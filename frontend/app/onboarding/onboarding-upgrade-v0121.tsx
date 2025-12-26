@@ -6,7 +6,7 @@ const UpgradeOnboardingModal_v0_12_1_Content = () => {
         <div className="flex flex-col items-start gap-6 w-full mb-4 unselectable">
             <div className="text-secondary leading-relaxed">
                 <p className="mb-0">
-                    Patch release focused on shell integration improvements, Wave AI enhancements, and restoring syntax
+                    Patch release focused on shell integration improvements, TideTerm AI enhancements, and restoring syntax
                     highlighting in code editor blocks.
                 </p>
             </div>
@@ -22,7 +22,7 @@ const UpgradeOnboardingModal_v0_12_1_Content = () => {
                     <div className="text-secondary leading-5">
                         <ul className="list-disc list-outside space-y-1 pl-5">
                             <li>
-                                <strong>OSC 7 Support</strong> - Wave now automatically tracks and restores your current
+                                <strong>OSC 7 Support</strong> - TideTerm now automatically tracks and restores your current
                                 directory across restarts for bash, zsh, fish, and pwsh shells
                             </li>
                             <li>
@@ -40,7 +40,7 @@ const UpgradeOnboardingModal_v0_12_1_Content = () => {
                 </div>
                 <div className="flex flex-col items-start gap-2 flex-1">
                     <div className="text-foreground text-base font-semibold leading-[18px]">
-                        Wave AI Improvements
+                        TideTerm AI Improvements
                     </div>
                     <div className="text-secondary leading-5">
                         <ul className="list-disc list-outside space-y-1 pl-5">

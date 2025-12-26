@@ -11,6 +11,8 @@ import (
 	"testing"
 
 	"github.com/sanshao85/tideterm/pkg/aiusechat/uctypes"
+	"github.com/sanshao85/tideterm/pkg/util/fileutil"
+	"github.com/sanshao85/tideterm/pkg/util/utilfn"
 )
 
 func TestReadDirCallback(t *testing.T) {
@@ -64,16 +66,23 @@ func TestReadDirCallback(t *testing.T) {
 		t.Errorf("Expected 3 entries, got %d", entryCount)
 	}
 
-	entries, ok := resultMap["entries"].([]map[string]any)
-	if !ok {
-		t.Fatalf("entries is not a slice of maps")
+	var entries []fileutil.DirEntryOut
+	switch v := resultMap["entries"].(type) {
+	case []fileutil.DirEntryOut:
+		entries = v
+	case []any:
+		if err := utilfn.ReUnmarshal(&entries, v); err != nil {
+			t.Fatalf("failed to parse entries: %v", err)
+		}
+	default:
+		t.Fatalf("entries has unexpected type %T", resultMap["entries"])
 	}
 
 	// Check that we have the expected entries
 	foundFiles := 0
 	foundDirs := 0
 	for _, entry := range entries {
-		if entry["is_dir"].(bool) {
+		if entry.Dir {
 			foundDirs++
 		} else {
 			foundFiles++
@@ -208,12 +217,22 @@ func TestReadDirSortBeforeTruncate(t *testing.T) {
 	}
 
 	resultMap := result.(map[string]any)
-	entries := resultMap["entries"].([]map[string]any)
+	var entries []fileutil.DirEntryOut
+	switch v := resultMap["entries"].(type) {
+	case []fileutil.DirEntryOut:
+		entries = v
+	case []any:
+		if err := utilfn.ReUnmarshal(&entries, v); err != nil {
+			t.Fatalf("failed to parse entries: %v", err)
+		}
+	default:
+		t.Fatalf("entries has unexpected type %T", resultMap["entries"])
+	}
 
 	// Count directories in the result
 	dirCount := 0
 	for _, entry := range entries {
-		if entry["is_dir"].(bool) {
+		if entry.Dir {
 			dirCount++
 		}
 	}
@@ -225,7 +244,7 @@ func TestReadDirSortBeforeTruncate(t *testing.T) {
 
 	// First 3 entries should be directories
 	for i := 0; i < 3; i++ {
-		if !entries[i]["is_dir"].(bool) {
+		if !entries[i].Dir {
 			t.Errorf("Expected entry %d to be a directory, but it was a file", i)
 		}
 	}

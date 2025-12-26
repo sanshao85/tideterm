@@ -1,26 +1,17 @@
-# Contributing to Wave Terminal
+# Contributing to TideTerm
 
-We welcome and value contributions to Wave Terminal! Wave is an open source project, always open for contributors. There are several ways you can contribute:
+We welcome and value contributions to TideTerm! TideTerm is an open source project, and contributions are welcome.
 
 - Submit issues related to bugs or new feature requests
-- Fix outstanding [issues](https://github.com/sanshao85/tideterm/issues) with the existing code
-- Contribute to [documentation](./docs)
-- Spread the word on social media (tag us on [LinkedIn](https://www.linkedin.com/company/wavetermdev), [Twitter/X](https://x.com/wavetermdev))
-- Or simply ⭐️ the repository to show your appreciation
+- Fix outstanding [issues](https://github.com/sanshao85/tideterm/issues)
+- Contribute to documentation (see `docs/`)
+- Or simply ⭐️ the repository
 
 However you choose to contribute, please be mindful and respect our [code of conduct](./CODE_OF_CONDUCT.md).
-
-> All contributions are highly appreciated! 🥰
 
 ## Before You Start
 
 We accept patches in the form of github pull requests. If you are new to github, please review this [github pull request guide](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests).
-
-### Contributor License Agreement
-
-Contributions to this project must be accompanied by a Contributor License Agreement (CLA). You (or your employer) retain the copyright to your contribution, this simply gives us permission to use and redistribute your contributions as part of the project.
-
-> On submission of your first pull request you will be prompted to sign the CLA confirming your original code contribution and that you own the intellectual property.
 
 ### Style guide
 
@@ -33,11 +24,10 @@ We have a set of recommended Visual Studio Code extensions to enforce our style 
 - For minor changes, you are welcome to [open a pull request](https://github.com/sanshao85/tideterm/pulls).
 - For major changes, please [create an issue](https://github.com/sanshao85/tideterm/issues/new) first.
 - If you are looking for a place to start take a look at [Good First Issues](https://github.com/sanshao85/tideterm/issues?q=is:issue%20state:open%20label:%22good%20first%20issue%22).
-- Join the [Discord channel](https://discord.gg/XfvZ334gwU) to collaborate with the community on your contribution.
 
 ### Development Environment
 
-To build and run Wave locally, see instructions at [Building Wave Terminal](./BUILD.md).
+To build and run TideTerm locally, see instructions at [Building TideTerm](./BUILD.md).
 
 ### Create a Pull Request
 
@@ -70,6 +60,6 @@ Communication between the wavesrv and the frontend and emain is handled by both 
 
 ### wsh
 
-wsh can be found at [`/cmd/wsh`](./cmd/wsh/). It serves two purposes: it functions as a CLI tool for controlling Wave from the command line and it functions as a server on remote machines to facilitate multiplexing terminal sessions over a single connection and streaming files between the remote host and the local host. This process does not hot-reload, you will need to manually kill the dev instance and rerun it to apply changes.
+wsh can be found at [`/cmd/wsh`](./cmd/wsh/). It serves two purposes: it functions as a CLI tool for controlling TideTerm from the command line and it functions as a server on remote machines to facilitate multiplexing terminal sessions over a single connection and streaming files between the remote host and the local host. This process does not hot-reload, you will need to manually kill the dev instance and rerun it to apply changes.
 
 Communication between wavesrv and wsh is handled by wshrpc via either forwarded domain socket or WebSocket, depending on what the remote host supports.

@@ -331,7 +331,7 @@ async function appMain() {
     const startTs = Date.now();
     const instanceLock = electronApp.requestSingleInstanceLock();
     if (!instanceLock) {
-        console.log("waveterm-app could not get single-instance-lock, shutting down");
+        console.log("tideterm-app could not get single-instance-lock, shutting down");
         electronApp.quit();
         return;
     }

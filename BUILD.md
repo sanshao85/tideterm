@@ -1,12 +1,12 @@
-# Building Wave Terminal
+# Building TideTerm
 
-These instructions are for setting up dependencies and building Wave Terminal from source on macOS, Linux, and Windows.
+These instructions are for setting up dependencies and building TideTerm from source on macOS, Linux, and Windows.
 
 ## Prerequisites
 
 ### OS-specific dependencies
 
-See [Minimum requirements](README.md#minimum-requirements) to learn whether your OS is supported.
+See the project README for supported platforms.
 
 #### macOS
 
@@ -76,7 +76,7 @@ We now use `npm`, so you can just run an `npm install` to install node dependenc
 ## Clone the Repo
 
 ```sh
-git clone git@github.com:wavetermdev/waveterm.git
+git clone git@github.com:sanshao85/tideterm.git
 ```
 
 or
@@ -135,4 +135,7 @@ You can use the regular Chrome DevTools to debug the frontend application. You c
 
 ### Backend logs
 
-Backend logs for the development version of Wave can be found at `~/.waveterm-dev/waveapp.log`. Both the NodeJS backend from Electron and the main Go backend will log here.
+Backend logs for the development version of TideTerm are written to TideTerm's data directory as `waveapp.log` (both the Electron/Node side and the Go backend).
+
+- macOS (dev): `$HOME/Library/Application Support/tideterm-dev/waveapp.log`
+- Linux (dev): `$HOME/.local/share/tideterm-dev/waveapp.log`

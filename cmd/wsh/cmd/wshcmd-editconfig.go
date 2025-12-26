@@ -16,8 +16,8 @@ var editConfigMagnified bool
 
 var editConfigCmd = &cobra.Command{
 	Use:     "editconfig [configfile]",
-	Short:   "edit Wave configuration files",
-	Long:    "Edit Wave configuration files. Defaults to settings.json if no file specified. Common files: settings.json, presets.json, widgets.json",
+	Short:   "edit TideTerm configuration files",
+	Long:    "Edit TideTerm configuration files. Defaults to settings.json if no file specified. Common files: settings.json, presets.json, widgets.json",
 	Args:    cobra.MaximumNArgs(1),
 	RunE:    editConfigRun,
 	PreRunE: preRunSetupRpcClient,

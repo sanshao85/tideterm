@@ -12,16 +12,22 @@ import { PlatformProvider, PlatformSelectorButton } from "@site/src/components/p
 <PlatformSelectorButton />
 <div style={{ marginBottom: 20 }}></div>
 
-Wave's configuration files are located at `~/.config/waveterm/`.
+TideTerm's configuration files live in TideTerm's config directory. You can locate it with:
 
-The main configuration file is `settings.json` (`~/.config/waveterm/settings.json`).
+```sh
+wsh appath config
+```
+
+On Linux this is typically `~/.config/tideterm/`.
+
+The main configuration file is `settings.json` in that directory.
 
 The file is structured as a mostly flat JSON file. Instead of using sub-objects we prefer to
 use ":" as level separators.
 
 :::info
 
-The easiest way to edit your config files is to use the wsh editconfig command which will open your Wave config file in our built-in preview editor.
+The easiest way to edit your config files is to use the `wsh editconfig` command, which will open your TideTerm config file in the built-in preview editor.
 
 ```
 wsh editconfig
@@ -33,8 +39,8 @@ wsh editconfig
 
 | Key Name                             | Type     | Function                                                                                                                                                                                                                                                      |
 | ------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| app:globalhotkey                     | string   | A systemwide keybinding to open your most recent wave window. This is a set of key names separated by `:`. For more info, see [Customizable Systemwide Global Hotkey](#customizable-systemwide-global-hotkey)                                                 |
-| app:dismissarchitecturewarning       | bool     | Disable warnings on app start when you are using a non-native architecture for Wave. For more info, see [Why does Wave warn me about ARM64 translation when it launches?](./faq#why-does-wave-warn-me-about-arm64-translation-when-it-launches).              |
+| app:globalhotkey                     | string   | A systemwide keybinding to open your most recent TideTerm window. This is a set of key names separated by `:`. For more info, see [Customizable Systemwide Global Hotkey](#customizable-systemwide-global-hotkey)                                              |
+| app:dismissarchitecturewarning       | bool     | Disable warnings on app start when you are using a non-native architecture for TideTerm. For more info, see [Why does Wave warn me about ARM64 translation when it launches?](./faq#why-does-wave-warn-me-about-arm64-translation-when-it-launches).          |
 | app:defaultnewblock                  | string   | Sets the default new block (Cmd:n, Cmd:d). "term" for terminal block, "launcher" for launcher block (default = "term")                                                                                                                                        |
 | app:showoverlayblocknums             | bool     | Set to false to disable the Ctrl+Shift block number overlay that appears when holding Ctrl+Shift (defaults to true)                                                                                                                                           |
 | app:ctrlvpaste                       | bool     | On Windows/Linux, when null (default) uses Control+V on Windows only. Set to true to force Control+V on all non-macOS platforms, false to disable the accelerator. macOS always uses Command+V regardless of this setting                                     |
@@ -108,7 +114,7 @@ For reference, this is the current default configuration (v0.11.5):
     "ai:maxtokens": 4000,
     "ai:timeoutms": 60000,
     "app:defaultnewblock": "term",
-    "autoupdate:enabled": true,
+    "autoupdate:enabled": false,
     "autoupdate:installonquit": true,
     "autoupdate:intervalms": 3600000,
     "conn:askbeforewshinstall": true,
@@ -125,22 +131,20 @@ For reference, this is the current default configuration (v0.11.5):
     "window:magnifiedblockblursecondarypx": 2,
     "window:confirmclose": true,
     "window:savelastwindow": true,
-    "telemetry:enabled": true,
+    "telemetry:enabled": false,
     "term:copyonselect": true
 }
 ```
 
 :::warning
 
-If you installed Wave pre-v0.9.0 your configuration file will be located at
-`~/.waveterm/config/settings.json`. This includes all of the other configuration
-files as well: `termthemes.json`, `presets.json`, and `widgets.json`.
+If you previously used the upstream Wave Terminal, its configuration files may live under `~/.waveterm/`. TideTerm uses separate config/data locations to avoid conflicting with an existing Wave installation.
 
 :::
 
 ## Environment Variable Resolution
 
-To avoid putting secrets directly in config files, Wave supports environment variable resolution using `$ENV:VARIABLE_NAME` or `$ENV:VARIABLE_NAME:fallback` syntax.  This works for any string value in any config file (settings.json, presets.json, ai.json, etc.).
+To avoid putting secrets directly in config files, TideTerm supports environment variable resolution using `$ENV:VARIABLE_NAME` or `$ENV:VARIABLE_NAME:fallback` syntax. This works for any string value in any config file (settings.json, presets.json, ai.json, etc.).
 
 ```json
 {
@@ -189,23 +193,23 @@ Each bookmark follows this structure (only `url` is required):
     "url": "https://claude.ai",
     "title": "Claude AI"
   },
-  "bookmark@wave": {
-    "url": "https://waveterm.dev",
-    "title": "Wave Terminal",
+  "bookmark@tideterm": {
+    "url": "https://github.com/sanshao85/tideterm",
+    "title": "TideTerm",
     "display:order": -1
   },
-  "bookmark@wave-github": {
+  "bookmark@tideterm-github": {
     "url": "https://github.com/sanshao85/tideterm",
-    "title": "Wave Github",
+    "title": "TideTerm GitHub",
     "iconurl": "https://github.githubassets.com/favicons/favicon-dark.png"
   },
   "bookmark@chatgpt": {
     "url": "https://chatgpt.com",
     "iconurl": "https://cdn.oaistatic.com/assets/favicon-miwirzcw.ico"
   },
-  "bookmark@wave-pulls": {
+  "bookmark@tideterm-pulls": {
     "url": "https://github.com/sanshao85/tideterm/pulls",
-    "title": "Wave Pull Requests",
+    "title": "TideTerm Pull Requests",
     "iconurl": "https://github.githubassets.com/favicons/favicon-dark.png"
   }
 }
@@ -220,7 +224,7 @@ Each bookmark follows this structure (only `url` is required):
 
 ## Terminal Theming
 
-User-defined terminal themes are located in `~/.config/waveterm/termthemes.json`.
+User-defined terminal themes are located in `termthemes.json` in TideTerm's config directory (see `wsh appath config`).
 
 This JSON file is structured as an object, with each sub-key defining a theme.
 Themes are applied by right-clicking on the terminal's header bar and selecting an entry from the "Themes" sub-menu. Alternatively they can be applied to

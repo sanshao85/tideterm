@@ -3,9 +3,6 @@ contact_links:
     - name: General Question
       url: https://github.com/sanshao85/tideterm/discussions
       about: Have a question on something? Start a new discussion thread.
-    - name: Engage with us directly on Discord
-      url: https://discord.gg/XfvZ334gwU
-      about: Join our Discord server to get updates on new features, bug fixes, and more.
     - name: Review open issues
       url: https://github.com/sanshao85/tideterm/issues
       about: Please check if your issue isn't already there.

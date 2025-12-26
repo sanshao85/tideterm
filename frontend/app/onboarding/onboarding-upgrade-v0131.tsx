@@ -6,7 +6,7 @@ const UpgradeOnboardingModal_v0_13_1_Content = () => {
         <div className="flex flex-col items-start gap-6 w-full mb-4 unselectable">
             <div className="text-secondary leading-relaxed">
                 <p className="mb-0">
-                    Wave v0.13.1 focuses on Windows platform improvements, Wave AI visual updates, and enhanced
+                    TideTerm v0.13.1 focuses on Windows platform improvements, TideTerm AI visual updates, and enhanced
                     terminal navigation.
                 </p>
             </div>
@@ -32,7 +32,7 @@ const UpgradeOnboardingModal_v0_13_1_Content = () => {
                                 <strong>SSH Agent Fallback</strong> - Improved SSH agent support on Windows
                             </li>
                             <li>
-                                <strong>Updated Focus Keybinding</strong> - Wave AI focus key changed to Alt:0 on
+                                <strong>Updated Focus Keybinding</strong> - TideTerm AI focus key changed to Alt:0 on
                                 Windows
                             </li>
                         </ul>
@@ -45,7 +45,7 @@ const UpgradeOnboardingModal_v0_13_1_Content = () => {
                     <i className="text-[24px] text-accent fa-solid fa-sparkles"></i>
                 </div>
                 <div className="flex flex-col items-start gap-2 flex-1">
-                    <div className="text-foreground text-base font-semibold leading-[18px]">Wave AI Updates</div>
+                    <div className="text-foreground text-base font-semibold leading-[18px]">TideTerm AI Updates</div>
                     <div className="text-secondary leading-5">
                         <ul className="list-disc list-outside space-y-1 pl-5">
                             <li>
@@ -53,7 +53,7 @@ const UpgradeOnboardingModal_v0_13_1_Content = () => {
                                 support for custom backgrounds
                             </li>
                             <li>
-                                <strong>BYOK Without Telemetry</strong> - Wave AI now works with bring-your-own-key and
+                                <strong>BYOK Without Telemetry</strong> - TideTerm AI now works with bring-your-own-key and
                                 local models without requiring telemetry
                             </li>
                         </ul>

@@ -87,7 +87,7 @@ const WaveAIPage = ({ onNext, onSkip }: { onNext: () => void; onSkip: () => void
                 <div>
                     <Logo />
                 </div>
-                <div className="text-[25px] font-normal text-foreground">Wave AI</div>
+                <div className="text-[25px] font-normal text-foreground">TideTerm AI</div>
             </header>
             <div className="flex-1 flex flex-row gap-0 min-h-0">
                 <div className="flex-1 flex flex-col items-center justify-center gap-8 pr-6 unselectable">
@@ -99,14 +99,14 @@ const WaveAIPage = ({ onNext, onSkip }: { onNext: () => void; onSkip: () => void
 
                         <div className="flex flex-col items-start gap-4 text-secondary">
                             <p>
-                                Wave AI is your terminal assistant with context. I can read your terminal output,
+                                TideTerm AI is your terminal assistant with context. I can read your terminal output,
                                 analyze widgets, read/write files, and help you solve problems faster.
                             </p>
 
                             <div className="flex items-start gap-3 w-full">
                                 <i className="fa fa-sparkles text-accent text-lg mt-1 flex-shrink-0" />
                                 <p>
-                                    Toggle the Wave AI panel with the{" "}
+                                    Toggle the TideTerm AI panel with the{" "}
                                     <span className="inline-flex h-[26px] px-1.5 items-center rounded-md box-border bg-hover text-accent text-[12px] align-middle">
                                         <i className="fa fa-sparkles" />
                                         <span className="font-bold ml-1 font-mono">AI</span>
@@ -261,7 +261,7 @@ const FilesPage = ({ onFinish, onPrev }: { onFinish: () => void; onPrev?: () => 
                     <div className="flex flex-col items-start gap-6 max-w-md">
                         <div className="flex flex-col items-start gap-4 text-secondary">
                             <p>
-                                Wave can preview markdown, images, and video files on both local <i>and remote</i>{" "}
+                                TideTerm can preview markdown, images, and video files on both local <i>and remote</i>{" "}
                                 machines.
                             </p>
 
@@ -273,7 +273,7 @@ const FilesPage = ({ onFinish, onPrev }: { onFinish: () => void; onPrev?: () => 
                                         <span className="font-mono font-semibold text-foreground">
                                             wsh view [filename]
                                         </span>{" "}
-                                        to preview files in Wave's graphical viewer
+                                        to preview files in TideTerm's graphical viewer
                                     </p>
                                 </div>
                             </div>
@@ -286,7 +286,7 @@ const FilesPage = ({ onFinish, onPrev }: { onFinish: () => void; onPrev?: () => 
                                         <span className="font-mono font-semibold text-foreground">
                                             wsh edit [filename]
                                         </span>{" "}
-                                        to open config files or code files in Wave's graphical editor
+                                        to open config files or code files in TideTerm's graphical editor
                                     </p>
                                 </div>
                             </div>

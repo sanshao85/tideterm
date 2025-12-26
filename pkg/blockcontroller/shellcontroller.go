@@ -851,13 +851,13 @@ func getCustomInitScript(logCtx context.Context, meta waveobj.MetaMapType, connN
 	blocklogger.Infof(logCtx, "[conndebug] initScript detected as a file %q from meta key: %s\n", initScriptVal, metaKeyName)
 	initScriptVal, err := wavebase.ExpandHomeDir(initScriptVal)
 	if err != nil {
-		blocklogger.Infof(logCtx, "[conndebug] cannot expand home dir in Wave initscript file: %v\n", err)
-		return fmt.Sprintf("echo \"cannot expand home dir in Wave initscript file, from key %s\";\n", metaKeyName)
+		blocklogger.Infof(logCtx, "[conndebug] cannot expand home dir in TideTerm initscript file: %v\n", err)
+		return fmt.Sprintf("echo \"cannot expand home dir in TideTerm initscript file, from key %s\";\n", metaKeyName)
 	}
 	fileData, err := os.ReadFile(initScriptVal)
 	if err != nil {
-		blocklogger.Infof(logCtx, "[conndebug] cannot open Wave initscript file: %v\n", err)
-		return fmt.Sprintf("echo \"cannot open Wave initscript file, from key %s\";\n", metaKeyName)
+		blocklogger.Infof(logCtx, "[conndebug] cannot open TideTerm initscript file: %v\n", err)
+		return fmt.Sprintf("echo \"cannot open TideTerm initscript file, from key %s\";\n", metaKeyName)
 	}
 	if len(fileData) > MaxInitScriptSize {
 		blocklogger.Infof(logCtx, "[conndebug] initscript file too large, size=%d, max=%d\n", len(fileData), MaxInitScriptSize)

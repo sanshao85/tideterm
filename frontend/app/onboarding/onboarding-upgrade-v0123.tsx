@@ -6,7 +6,7 @@ const UpgradeOnboardingModal_v0_12_3_Content = () => {
         <div className="flex flex-col items-start gap-6 w-full mb-4 unselectable">
             <div className="text-secondary leading-relaxed">
                 <p className="mb-0">
-                    Wave AI model upgrade to GPT-5.1, new secret management features, and improved terminal input
+                    TideTerm AI model upgrade to GPT-5.1, new secret management features, and improved terminal input
                     handling for interactive CLI tools.
                 </p>
             </div>
@@ -16,7 +16,7 @@ const UpgradeOnboardingModal_v0_12_3_Content = () => {
                     <i className="text-[24px] text-accent fa-solid fa-sparkles"></i>
                 </div>
                 <div className="flex flex-col items-start gap-2 flex-1">
-                    <div className="text-foreground text-base font-semibold leading-[18px]">Wave AI Updates</div>
+                    <div className="text-foreground text-base font-semibold leading-[18px]">TideTerm AI Updates</div>
                     <div className="text-secondary leading-5">
                         <ul className="list-disc list-outside space-y-1 pl-5">
                             <li>

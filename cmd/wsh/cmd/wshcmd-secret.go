@@ -22,7 +22,7 @@ var secretUiMagnified bool
 var secretCmd = &cobra.Command{
 	Use:   "secret",
 	Short: "manage secrets",
-	Long:  "Manage secrets for Wave Terminal",
+	Long:  "Manage secrets for TideTerm",
 }
 
 var secretGetCmd = &cobra.Command{

@@ -6,7 +6,7 @@ const UpgradeOnboardingModal_v0_13_0_Content = () => {
         <div className="flex flex-col items-start gap-6 w-full mb-4 unselectable">
             <div className="text-secondary leading-relaxed">
                 <p className="mb-0">
-                    Wave v0.13 brings local AI support, bring-your-own-key (BYOK), a redesigned configuration system,
+                    TideTerm v0.13 brings local AI support, bring-your-own-key (BYOK), a redesigned configuration system,
                     and improved terminal functionality.
                 </p>
             </div>
@@ -78,7 +78,7 @@ const UpgradeOnboardingModal_v0_13_0_Content = () => {
                                 <strong>Windows Paste Fix</strong> - Ctrl+V now works as standard paste on Windows
                             </li>
                             <li>
-                                <strong>SSH Password Storage</strong> - Store SSH passwords in Wave's secret store
+                                <strong>SSH Password Storage</strong> - Store SSH passwords in TideTerm's secret store
                             </li>
                         </ul>
                     </div>

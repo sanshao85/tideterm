@@ -11,7 +11,7 @@ interface WaveAIVisualContentProps {
 export const WaveAIVisualContent = memo(({ model }: WaveAIVisualContentProps) => {
     return (
         <div className="flex flex-col gap-4 p-6 h-full">
-            <div className="text-lg font-semibold">Wave AI Modes - Visual Editor</div>
+            <div className="text-lg font-semibold">AI Modes - Visual Editor</div>
             <div className="text-muted-foreground">Visual editor coming soon...</div>
         </div>
     );

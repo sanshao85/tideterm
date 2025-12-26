@@ -24,7 +24,7 @@ import (
 	"github.com/sanshao85/tideterm/pkg/web/sse"
 )
 
-// sanitizeHostnameInError removes the Wave cloud hostname from error messages
+// sanitizeHostnameInError removes the cloud hostname from error messages
 func sanitizeHostnameInError(err error) error {
 	if err == nil {
 		return nil

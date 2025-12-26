@@ -478,7 +478,7 @@ func (ws *WshServer) WriteTempFileCommand(ctx context.Context, data wshrpc.Comma
 	if name == "" || name == "." || name == ".." {
 		return "", fmt.Errorf("invalid filename")
 	}
-	tempDir, err := os.MkdirTemp("", "waveterm-")
+	tempDir, err := os.MkdirTemp("", "tideterm-")
 	if err != nil {
 		return "", fmt.Errorf("error creating temp directory: %w", err)
 	}

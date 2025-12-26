@@ -124,7 +124,7 @@ const UpgradeOnboardingMinor = () => {
                     <div className="flex justify-center">
                         <Logo />
                     </div>
-                    <div className="text-center text-[25px] font-normal text-foreground">Welcome to Wave v0.13!</div>
+                    <div className="text-center text-[25px] font-normal text-foreground">Welcome to TideTerm v0.13!</div>
                 </header>
                 <OverlayScrollbarsComponent
                     className="flex-1 overflow-y-auto min-h-0"
@@ -134,24 +134,27 @@ const UpgradeOnboardingMinor = () => {
                         <div className="flex flex-col items-center gap-4 text-center">
                             <div className="flex h-[52px] px-3 items-center rounded-lg bg-hover text-accent text-[24px]">
                                 <i className="fa fa-sparkles" />
-                                <span className="font-bold ml-2 font-mono">Wave AI</span>
+                                <span className="font-bold ml-2 font-mono">AI</span>
                             </div>
                             <div className="text-secondary leading-relaxed max-w-[600px]">
                                 <p className="mb-4">
-                                    Wave AI is your terminal assistant with full context. It can read your terminal
+                                    TideTerm AI is your terminal assistant with full context. It can read your terminal
                                     output, analyze widgets, read and write files, and help you solve
                                     problems&nbsp;faster.
                                 </p>
                                 <p className="mb-4">
-                                    <span className="font-semibold text-foreground">New in v0.13:</span> Wave AI now
+                                    <span className="font-semibold text-foreground">New in v0.13:</span> AI now
                                     supports local models and bring-your-own-key! Use Ollama, LM Studio, vLLM,
                                     OpenRouter, or any OpenAI-compatible provider.
                                 </p>
                                 <p className="py-3 px-2 border border-border rounded-md bg-hover/30">
-                                    Wave AI is in beta with included AI credits while we refine the experience. We're
-                                    actively improving it and would love your feedback in{" "}
-                                    <a target="_blank" href="https://discord.gg/XfvZ334gwU" className="hover:underline">
-                                        Discord
+                                    AI is evolving quickly and we'd love your feedback in{" "}
+                                    <a
+                                        target="_blank"
+                                        href="https://github.com/sanshao85/tideterm/discussions"
+                                        className="hover:underline"
+                                    >
+                                        GitHub Discussions
                                     </a>
                                     .
                                 </p>
@@ -161,9 +164,9 @@ const UpgradeOnboardingMinor = () => {
                         <div className="w-full max-w-[550px] border-t border-border my-2"></div>
 
                         <div className="flex flex-col items-center gap-3 text-center max-w-[550px]">
-                            <div className="text-foreground text-base">Thanks for being an early Wave adopter! ⭐</div>
+                            <div className="text-foreground text-base">Thanks for being an early TideTerm adopter! ⭐</div>
                             <div className="text-secondary text-sm">
-                                A GitHub star shows your support for Wave (and open-source) and helps us reach more
+                                A GitHub star shows your support for TideTerm (and open-source) and helps us reach more
                                 developers.
                             </div>
                         </div>

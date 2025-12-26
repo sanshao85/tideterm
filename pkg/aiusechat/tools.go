@@ -114,9 +114,9 @@ func MakeBlockShortDesc(block *waveobj.Block) string {
 		}
 		return "cpu graph"
 	case "tips":
-		return "Wave quick tips widget"
+		return "TideTerm quick tips widget"
 	case "help":
-		return "Wave documentation widget"
+		return "TideTerm documentation widget"
 	case "launcher":
 		return "placeholder widget used to launch other widgets"
 	case "tsunami":
@@ -125,9 +125,9 @@ func MakeBlockShortDesc(block *waveobj.Block) string {
 		return "" // AI doesn't need to see these
 	case "waveconfig":
 		if file, hasFile := block.Meta["file"].(string); hasFile && file != "" {
-			return fmt.Sprintf("wave config editor for %q", file)
+			return fmt.Sprintf("config editor for %q", file)
 		}
-		return "wave config editor"
+		return "config editor"
 	default:
 		return fmt.Sprintf("unknown widget with type %q", viewType)
 	}

@@ -1,7 +1,7 @@
 // Copyright 2025, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Package gemini implements the Google Gemini backend for WaveTerm's AI chat system.
+// Package gemini implements the Google Gemini backend for TideTerm's AI chat system.
 //
 // This package provides a complete implementation of the UseChatBackend interface
 // for Google's Gemini API, including:

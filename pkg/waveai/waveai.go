@@ -91,7 +91,7 @@ func RunAICommand(ctx context.Context, request wshrpc.WaveAIStreamRequest) chan 
 		backend = GoogleBackend{}
 		backendType = APIType_Google
 	} else if IsCloudAIRequest(request.Opts) {
-		endpoint = "waveterm cloud"
+		endpoint = "cloud"
 		request.Opts.APIType = APIType_OpenAI
 		request.Opts.Model = "default"
 		backend = WaveAICloudBackend{}

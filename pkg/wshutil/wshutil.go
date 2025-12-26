@@ -300,7 +300,7 @@ func SetupDomainSocketRpcClient(sockName string, serverImpl ServerImpl, debugNam
 func MakeClientJWTToken(rpcCtx wshrpc.RpcContext, sockName string) (string, error) {
 	claims := jwt.MapClaims{}
 	claims["iat"] = time.Now().Unix()
-	claims["iss"] = "waveterm"
+	claims["iss"] = "tideterm"
 	claims["sock"] = sockName
 	claims["exp"] = time.Now().Add(time.Hour * 24 * 365).Unix()
 	if rpcCtx.BlockId != "" {
@@ -345,7 +345,7 @@ func ValidateAndExtractRpcContextFromToken(tokenStr string) (*wshrpc.RpcContext,
 	}
 	// validate "iss" claim
 	if iss, ok := claims["iss"].(string); ok {
-		if iss != "waveterm" {
+		if iss != "tideterm" {
 			return nil, fmt.Errorf("unexpected issuer: %s", iss)
 		}
 	} else {

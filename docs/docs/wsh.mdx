@@ -4,13 +4,13 @@ id: "wsh"
 title: "wsh overview"
 ---
 
-The `wsh` command provides Wave Terminal's core command line interface, allowing users to interact with both terminal and graphical elements from the command line. This guide covers the basics of using `wsh` and its key features.
+The `wsh` command provides TideTerm's core command line interface, allowing users to interact with both terminal and graphical elements from the command line. This guide covers the basics of using `wsh` and its key features.
 
 See the [wsh reference](/wsh-reference) for a list of all wsh commands and their arguments.
 
 ## Overview
 
-At its core, `wsh` enables seamless interaction between your terminal commands and Wave's graphical blocks. It allows you to:
+At its core, `wsh` enables seamless interaction between your terminal commands and TideTerm's graphical blocks. It allows you to:
 
 - Control graphical widgets directly from the command line
 - Share data between terminal sessions and GUI components
@@ -23,7 +23,7 @@ At its core, `wsh` enables seamless interaction between your terminal commands a
 
 ### Interacting with Blocks
 
-`wsh` provides direct interaction with Wave's graphical blocks through the command line. For example:
+`wsh` provides direct interaction with TideTerm's graphical blocks through the command line. For example:
 
 ```bash
 # Open a file in the editor
@@ -61,14 +61,14 @@ echo "Terminal 1 log" | wsh file append wavefile://workspace/logs.txt
 
 ### Block Management
 
-Every visual element in Wave is a block, and `wsh` gives you complete control over them (hold Ctrl+Shift to see block numbers):
+Every visual element in TideTerm is a block, and `wsh` gives you complete control over them (hold Ctrl+Shift to see block numbers):
 
 ```bash
 # Create a new block showing a webpage
 wsh web open github.com
 
 # Do a web search in a new block
-wsh web open "wave terminal"
+wsh web open "tideterm"
 
 # Run a command in a new block and auto-close when done
 wsh run -x -- npm test
@@ -116,7 +116,7 @@ wsh setvar -b tab SHARED_ENV=staging
 
 ### AI-Assisted Development
 
-The `wsh ai` command appends content to the Wave AI sidebar. By default, files are attached without auto-submitting, allowing you to review and add more context before sending.
+The `wsh ai` command appends content to the TideTerm AI sidebar. By default, files are attached without auto-submitting, allowing you to review and add more context before sending.
 
 ```bash
 # Pipe output to AI sidebar (ask question in UI)

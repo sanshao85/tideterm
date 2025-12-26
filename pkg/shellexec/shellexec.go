@@ -209,7 +209,7 @@ func makeHomeResetInitScript(shellType string) string {
 	switch shellType {
 	case shellutil.ShellType_bash, shellutil.ShellType_zsh:
 		// Some environments override HOME unexpectedly (e.g. to /tmp), which breaks "~" expansion
-		// and any "$HOME/..." paths injected by Wave (e.g. remote cwd init scripts).
+		// and any "$HOME/..." paths injected by TideTerm (e.g. remote cwd init scripts).
 		// Prefer the passwd entry for the current user.
 		return "if command -v id >/dev/null 2>&1; then\n" +
 			"  _waveterm_user=\"$(id -un 2>/dev/null)\" || _waveterm_user=\"\"\n" +

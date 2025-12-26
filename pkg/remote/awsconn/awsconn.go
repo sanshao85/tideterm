@@ -27,7 +27,7 @@ const (
 	ProfileConfigKey      = "profile:config"
 	ProfileCredentialsKey = "profile:credentials"
 	ProfilePrefix         = "aws:"
-	TempFilePattern       = "waveterm-awsconfig-%s"
+	TempFilePattern       = "tideterm-awsconfig-%s"
 )
 
 var connectionRe = regexp.MustCompile(`^(.*):\w+:\/\/.*$`)

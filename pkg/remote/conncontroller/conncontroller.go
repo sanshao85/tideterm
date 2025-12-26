@@ -211,7 +211,7 @@ func (conn *SSHConn) OpenDomainSocketListener(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("error generating random string: %w", err)
 	}
-	sockName := fmt.Sprintf("/tmp/waveterm-%s.sock", randStr)
+	sockName := fmt.Sprintf("/tmp/tideterm-%s.sock", randStr)
 	conn.Infof(ctx, "generated domain socket name %s\n", sockName)
 	listener, err := client.ListenUnix(sockName)
 	if err != nil {

@@ -7,7 +7,7 @@ title: "Getting Started"
 import { PlatformProvider, PlatformSelectorButton, PlatformItem } from "@site/src/components/platformcontext";
 import { Kbd } from "@site/src/components/kbd";
 
-Wave Terminal is a modern terminal that includes graphical capabilities like web browsing, file previews, and AI assistance alongside traditional terminal features. This guide will help you get started.
+TideTerm is a modern terminal that includes graphical capabilities like web browsing, file previews, and AI assistance alongside traditional terminal features. This guide will help you get started.
 
 ## Installation
 
@@ -43,54 +43,36 @@ ARM64 is planned, but is currently blocked by upstream dependencies (see [Window
 
 </PlatformItem>
 
-### Package managers
+### Downloads
+
+TideTerm installers are currently distributed via GitHub Releases:
+
+https://github.com/sanshao85/tideterm/releases
 
 <PlatformItem platforms={["mac"]}>
 
-#### Homebrew
-
-```bash
-brew install --cask wave
-```
+- Download the latest `.dmg` or `.zip`, then drag TideTerm to Applications.
 
 </PlatformItem>
 
 <PlatformItem platforms={["windows"]}>
 
-#### Windows Package Manager
-
-```powershell
-winget install CommandLine.Wave
-```
-
-#### Chocolatey
-
-```powershell
-choco install wave
-```
+- Download the latest `.exe` (installer) or `.msi`, then run it.
 
 </PlatformItem>
 
 <PlatformItem platforms={["linux"]}>
 
-#### Snap
-
-```bash
-sudo snap install --classic waveterm
-```
-
-Other options available: [AUR package](https://aur.archlinux.org/packages/waveterm) (community maintained), [Nix package](https://search.nixos.org/packages?channel=unstable&show=waveterm) (community maintained)
+- Download a package for your distro (`.AppImage`, `.deb`, `.rpm`, etc.).
 
 </PlatformItem>
-
-You can also download installers directly from our [Downloads page](https://www.waveterm.dev/download).
 
 ## Core Concepts
 
 ### Tabs and Blocks
 
 - **Tabs**: Like browser tabs, these help organize your work. Create new tabs with <Kbd k="Cmd:t"/>.
-- **Blocks**: The building blocks of Wave. Each block can be a terminal, web browser, file preview, or other widget.
+- **Blocks**: The building blocks of TideTerm. Each block can be a terminal, web browser, file preview, or other widget.
 - **Layout**: Blocks can be dragged, dropped, and resized to create your ideal layout.
 
 ### Key Features
@@ -99,7 +81,7 @@ You can also download installers directly from our [Downloads page](https://www.
 
    - Works with common shells (bash, zsh, fish)
    - Supports standard terminal features (readline, control sequences, etc)
-   - Includes the `wsh` command for interacting with Wave's GUI features
+   - Includes the `wsh` command for interacting with TideTerm's GUI features
    - GPU accelerated (on most platforms)
 
 2. **Graphical Widgets**
@@ -118,7 +100,7 @@ You can also download installers directly from our [Downloads page](https://www.
 
 1. **Open Your First New Tab**
 
-   - New Wave tabs start with a single terminal block
+   - New TideTerm tabs start with a single terminal block
    - Use it just like your regular terminal
    - Create additional terminal blocks with <Kbd k="Cmd:n"/>
 
@@ -152,7 +134,7 @@ You can also download installers directly from our [Downloads page](https://www.
 - Explore [Key Bindings](./keybindings) to work more efficiently
 - Learn about [Tab Layouts](./layout) to organize your workspace
 - Set up [Custom Widgets](./customwidgets) for quick access to your tools
-- Configure [Wave AI](./waveai) to use your preferred AI models
+- Configure [AI](./waveai) to use your preferred AI models
 - Check out [Configuration](./config) for detailed customization options
 
 ## Getting Help

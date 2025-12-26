@@ -60,9 +60,9 @@ Keys follow pattern: `provider@modename` (e.g., `waveai@quick`, `openai@gpt4`)
 
 **Defined in:** `pkg/aiusechat/uctypes/uctypes.go:27-35`
 
-1. **wave** - Wave AI Cloud service
+1. **wave** - Wave AI Cloud service (upstream; disabled by default in TideTerm)
    - Auto-sets: `waveai:cloud = true`, endpoint from env or default
-   - Default endpoint: `https://cfapi.waveterm.dev/api/waveai`
+   - Default endpoint: *(empty in TideTerm; configure `TIDETERM_AI_ENDPOINT` if you choose to use a hosted proxy)*
    - Used for Wave's hosted AI modes
 
 2. **openai** - OpenAI API

@@ -42,7 +42,7 @@ Wave v0.13 is a major release that opens up Wave AI to local models, third-party
 - **Google Gemini Integration** - Native support for Google's Gemini models with a dedicated API adapter
 - **Provider Presets** - Simplified configuration with built-in presets for OpenAI, OpenRouter, Google, Azure, and custom endpoints
 - **Multiple AI Modes** - Easily switch between different models and providers with a unified interface
-- See the new [Wave AI Modes documentation](https://docs.waveterm.dev/waveai-modes) for configuration examples and setup guides
+- See the new [AI Modes documentation](https://sanshao85.github.io/tideterm/waveai-modes) for configuration examples and setup guides
 
 **Unified Configuration Widget:**
 - **New Config Interface** - Replaced the basic JSON editor with a dedicated configuration widget accessible from the sidebar
@@ -157,7 +157,7 @@ Wave Terminal v0.12.0 introduces a completely redesigned AI experience powered b
 
 Wave AI is in active beta with included AI credits while we refine the experience. BYOK (Bring Your Own Key) will be available once we've stabilized core features and gathered feedback on what works best. Share your feedback in our [Discord](https://discord.gg/XfvZ334gwU).
 
-For more information and upcoming features, visit our [Wave AI documentation](https://docs.waveterm.dev/waveai).
+For more information and upcoming features, visit our [AI documentation](https://sanshao85.github.io/tideterm/waveai).
 
 **Other Improvements:**
 - New onboarding flow showcasing block magnification, Wave AI, and wsh view/edit capabilities
@@ -299,8 +299,8 @@ Quick update with bug fixes and new configuration options
 
 Quick update to v0.10 with new features and bug fixes.
 
-- Global hotkey support [docs](https://docs.waveterm.dev/config#customizable-systemwide-global-hotkey)
-- Added configuration to override the font size for markdown, AI-chat, and preview editor [docs](https://docs.waveterm.dev/config)
+- Global hotkey support [docs](https://sanshao85.github.io/tideterm/config#customizable-systemwide-global-hotkey)
+- Added configuration to override the font size for markdown, AI-chat, and preview editor [docs](https://sanshao85.github.io/tideterm/config)
 - Added ability to set independent zoom level for the web view (right click block header)
 - New `wsh wavepath` command to open the config directory, data directory, and log file
 - [bugfix] Fixed crash when /etc/sshd_config contained an unsupported Match directive (most common on Fedora)
@@ -321,15 +321,15 @@ Quick update to fix the workspace app menu actions. Also fixes workspace switchi
 Wave Terminal v0.10.0 introduces workspaces, making it easier to manage multiple work environments. We've added powerful new command execution capabilities with `wsh run`, allowing you to launch and control commands in dedicated blocks. This release also brings significant improvements to SSH with a new connections configuration system for managing your remote environments.
 
 - **Workspaces**: Organize your work into separate environments, each with their own tabs, layouts, and settings
-- **Command Blocks**: New `wsh run` command for launching terminal commands in dedicated blocks, with support for magnification, auto-closing, and execution control ([docs](https://docs.waveterm.dev/wsh-reference#run))
-- **Connections**: New configuration system for managing SSH connections, with support for wsh-free operation, per-connection themes, and more ([docs](https://docs.waveterm.dev/connections))
+- **Command Blocks**: New `wsh run` command for launching terminal commands in dedicated blocks, with support for magnification, auto-closing, and execution control ([docs](https://sanshao85.github.io/tideterm/wsh-reference#run))
+- **Connections**: New configuration system for managing SSH connections, with support for wsh-free operation, per-connection themes, and more ([docs](https://sanshao85.github.io/tideterm/connections))
 - Improved tab management with better switching behavior and context menus (many bug fixes)
 - New tab features including pinned tabs and drag-and-drop improvements
 - Create, rename, and delete files/directories directly in directory preview
 - Attempt wsh-free connection as a fallback if wsh installation or execution fails
 - New `-i` flag to add identity files with the `wsh ssh` command
-- Added Perplexity API integration ([docs](https://docs.waveterm.dev/faq#perplexity))
-- `wsh setbg` command for background handling ([docs](https://docs.waveterm.dev/wsh-reference#setbg))
+- Added Perplexity API integration ([docs](https://sanshao85.github.io/tideterm/faq#perplexity))
+- `wsh setbg` command for background handling ([docs](https://sanshao85.github.io/tideterm/wsh-reference#setbg))
 - Switched from Less to SCSS for styling
 - [bugfix] Fixed tab flickering issues during tab switches
 - [bugfix] Corrected WaveAI text area resize behavior
@@ -338,15 +338,15 @@ Wave Terminal v0.10.0 introduces workspaces, making it easier to manage multiple
 - [bugfix] Fixed unresponsive context menus
 - [bugfix] Fixed connection errors in Help block
 - Upgraded Go toolchain to 1.23.4
-- Lots of new documentation, including new pages for [Getting Started](https://docs.waveterm.dev/gettingstarted), [AI Presets](https://docs.waveterm.dev/ai-presets), and [wsh overview](https://docs.waveterm.dev/wsh).
+- Lots of new documentation, including new pages for [Getting Started](https://sanshao85.github.io/tideterm/gettingstarted), [AI Presets](https://sanshao85.github.io/tideterm/ai-presets), and [wsh overview](https://sanshao85.github.io/tideterm/wsh).
 - Other bug fixes, performance improvements, and dependency updates
 
 ### v0.9.3 &mdash; Nov 20, 2024
 
 New minor release that introduces Wave's connected computing extensions. We've introduced new `wsh` commands that allow you to store variables and files, and access them across terminal sessions (on both local and remote machines).
 
-- `wsh setvar/getvar` to get and set variables -- [Docs](https://docs.waveterm.dev/wsh-reference#getvarsetvar)
-- `wsh file` operations (cat, write, append, rm, info, cp, and ls) -- [Docs](https://docs.waveterm.dev/wsh-reference#file)
+- `wsh setvar/getvar` to get and set variables -- [Docs](https://sanshao85.github.io/tideterm/wsh-reference#getvarsetvar)
+- `wsh file` operations (cat, write, append, rm, info, cp, and ls) -- [Docs](https://sanshao85.github.io/tideterm/wsh-reference#file)
 - Improved golang panic handling to prevent backend crashes
 - Improved SSH config logging and fixes a reused connection bug
 - Updated telemetry to track additional counters
@@ -367,7 +367,7 @@ New minor release that introduces Wave's connected computing extensions. We've i
 
 ### v0.9.2 &mdash; Nov 11, 2024
 
-New minor release with bug fixes and new features! Fixed the bug around making Wave fullscreen (also affecting certain window managers like Hyprland). We've also put a lot of work into the doc site (https://docs.waveterm.dev), including documenting how [Widgets](./widgets) and [Presets](./presets) work!
+New minor release with bug fixes and new features! Fixed the bug around making Wave fullscreen (also affecting certain window managers like Hyprland). We've also put a lot of work into the doc site (https://sanshao85.github.io/tideterm/), including documenting how [Widgets](./widgets) and [Presets](./presets) work!
 
 - Updated documentation
 - Wave AI now supports the Anthropic API! Checkout the [FAQ](./faq) for how to use the Claude models with Wave AI.
@@ -449,7 +449,7 @@ Hotfix release to address a couple of bugs introduced in v0.8.10
 
 Minor big fix release (but there are some new features).
 
-- added support for Azure AI [See FAQ](https://docs.waveterm.dev/faq#how-can-i-connect-to-azure-ai)
+- added support for Azure AI [See FAQ](https://sanshao85.github.io/tideterm/faq#how-can-i-connect-to-azure-ai)
 - AI errors now appear in the chat
 - on MacOS, hitting "Space" in directorypreview will open selected file in Quick Look
 - [bugfix] fixed transparency settings
@@ -460,7 +460,7 @@ Minor big fix release (but there are some new features).
 
 Lots of bug fixes and new features!
 
-- New "help" view -- uses an embedded version of our doc site -- https://docs.waveterm.dev
+- New "help" view -- uses an embedded version of our doc site -- https://sanshao85.github.io/tideterm/
 - [breaking] wsh getmeta, wsh setmeta, and wsh deleteblock now take a blockid using a `-b` parameter instead of as a positional parameter
 - allow metadata to override the block icon, header, and text (frame:title, frame:icon, and frame:text)
 - home button on web widget to return to the homepage, option to set a homepage default for the whole app or just for the given block
@@ -514,7 +514,7 @@ users to edit files.
 
 - Added a setting `window:disablehardwareacceleration` to disable native hardware acceleration
 - New startup model for legacy users given them the option to download the WaveLegacy
-- Use WAVETERM_HOME for the home directory consistently
+- Use TideTerm's config/data directories consistently
 
 ### v0.8.3 &mdash; Sep 25, 2024
 

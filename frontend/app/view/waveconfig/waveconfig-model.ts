@@ -76,7 +76,7 @@ const configFiles: ConfigFile[] = [
         nameKey: "waveconfig.file.general",
         path: "settings.json",
         language: "json",
-        docsUrl: "https://docs.waveterm.dev/config",
+        docsUrl: "https://github.com/sanshao85/tideterm/blob/main/docs/docs/config.mdx",
         hasJsonView: true,
         visualComponent: SettingsContent,
     },
@@ -85,7 +85,7 @@ const configFiles: ConfigFile[] = [
         nameKey: "waveconfig.file.connections",
         path: "connections.json",
         language: "json",
-        docsUrl: "https://docs.waveterm.dev/connections",
+        docsUrl: "https://github.com/sanshao85/tideterm/blob/main/docs/docs/connections.mdx",
         descriptionKey: isWindows()
             ? "waveconfig.connections.description.sshHostsAndWslDistros"
             : "waveconfig.connections.description.sshHosts",
@@ -96,16 +96,16 @@ const configFiles: ConfigFile[] = [
         nameKey: "waveconfig.file.sidebarWidgets",
         path: "widgets.json",
         language: "json",
-        docsUrl: "https://docs.waveterm.dev/customwidgets",
+        docsUrl: "https://github.com/sanshao85/tideterm/blob/main/docs/docs/customwidgets.mdx",
         hasJsonView: true,
     },
     {
-        name: "Wave AI Modes",
+        name: "AI Modes",
         nameKey: "waveconfig.file.waveAiModes",
         path: "waveai.json",
         language: "json",
         descriptionKey: "waveconfig.waveAiModes.description",
-        docsUrl: "https://docs.waveterm.dev/waveai-modes",
+        docsUrl: "https://github.com/sanshao85/tideterm/blob/main/docs/docs/waveai-modes.mdx",
         validator: validateWaveAiJson,
         hasJsonView: true,
         // visualComponent: WaveAIVisualContent,
@@ -115,7 +115,7 @@ const configFiles: ConfigFile[] = [
         nameKey: "waveconfig.file.tabBackgrounds",
         path: "presets/bg.json",
         language: "json",
-        docsUrl: "https://docs.waveterm.dev/presets#background-configurations",
+        docsUrl: "https://github.com/sanshao85/tideterm/blob/main/docs/docs/presets.mdx",
         validator: validateBgJson,
         hasJsonView: true,
     },
@@ -144,7 +144,7 @@ const deprecatedConfigFiles: ConfigFile[] = [
         path: "presets/ai.json",
         language: "json",
         deprecated: true,
-        docsUrl: "https://docs.waveterm.dev/ai-presets",
+        docsUrl: "https://github.com/sanshao85/tideterm/blob/main/docs/docs/ai-presets.mdx",
         validator: validateAiJson,
         hasJsonView: true,
     },
@@ -154,7 +154,7 @@ export class WaveConfigViewModel implements ViewModel {
     blockId: string;
     viewType = "waveconfig";
     viewIcon = atom("gear");
-    viewName = atom("Wave Config");
+    viewName = atom("Settings");
     viewComponent = WaveConfigView;
     noPadding = atom(true);
     nodeModel: BlockNodeModel;

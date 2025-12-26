@@ -39,12 +39,12 @@ URI format: [profile]:[uri-scheme]://[connection]/[path]
 Supported URI schemes:
   wsh:
     Used to access files on remote hosts over SSH via the WSH helper. Allows
-    for file streaming to Wave and other remotes.
+    for file streaming to TideTerm and other remotes.
 
     Profiles are optional for WSH URIs, provided that you have configured the
     remote host in your "connections.json" or "~/.ssh/config" file.
 
-    If a profile is provided, it must be defined in "profiles.json" in the Wave
+    If a profile is provided, it must be defined in "profiles.json" in the TideTerm
     configuration directory.
 
     Format: wsh://[remote]/[path]
@@ -58,7 +58,7 @@ Supported URI schemes:
     Used to access files on S3-compatible systems.
 
     Requires S3 credentials to be set up, either in the AWS CLI configuration
-    files, or in "profiles.json" in the Wave configuration directory.
+    files, or in "profiles.json" in the TideTerm configuration directory.
 
     If no profile is provided, the default from your AWS CLI configuration will
     be used. Profiles from the AWS CLI must be prefixed with "aws:".
@@ -67,7 +67,7 @@ Supported URI schemes:
             aws:[profile]:s3://[bucket]/[path]
             [profile]:s3://[bucket]/[path]
   wavefile:
-    Used to retrieve blockfiles from the internal Wave filesystem.
+    Used to retrieve blockfiles from the internal TideTerm filesystem.
 
     Format: wavefile://[zoneid]/[path]`
 )
@@ -77,9 +77,9 @@ var fileCmd = &cobra.Command{
 	Short: "manage files across different storage systems",
 	Long: `Manage files across different storage systems.
     
-Wave Terminal is capable of managing files from remote SSH hosts, S3-compatible
-systems, and the internal Wave filesystem. Files are addressed via URIs, which
-vary depending on the storage system.` + UriHelpText}
+TideTerm is capable of managing files from remote SSH hosts, S3-compatible
+systems, and the internal filesystem. Files are addressed via URIs, which vary
+depending on the storage system.` + UriHelpText}
 
 var fileTimeout int64
 

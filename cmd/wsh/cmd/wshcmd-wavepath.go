@@ -15,8 +15,9 @@ import (
 )
 
 var wavepathCmd = &cobra.Command{
-	Use:     "wavepath {config|data|log}",
-	Short:   "Get paths to various waveterm files and directories",
+	Use:     "appath {config|data|log}",
+	Aliases: []string{"wavepath", "tidpath"},
+	Short:   "Get paths to various TideTerm files and directories",
 	RunE:    wavepathRun,
 	PreRunE: preRunSetupRpcClient,
 }
@@ -35,11 +36,11 @@ func wavepathRun(cmd *cobra.Command, args []string) (rtnErr error) {
 
 	if len(args) == 0 {
 		OutputHelpMessage(cmd)
-		return fmt.Errorf("no arguments. wsh wavepath requires a type argument (config, data, or log)")
+		return fmt.Errorf("no arguments. wsh appath requires a type argument (config, data, or log)")
 	}
 	if len(args) > 1 {
 		OutputHelpMessage(cmd)
-		return fmt.Errorf("too many arguments. wsh wavepath requires exactly one argument")
+		return fmt.Errorf("too many arguments. wsh appath requires exactly one argument")
 	}
 
 	pathType := args[0]

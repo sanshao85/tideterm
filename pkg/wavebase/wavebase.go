@@ -48,12 +48,12 @@ const (
 
 const NeedJwtConst = "NEED-JWT"
 
-var ConfigHome_VarCache string          // caches WAVETERM_CONFIG_HOME
-var DataHome_VarCache string            // caches WAVETERM_DATA_HOME
-var AppPath_VarCache string             // caches WAVETERM_APP_PATH
-var AppResourcesPath_VarCache string    // caches WAVETERM_RESOURCES_PATH
-var AppElectronExecPath_VarCache string // caches WAVETERM_ELECTRONEXECPATH
-var Dev_VarCache string                 // caches WAVETERM_DEV
+var ConfigHome_VarCache string          // caches TIDETERM_CONFIG_HOME
+var DataHome_VarCache string            // caches TIDETERM_DATA_HOME
+var AppPath_VarCache string             // caches TIDETERM_APP_PATH
+var AppResourcesPath_VarCache string    // caches TIDETERM_RESOURCES_PATH
+var AppElectronExecPath_VarCache string // caches TIDETERM_ELECTRONEXECPATH
+var Dev_VarCache string                 // caches TIDETERM_DEV
 
 const WaveLockFile = "tideterm.lock"
 const DomainSocketBaseName = "tideterm.sock"

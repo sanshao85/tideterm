@@ -6,7 +6,7 @@ const UpgradeOnboardingModal_v0_12_2_Content = () => {
         <div className="flex flex-col items-start gap-6 w-full mb-4 unselectable">
             <div className="text-secondary leading-relaxed">
                 <p className="mb-0">
-                    Wave AI can now create and modify files with visual diff previews and easy rollback capabilities.
+                    TideTerm AI can now create and modify files with visual diff previews and easy rollback capabilities.
                     Plus performance improvements and bug fixes.
                 </p>
             </div>
@@ -16,11 +16,11 @@ const UpgradeOnboardingModal_v0_12_2_Content = () => {
                     <i className="text-[24px] text-accent fa-solid fa-file-pen"></i>
                 </div>
                 <div className="flex flex-col items-start gap-2 flex-1">
-                    <div className="text-foreground text-base font-semibold leading-[18px]">Wave AI File Editing</div>
+                    <div className="text-foreground text-base font-semibold leading-[18px]">TideTerm AI File Editing</div>
                     <div className="text-secondary leading-5">
                         <ul className="list-disc list-outside space-y-1 pl-5">
                             <li>
-                                <strong>File Write Tool</strong> - Wave AI can now create and modify files with your
+                                <strong>File Write Tool</strong> - TideTerm AI can now create and modify files with your
                                 approval
                             </li>
                             <li>
@@ -45,7 +45,7 @@ const UpgradeOnboardingModal_v0_12_2_Content = () => {
                     </div>
                     <div className="text-secondary leading-5">
                         <ul className="list-disc list-outside space-y-1 pl-5">
-                            <li>Drag & drop files from preview viewer directly to Wave AI</li>
+                            <li>Drag & drop files from preview viewer directly to TideTerm AI</li>
                             <li>
                                 Directory listings support in <span className="font-mono">`wsh ai`</span> commands
                             </li>

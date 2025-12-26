@@ -15,8 +15,8 @@ import (
 
 var connCmd = &cobra.Command{
 	Use:   "conn",
-	Short: "manage Wave Terminal connections",
-	Long:  "Commands to manage Wave Terminal SSH and WSL connections",
+	Short: "manage TideTerm connections",
+	Long:  "Commands to manage TideTerm SSH and WSL connections",
 }
 
 var connStatusCmd = &cobra.Command{

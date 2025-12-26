@@ -23,8 +23,8 @@ import (
 
 var aiCmd = &cobra.Command{
 	Use:   "ai [options] [files...]",
-	Short: "Append content to Wave AI sidebar prompt",
-	Long: `Append content to Wave AI sidebar prompt (does not auto-submit by default)
+	Short: "Append content to TideTerm AI sidebar prompt",
+	Long: `Append content to TideTerm AI sidebar prompt (does not auto-submit by default)
 
 Arguments:
   files...               Files to attach (use '-' for stdin)

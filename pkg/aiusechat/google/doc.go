@@ -1,7 +1,7 @@
 // Copyright 2025, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-// Package google provides Google Generative AI integration for WaveTerm.
+// Package google provides Google Generative AI integration for TideTerm.
 //
 // This package implements file summarization using Google's Gemini models.
 // Unlike other AI provider implementations in the aiusechat package, this

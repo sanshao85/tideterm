@@ -101,8 +101,8 @@ async function initWaveWrap(initOpts: WaveInitOpts) {
 }
 
 async function reinitWave() {
-    console.log("Reinit Wave");
-    getApi().sendLog("Reinit Wave");
+    console.log("Reinit TideTerm");
+    getApi().sendLog("Reinit TideTerm");
 
     // We use this hack to prevent a flicker of the previously-hovered tab when this view was last active.
     document.body.classList.add("nohover");
@@ -152,7 +152,7 @@ function loadAllWorkspaceTabs(ws: Workspace) {
 }
 
 async function initWave(initOpts: WaveInitOpts) {
-    getApi().sendLog("Init Wave " + JSON.stringify(initOpts));
+    getApi().sendLog("Init TideTerm " + JSON.stringify(initOpts));
     const globalInitOpts: GlobalInitOptions = {
         tabId: initOpts.tabId,
         clientId: initOpts.clientId,
@@ -161,7 +161,7 @@ async function initWave(initOpts: WaveInitOpts) {
         environment: "renderer",
         primaryTabStartup: initOpts.primaryTabStartup,
     };
-    console.log("Wave Init", globalInitOpts);
+    console.log("TideTerm Init", globalInitOpts);
     globalStore.set(activeTabIdAtom, initOpts.tabId);
     await GlobalModel.getInstance().initialize(globalInitOpts);
     initGlobal(globalInitOpts);
@@ -202,7 +202,7 @@ async function initWave(initOpts: WaveInitOpts) {
     globalStore.set(atoms.fullConfigAtom, fullConfig);
     const waveaiModeConfig = await RpcApi.GetWaveAIModeConfigCommand(TabRpcClient);
     globalStore.set(atoms.waveaiModeConfigAtom, waveaiModeConfig.configs);
-    console.log("Wave First Render");
+    console.log("TideTerm First Render");
     let firstRenderResolveFn: () => void = null;
     let firstRenderPromise = new Promise<void>((resolve) => {
         firstRenderResolveFn = resolve;
@@ -212,7 +212,7 @@ async function initWave(initOpts: WaveInitOpts) {
     const root = createRoot(elem);
     root.render(reactElem);
     await firstRenderPromise;
-    console.log("Wave First Render Done");
+    console.log("TideTerm First Render Done");
     getApi().setWindowInitStatus("wave-ready");
 }
 

@@ -6,7 +6,7 @@ title: "Presets"
 
 # Presets
 
-Wave's preset system allows you to save and apply multiple configuration settings at once. Presets are used for:
+TideTerm's preset system allows you to save and apply multiple configuration settings at once. Presets are used for:
 
 - Tab backgrounds: Apply visual styles to your tabs
 
@@ -14,8 +14,8 @@ Wave's preset system allows you to save and apply multiple configuration setting
 
 You can store presets in two locations:
 
-- `~/.config/waveterm/presets.json`: Main presets file
-- `~/.config/waveterm/presets/`: Directory for organizing presets into separate files
+- `<config-dir>/presets.json`: Main presets file (see `wsh appath config`)
+- `<config-dir>/presets/`: Directory for organizing presets into separate files
 
 All presets are aggregated regardless of which file they're in, so you can use the `presets` directory to organize them (e.g., `presets/bg.json`).
 
@@ -44,7 +44,7 @@ Presets follow this format:
 }
 ```
 
-The `preset-type` determines where the preset appears in Wave's interface:
+The `preset-type` determines where the preset appears in TideTerm's interface:
 
 - `bg`: Appears in the "Backgrounds" submenu when right-clicking a tab
 

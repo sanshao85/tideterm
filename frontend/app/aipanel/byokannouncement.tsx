@@ -42,8 +42,8 @@ const BYOKAnnouncement = () => {
                 <div className="text-left flex-1">
                     <div className="text-blue-400 font-medium mb-1">New: BYOK & Local AI Support</div>
                     <div className="text-secondary text-sm mb-3">
-                        Wave AI now supports bring-your-own-key (BYOK) with OpenAI, Google Gemini, Azure, and
-                        OpenRouter, plus local models via Ollama, LM Studio, and other OpenAI-compatible providers.
+                        TideTerm supports bring-your-own-key (BYOK) with OpenAI, Google Gemini, Azure, and OpenRouter,
+                        plus local models via Ollama, LM Studio, and other OpenAI-compatible providers.
                     </div>
                     <div className="flex items-center gap-3">
                         <button
@@ -53,7 +53,7 @@ const BYOKAnnouncement = () => {
                             Configure AI Modes
                         </button>
                         <a
-                            href="https://docs.waveterm.dev/waveai-modes"
+                            href="https://github.com/sanshao85/tideterm/blob/main/docs/docs/waveai-modes.mdx"
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={handleViewDocs}

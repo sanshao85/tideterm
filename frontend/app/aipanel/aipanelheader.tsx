@@ -26,7 +26,7 @@ export const AIPanelHeader = memo(() => {
         >
             <h2 className="text-white text-sm @xs:text-lg font-semibold flex items-center gap-2 flex-shrink-0 whitespace-nowrap">
                 <i className="fa fa-sparkles text-accent"></i>
-                Wave AI
+                TideTerm AI
             </h2>
 
             <div className="flex items-center flex-shrink-0 whitespace-nowrap">

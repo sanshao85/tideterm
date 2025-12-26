@@ -1,5 +1,5 @@
 {
-    "name": "waveterm-docs",
+    "name": "tideterm-docs",
     "version": "0.0.0",
     "scripts": {
         "docusaurus": "docusaurus",
@@ -21,9 +21,7 @@
         "@docusaurus/plugin-sitemap": "^3.9.2",
         "@docusaurus/plugin-svgr": "^3.9.2",
         "@docusaurus/theme-classic": "^3.9.2",
-        "@docusaurus/theme-search-algolia": "^3.9.2",
         "@mdx-js/react": "^3.0.0",
-        "@waveterm/docusaurus-og": "https://codeload.github.com/wavetermdev/docusaurus-og/tar.gz/2156619012b8970d922c1ef47789d2f14e47e283",
         "clsx": "^2.1.1",
         "docusaurus-plugin-sass": "^0.2.6",
         "prism-react-renderer": "^2.4.1",

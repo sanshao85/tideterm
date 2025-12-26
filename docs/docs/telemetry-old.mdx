@@ -22,7 +22,7 @@ wsh setconfig telemetry:enabled=true
 
 ## Sending Telemetry
 
-Provided that telemetry is enabled, it is sent 10 seconds after Waveterm is first booted and then again every 4 hours thereafter. It can also be sent in response to a few special cases listed below. When telemetry is sent, it is grouped into individual days as determined by your time zone. Any data from a previous day is marked as `Uploaded` so it will not need to be sent again.
+Provided that telemetry is enabled, it is sent 10 seconds after TideTerm is first booted and then again every 4 hours thereafter. It can also be sent in response to a few special cases listed below. When telemetry is sent, it is grouped into individual days as determined by your time zone. Any data from a previous day is marked as `Uploaded` so it will not need to be sent again.
 
 ### Sending Once Telemetry is Enabled
 
@@ -30,11 +30,11 @@ As soon as telemetry is enabled, a telemetry update is sent regardless of how lo
 
 ### Notifying that Telemetry is Disabled
 
-As soon as telemetry is disabled, Waveterm sends a special update that notifies us of this change. See [When Telemetry is Turned Off](#when-telemetry-is-turned-off) for more info. The timer still runs in the background but no data is sent.
+As soon as telemetry is disabled, TideTerm may send a special update that notifies the configured endpoint of this change. See [When Telemetry is Turned Off](#when-telemetry-is-turned-off) for more info. The timer still runs in the background but no data is sent.
 
-### When Waveterm is Closed
+### When TideTerm is Closed
 
-Provided that telemetry is enabled, it will be sent when Waveterm is closed.
+Provided that telemetry is enabled, it will be sent when TideTerm is closed.
 
 ---
 
@@ -44,9 +44,9 @@ When telemetry is active, we collect the following data. It is stored in the `te
 
 | Name          | Description                                                                                                                                                                     |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ActiveMinutes | The number of minutes that the user has actively used Waveterm on a given day. This requires the terminal window to be in focus while the user is actively interacting with it. |
-| FgMinutes     | The number of minutes that Waveterm has been in the foreground on a given day. This requires the terminal window to be in focus regardless of user interaction.                 |
-| OpenMinutes   | The number of minutes that Waveterm has been open on a given day. This only requires that the terminal is open, even if the window is out of focus.                             |
+| ActiveMinutes | The number of minutes that the user has actively used TideTerm on a given day. This requires the terminal window to be in focus while the user is actively interacting with it. |
+| FgMinutes     | The number of minutes that TideTerm has been in the foreground on a given day. This requires the terminal window to be in focus regardless of user interaction.                 |
+| OpenMinutes   | The number of minutes that TideTerm has been open on a given day. This only requires that the terminal is open, even if the window is out of focus.                             |
 | NumBlocks     | The number of existing blocks open on a given day                                                                                                                               |
 | NumTabs       | The number of existing tabs open on a given day.                                                                                                                                |
 | NewTab        | The number of new tabs created on a given day                                                                                                                                   |
@@ -77,7 +77,7 @@ In addition to the telemetry data collected, the following is also reported. It 
 | Uploaded      | A boolean that indicates if the telemetry for this day is finalized. It is false during the day the telemetry is associated with, but gets set true at the first telemetry upload after that. Once it is true, the data for that particular day will not be sent up with the telemetry any more. |
 | TzName        | The code for the timezone the user's OS is reporting (e.g. PST, GMT, JST)                                                                                                                                                                                                                        |
 | TzOffset      | The offset for the timezone the user's OS is reporting (e.g. -08:00, +00:00, +09:00)                                                                                                                                                                                                             |
-| ClientVersion | Which version of Waveterm is installed.                                                                                                                                                                                                                                                          |
+| ClientVersion | Which version of TideTerm is installed.                                                                                                                                                                                                                                                          |
 | ClientArch    | This includes the user's operating system (e.g. linux or darwin) and architecture (e.g. x86_64 or arm64). It does not include data for any Connections at this time.                                                                                                                             |
 | BuildTime     | This serves as a more accurate version number that keeps track of when we built the version. It has no bearing on when that version was installed by you.                                                                                                                                        |
 | OSRelease     | This lists the version of the operating system the user has installed.                                                                                                                                                                                                                           |
@@ -90,7 +90,7 @@ Lastly, some data is sent along with the telemetry that describes how to classif
 | Name              | Description                                                                                                                 |
 | ----------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | UserId            | Currently Unused. This is an anonymous UUID intended for use in future features.                                            |
-| ClientId          | This is an anonymous UUID created when Waveterm is first launched. It is used for telemetry and sending prompts to Open AI. |
+| ClientId          | This is an anonymous UUID created when TideTerm is first launched. It is used for telemetry and sending prompts to Open AI. |
 | AppType           | This is used to differentiate the current version of waveterm from the legacy app.                                          |
 | AutoUpdateEnabled | Whether or not auto update is turned on.                                                                                    |
 | AutoUpdateChannel | The type of auto update in use. This specifically refers to whether a latest or beta channel is selected.                   |
@@ -109,7 +109,7 @@ We do not store IP addresses in our telemetry table. However, CloudFlare passes 
 
 ## When Telemetry is Turned Off
 
-When a user disables telemetry, Waveterm sends a notification that their anonymous _ClientId_ has had its telemetry disabled. This is done with the `wcloud.NoTelemetryInputType` type in the source code. Beyond that, no further information is sent unless telemetry is turned on again. If it is turned on again, the previous 30 days of telemetry will be sent.
+When a user disables telemetry, TideTerm may send a notification that their anonymous _ClientId_ has had its telemetry disabled (if an endpoint is configured). This is done with the `wcloud.NoTelemetryInputType` type in the source code. Beyond that, no further information is sent unless telemetry is turned on again.
 
 ---
 
@@ -121,10 +121,10 @@ Telemetry is uploaded via https, which means your IP address is known to the tel
 
 ## Previously Collected Telemetry Data
 
-While we believe the data we collect with telemetry is fairly minimal, we cannot make that decision for every user. If you ever change your mind about what has been collected previously, you may request that your data be deleted by emailing us at [support@waveterm.dev](mailto:support@waveterm.dev). If you do, we will need your _ClientId_ to remove it.
+If you enabled telemetry and pointed TideTerm at an endpoint you control, deletion is handled by that endpoint operator. TideTerm does not run a default public telemetry endpoint.
 
 ---
 
 ## Privacy Policy
 
-For a summary of the above, you can take a look at our [Privacy Policy](https://www.waveterm.dev/privacy).
+For a summary of the above, see `PRIVACY.md` in the repository: https://github.com/sanshao85/tideterm/blob/main/PRIVACY.md

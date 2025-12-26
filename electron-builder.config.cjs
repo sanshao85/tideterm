@@ -27,7 +27,7 @@ const config = {
         {
             from: ".",
             to: ".",
-            filter: ["package.json"],
+            filter: ["package.json", "LICENSE", "NOTICE", "MODIFICATIONS.md", "ACKNOWLEDGEMENTS.md"],
         },
         "!node_modules", // We don't need electron-builder to package in Node modules as Vite has already bundled any code that our program is using.
     ],

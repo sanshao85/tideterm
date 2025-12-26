@@ -374,7 +374,7 @@ type WshInstallOpts struct {
 }
 
 var queryTextTemplate = strings.TrimSpace(`
-Wave requires Wave Shell Extensions to be
+TideTerm requires TideTerm Shell Extensions (wsh) to be
 installed on %q
 to ensure a seamless experience.
 
@@ -401,7 +401,7 @@ func (conn *WslConn) UpdateWsh(ctx context.Context, clientDisplayName string, re
 func (conn *WslConn) getPermissionToInstallWsh(ctx context.Context, clientDisplayName string) (bool, error) {
 	conn.Infof(ctx, "running getPermissionToInstallWsh...\n")
 	queryText := fmt.Sprintf(queryTextTemplate, clientDisplayName)
-	title := "Install Wave Shell Extensions"
+	title := "Install TideTerm Shell Extensions"
 	request := &userinput.UserInputRequest{
 		ResponseType: "confirm",
 		QueryText:    queryText,

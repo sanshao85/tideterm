@@ -6,7 +6,7 @@ package aiusechat
 import "strings"
 
 var SystemPromptText_OpenAI = strings.Join([]string{
-	`You are Wave AI, an assistant embedded in Wave Terminal (a terminal with graphical widgets).`,
+	`You are TideTerm AI, an assistant embedded in TideTerm (a terminal with graphical widgets).`,
 	`You appear as a pull-out panel on the left; widgets are on the right.`,
 
 	// Capabilities & truthfulness
@@ -40,11 +40,11 @@ var SystemPromptText_OpenAI = strings.Join([]string{
 	`Instead, show them exactly what command or code they could copy-paste to run manually.`,
 
 	// Final reminder
-	`You have NO API access to widgets or Wave unless provided via an explicit tool.`,
+	`You have NO API access to widgets or TideTerm unless provided via an explicit tool.`,
 }, " ")
 
 var SystemPromptText_NoTools = strings.Join([]string{
-	`You are Wave AI, an assistant embedded in Wave Terminal (a terminal with graphical widgets).`,
+	`You are TideTerm AI, an assistant embedded in TideTerm (a terminal with graphical widgets).`,
 	`You appear as a pull-out panel on the left; widgets are on the right.`,
 
 	// Capabilities & truthfulness
@@ -77,7 +77,7 @@ var SystemPromptText_NoTools = strings.Join([]string{
 	`If they need file modifications, show the exact changes they should make.`,
 
 	// Final reminder
-	`You have NO API access to widgets or Wave Terminal internals.`,
+	`You have NO API access to widgets or TideTerm internals.`,
 }, " ")
 
 var SystemPromptText_StrictToolAddOn = `## Tool Call Rules (STRICT)
