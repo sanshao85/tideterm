@@ -26,6 +26,7 @@ require (
 	github.com/launchdarkly/eventsource v1.11.0
 	github.com/mattn/go-sqlite3 v1.14.32
 	github.com/mitchellh/mapstructure v1.5.0
+	github.com/sanshao85/tideterm/tsunami v0.12.3
 	github.com/sashabaranov/go-openai v1.41.2
 	github.com/sawka/txwrap v0.2.0
 	github.com/shirou/gopsutil/v4 v4.25.11
@@ -34,7 +35,6 @@ require (
 	github.com/spf13/cobra v1.10.2
 	github.com/ubuntu/gowsl v0.0.0-20240906163211-049fd49bd93b
 	github.com/wavetermdev/htmltoken v0.2.0
-	github.com/sanshao85/tideterm/tsunami v0.12.3
 	golang.org/x/crypto v0.46.0
 	golang.org/x/mod v0.30.0
 	golang.org/x/sync v0.19.0

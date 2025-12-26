@@ -60,7 +60,7 @@ export async function createBuilderWindow(appId: string): Promise<BuilderWindowT
         titleBarStyle: unamePlatform === "darwin" ? "hiddenInset" : "default",
         icon:
             unamePlatform === "linux"
-                ? path.join(getElectronAppBasePath(), "public/logos/wave-logo-dark.png")
+                ? path.join(getElectronAppBasePath(), "public/logos/tideterm-logo-256.png")
                 : undefined,
         show: false,
         backgroundColor: "#222222",

@@ -4,7 +4,6 @@
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react-swc";
 import { defineConfig } from "electron-vite";
-import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 import svgr from "vite-plugin-svgr";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -165,7 +164,6 @@ export default defineConfig({
         },
         plugins: [
             tsconfigPaths(),
-            { ...ViteImageOptimizer(), apply: "build" },
             svgr({
                 svgrOptions: { exportType: "default", ref: true, svgo: false, titleProp: true },
                 include: "**/*.svg",

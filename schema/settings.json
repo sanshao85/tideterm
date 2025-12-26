@@ -24,11 +24,7 @@
           "type": "boolean"
         },
         "app:language": {
-          "type": "string",
-          "enum": [
-            "en",
-            "zh-CN"
-          ]
+          "type": "string"
         },
         "feature:waveappbuilder": {
           "type": "boolean"

@@ -166,7 +166,7 @@ func (c *ClientImpl) getFaviconPath() string {
 			}
 		}
 	}
-	return "/wave-logo-256.png"
+	return "/tideterm-logo-256.png"
 }
 
 func (c *ClientImpl) makeBackendOpts() *rpctypes.VDomBackendOpts {
