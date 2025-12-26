@@ -73,7 +73,7 @@ const InitPage = ({ isCompact }: { isCompact: boolean }) => {
                         <div>
                             <a
                                 target="_blank"
-                                href="https://github.com/wavetermdev/waveterm?ref=install"
+                                href="https://github.com/sanshao85/tideterm?ref=install"
                                 rel={"noopener"}
                             >
                                 <i className="text-[32px] text-white/50 fa-brands fa-github"></i>
@@ -86,7 +86,7 @@ const InitPage = ({ isCompact }: { isCompact: boolean }) => {
                                 users. Please show your support by giving us a star on{" "}
                                 <a
                                     target="_blank"
-                                    href="https://github.com/wavetermdev/waveterm?ref=install"
+                                    href="https://github.com/sanshao85/tideterm?ref=install"
                                     rel={"noopener"}
                                 >
                                     Github&nbsp;(wavetermdev/waveterm)
@@ -162,7 +162,7 @@ const NoTelemetryStarPage = ({ isCompact }: { isCompact: boolean }) => {
             oref: WOS.makeORef("client", clientId),
             meta: { "onboarding:githubstar": true },
         });
-        window.open("https://github.com/wavetermdev/waveterm?ref=not", "_blank");
+        window.open("https://github.com/sanshao85/tideterm?ref=not", "_blank");
         setPageName("features");
     };
 

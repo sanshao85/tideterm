@@ -14,11 +14,11 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/wavetermdev/waveterm/pkg/util/fileutil"
-	"github.com/wavetermdev/waveterm/pkg/util/utilfn"
-	"github.com/wavetermdev/waveterm/pkg/wshrpc"
-	"github.com/wavetermdev/waveterm/pkg/wshrpc/wshclient"
-	"github.com/wavetermdev/waveterm/pkg/wshutil"
+	"github.com/sanshao85/tideterm/pkg/util/fileutil"
+	"github.com/sanshao85/tideterm/pkg/util/utilfn"
+	"github.com/sanshao85/tideterm/pkg/wshrpc"
+	"github.com/sanshao85/tideterm/pkg/wshrpc/wshclient"
+	"github.com/sanshao85/tideterm/pkg/wshutil"
 )
 
 var aiCmd = &cobra.Command{
@@ -160,10 +160,10 @@ func aiRun(cmd *cobra.Command, args []string) (rtnErr error) {
 		})
 	}
 
-	tabId := os.Getenv("WAVETERM_TABID")
-	if tabId == "" {
-		return fmt.Errorf("WAVETERM_TABID environment variable not set")
-	}
+		tabId := os.Getenv("TIDETERM_TABID")
+		if tabId == "" {
+			return fmt.Errorf("TIDETERM_TABID environment variable not set")
+		}
 
 	route := wshutil.MakeTabRouteId(tabId)
 

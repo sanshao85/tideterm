@@ -11,12 +11,12 @@ import (
 	"io/fs"
 	"strings"
 
-	"github.com/wavetermdev/waveterm/pkg/remote/connparse"
-	"github.com/wavetermdev/waveterm/pkg/remote/fileshare/fsutil"
-	"github.com/wavetermdev/waveterm/pkg/util/fileutil"
-	"github.com/wavetermdev/waveterm/pkg/util/wavefileutil"
-	"github.com/wavetermdev/waveterm/pkg/wshrpc"
-	"github.com/wavetermdev/waveterm/pkg/wshrpc/wshclient"
+	"github.com/sanshao85/tideterm/pkg/remote/connparse"
+	"github.com/sanshao85/tideterm/pkg/remote/fileshare/fsutil"
+	"github.com/sanshao85/tideterm/pkg/util/fileutil"
+	"github.com/sanshao85/tideterm/pkg/util/wavefileutil"
+	"github.com/sanshao85/tideterm/pkg/wshrpc"
+	"github.com/sanshao85/tideterm/pkg/wshrpc/wshclient"
 )
 
 func convertNotFoundErr(err error) error {

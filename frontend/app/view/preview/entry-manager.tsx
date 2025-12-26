@@ -3,13 +3,21 @@
 
 import { Button } from "@/app/element/button";
 import { Input } from "@/app/element/input";
+import { useT } from "@/app/i18n/i18n";
+import type { I18nKey } from "@/app/i18n/i18n-core";
 import React, { memo, useState } from "react";
 
 export enum EntryManagerType {
-    NewFile = "New File",
-    NewDirectory = "New Folder",
-    EditName = "Rename",
+    NewFile = "newFile",
+    NewDirectory = "newFolder",
+    EditName = "rename",
 }
+
+const entryManagerTitleKeys: Record<EntryManagerType, I18nKey> = {
+    [EntryManagerType.NewFile]: "filemenu.newFile",
+    [EntryManagerType.NewDirectory]: "filemenu.newFolder",
+    [EntryManagerType.EditName]: "filemenu.rename",
+};
 
 export type EntryManagerOverlayProps = {
     forwardRef?: React.Ref<HTMLDivElement>;
@@ -31,10 +39,11 @@ export const EntryManagerOverlay = memo(
         style,
         getReferenceProps,
     }: EntryManagerOverlayProps) => {
+        const t = useT();
         const [value, setValue] = useState(startingValue);
         return (
             <div className="entry-manager-overlay" ref={forwardRef} style={style} {...(getReferenceProps?.() ?? {})}>
-                <div className="entry-manager-type">{entryManagerType}</div>
+                <div className="entry-manager-type">{t(entryManagerTitleKeys[entryManagerType])}</div>
                 <div className="entry-manager-input">
                     <Input
                         value={value}
@@ -51,10 +60,10 @@ export const EntryManagerOverlay = memo(
                 </div>
                 <div className="entry-manager-buttons">
                     <Button className="py-[4px]" onClick={() => onSave(value)}>
-                        Save
+                        {t("common.save")}
                     </Button>
                     <Button className="py-[4px] red outlined" onClick={onCancel}>
-                        Cancel
+                        {t("common.cancel")}
                     </Button>
                 </div>
             </div>

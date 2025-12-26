@@ -5,7 +5,7 @@ import { useOnResize } from "@/app/hook/useDimensions";
 import { atoms, globalStore, WOS } from "@/app/store/global";
 import { fireAndForget } from "@/util/util";
 import { Atom, useAtomValue } from "jotai";
-import { CSSProperties, useCallback, useEffect, useState } from "react";
+import { CSSProperties, useEffect, useRef, useState } from "react";
 import { getLayoutStateAtomFromTab } from "./layoutAtom";
 import { LayoutModel } from "./layoutModel";
 import { LayoutNode, NodeModel, TileLayoutContents } from "./types";
@@ -80,34 +80,34 @@ export function useDebouncedNodeInnerRect(nodeModel: NodeModel): CSSProperties {
     const isResizing = useAtomValue(nodeModel.isResizing);
     const prefersReducedMotion = useAtomValue(atoms.prefersReducedMotionAtom);
     const [innerRect, setInnerRect] = useState<CSSProperties>();
-    const [innerRectDebounceTimeout, setInnerRectDebounceTimeout] = useState<NodeJS.Timeout>();
-
-    const setInnerRectDebounced = useCallback(
-        (nodeInnerRect: CSSProperties) => {
-            clearInnerRectDebounce();
-            setInnerRectDebounceTimeout(
-                setTimeout(() => {
-                    setInnerRect(nodeInnerRect);
-                }, animationTimeS * 1000)
-            );
-        },
-        [animationTimeS]
-    );
-    const clearInnerRectDebounce = useCallback(() => {
-        if (innerRectDebounceTimeout) {
-            clearTimeout(innerRectDebounceTimeout);
-            setInnerRectDebounceTimeout(undefined);
-        }
-    }, [innerRectDebounceTimeout]);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
+        // Clear any pending timeout
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
+        }
+
+        // Set immediately if reduced motion, magnified, or resizing
         if (prefersReducedMotion || isMagnified || isResizing) {
-            clearInnerRectDebounce();
             setInnerRect(nodeInnerRect);
         } else {
-            setInnerRectDebounced(nodeInnerRect);
+            // Debounce the update
+            timeoutRef.current = setTimeout(() => {
+                setInnerRect(nodeInnerRect);
+                timeoutRef.current = null;
+            }, animationTimeS * 1000);
         }
-    }, [nodeInnerRect]);
+
+        // Cleanup on unmount or before next effect run
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+                timeoutRef.current = null;
+            }
+        };
+    }, [nodeInnerRect, prefersReducedMotion, isMagnified, isResizing, animationTimeS]);
 
     return innerRect;
 }

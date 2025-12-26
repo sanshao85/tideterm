@@ -16,11 +16,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/wavetermdev/waveterm/pkg/panichandler"
-	"github.com/wavetermdev/waveterm/pkg/util/ds"
-	"github.com/wavetermdev/waveterm/pkg/util/utilfn"
-	"github.com/wavetermdev/waveterm/pkg/wps"
-	"github.com/wavetermdev/waveterm/pkg/wshrpc"
+	"github.com/sanshao85/tideterm/pkg/panichandler"
+	"github.com/sanshao85/tideterm/pkg/util/ds"
+	"github.com/sanshao85/tideterm/pkg/util/utilfn"
+	"github.com/sanshao85/tideterm/pkg/wps"
+	"github.com/sanshao85/tideterm/pkg/wshrpc"
 )
 
 const DefaultTimeoutMs = 5000

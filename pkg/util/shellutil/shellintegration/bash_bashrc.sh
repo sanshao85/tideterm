@@ -4,14 +4,32 @@ if [ -f /etc/profile ]; then
     . /etc/profile
 fi
 
-WAVETERM_WSHBINDIR={{.WSHBINDIR}}
+_waveterm_si_reset_home() {
+    # Ensure HOME matches the passwd entry for the user.
+    # Some environments (containers / custom profiles) override HOME unexpectedly (e.g. to /tmp),
+    # which breaks "~" expansion for users in TideTerm terminals.
+    local _waveterm_user
+    _waveterm_user="$(id -un 2>/dev/null)"
+    if [ -z "$_waveterm_user" ]; then
+        return 0
+    fi
+    local _waveterm_home
+    _waveterm_home="$(eval echo ~${_waveterm_user} 2>/dev/null)"
+    if [ -n "$_waveterm_home" ] && [ "$_waveterm_home" != "$HOME" ]; then
+        export HOME="$_waveterm_home"
+    fi
+}
+
+_waveterm_si_reset_home
+
+TIDETERM_WSHBINDIR={{.WSHBINDIR}}
 
 # after /etc/profile which is likely to clobber the path
-export PATH="$WAVETERM_WSHBINDIR:$PATH"
+export PATH="$TIDETERM_WSHBINDIR:$PATH"
 
 # Source the dynamic script from wsh token
-eval "$(wsh token "$WAVETERM_SWAPTOKEN" bash 2> /dev/null)"
-unset WAVETERM_SWAPTOKEN
+eval "$(wsh token "$TIDETERM_SWAPTOKEN" bash 2> /dev/null)"
+unset TIDETERM_SWAPTOKEN
 
 # Source the first of ~/.bash_profile, ~/.bash_login, or ~/.profile that exists
 if [ -f ~/.bash_profile ]; then
@@ -22,10 +40,13 @@ elif [ -f ~/.profile ]; then
     . ~/.profile
 fi
 
-if [[ ":$PATH:" != *":$WAVETERM_WSHBINDIR:"* ]]; then
-    export PATH="$WAVETERM_WSHBINDIR:$PATH"
+_waveterm_si_reset_home
+unset -f _waveterm_si_reset_home
+
+if [[ ":$PATH:" != *":$TIDETERM_WSHBINDIR:"* ]]; then
+    export PATH="$TIDETERM_WSHBINDIR:$PATH"
 fi
-unset WAVETERM_WSHBINDIR
+unset TIDETERM_WSHBINDIR
 if type _init_completion &>/dev/null; then
   source <(wsh completion bash)
 fi
@@ -39,11 +60,11 @@ fi
 
 # Source bash-preexec for proper preexec/precmd hook support
 if [ -z "${bash_preexec_imported:-}" ]; then
-    _WAVETERM_SI_BASHRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    if [ -f "$_WAVETERM_SI_BASHRC_DIR/bash_preexec.sh" ]; then
-        source "$_WAVETERM_SI_BASHRC_DIR/bash_preexec.sh"
+    _TIDETERM_SI_BASHRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    if [ -f "$_TIDETERM_SI_BASHRC_DIR/bash_preexec.sh" ]; then
+        source "$_TIDETERM_SI_BASHRC_DIR/bash_preexec.sh"
     fi
-    unset _WAVETERM_SI_BASHRC_DIR
+    unset _TIDETERM_SI_BASHRC_DIR
 fi
 
 # Check if bash-preexec was successfully imported
@@ -53,9 +74,9 @@ if [ -z "${bash_preexec_imported:-}" ]; then
     return 0
 fi
 
-_WAVETERM_SI_FIRSTPROMPT=1
+_TIDETERM_SI_FIRSTPROMPT=1
 
-# Wave Terminal Shell Integration
+# TideTerm Shell Integration
 _waveterm_si_blocked() {
     [[ -n "$TMUX" || -n "$STY" || "$TERM" == tmux* || "$TERM" == screen* ]]
 }
@@ -82,7 +103,7 @@ _waveterm_si_precmd() {
     local _waveterm_si_status=$?
     _waveterm_si_blocked && return
     
-    if [ "$_WAVETERM_SI_FIRSTPROMPT" -eq 1 ]; then
+    if [ "$_TIDETERM_SI_FIRSTPROMPT" -eq 1 ]; then
         local uname_info
         uname_info=$(uname -smr 2>/dev/null)
         printf '\033]16162;M;{"shell":"bash","shellversion":"%s","uname":"%s","integration":true}\007' "$BASH_VERSION" "$uname_info"
@@ -92,7 +113,7 @@ _waveterm_si_precmd() {
     # OSC 7 sent on every prompt - bash has no chpwd hook for directory changes
     _waveterm_si_osc7
     printf '\033]16162;A\007'
-    _WAVETERM_SI_FIRSTPROMPT=0
+    _TIDETERM_SI_FIRSTPROMPT=0
 }
 
 _waveterm_si_preexec() {

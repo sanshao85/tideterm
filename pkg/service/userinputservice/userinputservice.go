@@ -4,7 +4,7 @@
 package userinputservice
 
 import (
-	"github.com/wavetermdev/waveterm/pkg/userinput"
+	"github.com/sanshao85/tideterm/pkg/userinput"
 )
 
 type UserInputService struct {

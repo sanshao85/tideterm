@@ -7,7 +7,9 @@ import { getApi, getBlockMetaKeyAtom, WOS } from "@/app/store/global";
 import { globalStore } from "@/app/store/jotaiStore";
 import { RpcApi } from "@/app/store/wshclientapi";
 import { TabRpcClient } from "@/app/store/wshrpcutil";
+import type { I18nKey } from "@/app/i18n/i18n-core";
 import { SecretsContent } from "@/app/view/waveconfig/secretscontent";
+import { SettingsContent } from "@/app/view/waveconfig/settingscontent";
 import { WaveConfigView } from "@/app/view/waveconfig/waveconfig";
 import { isWindows } from "@/util/platformutil";
 import { base64ToString, stringToBase64 } from "@/util/util";
@@ -20,10 +22,12 @@ type ConfigValidator = (parsed: any) => ValidationResult;
 
 export type ConfigFile = {
     name: string;
+    nameKey?: I18nKey;
     path: string;
     language?: string;
     deprecated?: boolean;
     description?: string;
+    descriptionKey?: I18nKey;
     docsUrl?: string;
     validator?: ConfigValidator;
     isSecrets?: boolean;
@@ -69,21 +73,27 @@ function validateWaveAiJson(parsed: any): ValidationResult {
 const configFiles: ConfigFile[] = [
     {
         name: "General",
+        nameKey: "waveconfig.file.general",
         path: "settings.json",
         language: "json",
         docsUrl: "https://docs.waveterm.dev/config",
         hasJsonView: true,
+        visualComponent: SettingsContent,
     },
     {
         name: "Connections",
+        nameKey: "waveconfig.file.connections",
         path: "connections.json",
         language: "json",
         docsUrl: "https://docs.waveterm.dev/connections",
-        description: isWindows() ? "SSH hosts and WSL distros" : "SSH hosts",
+        descriptionKey: isWindows()
+            ? "waveconfig.connections.description.sshHostsAndWslDistros"
+            : "waveconfig.connections.description.sshHosts",
         hasJsonView: true,
     },
     {
         name: "Sidebar Widgets",
+        nameKey: "waveconfig.file.sidebarWidgets",
         path: "widgets.json",
         language: "json",
         docsUrl: "https://docs.waveterm.dev/customwidgets",
@@ -91,9 +101,10 @@ const configFiles: ConfigFile[] = [
     },
     {
         name: "Wave AI Modes",
+        nameKey: "waveconfig.file.waveAiModes",
         path: "waveai.json",
         language: "json",
-        description: "Local models and BYOK",
+        descriptionKey: "waveconfig.waveAiModes.description",
         docsUrl: "https://docs.waveterm.dev/waveai-modes",
         validator: validateWaveAiJson,
         hasJsonView: true,
@@ -101,6 +112,7 @@ const configFiles: ConfigFile[] = [
     },
     {
         name: "Tab Backgrounds",
+        nameKey: "waveconfig.file.tabBackgrounds",
         path: "presets/bg.json",
         language: "json",
         docsUrl: "https://docs.waveterm.dev/presets#background-configurations",
@@ -109,6 +121,7 @@ const configFiles: ConfigFile[] = [
     },
     {
         name: "Secrets",
+        nameKey: "waveconfig.file.secrets",
         path: "secrets",
         isSecrets: true,
         hasJsonView: false,
@@ -119,6 +132,7 @@ const configFiles: ConfigFile[] = [
 const deprecatedConfigFiles: ConfigFile[] = [
     {
         name: "Presets",
+        nameKey: "waveconfig.file.presets",
         path: "presets.json",
         language: "json",
         deprecated: true,
@@ -126,6 +140,7 @@ const deprecatedConfigFiles: ConfigFile[] = [
     },
     {
         name: "AI Presets",
+        nameKey: "waveconfig.file.aiPresets",
         path: "presets/ai.json",
         language: "json",
         deprecated: true,

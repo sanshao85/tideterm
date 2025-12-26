@@ -13,16 +13,16 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/wavetermdev/waveterm/pkg/panichandler"
-	"github.com/wavetermdev/waveterm/pkg/telemetry/telemetrydata"
-	"github.com/wavetermdev/waveterm/pkg/util/daystr"
-	"github.com/wavetermdev/waveterm/pkg/util/dbutil"
-	"github.com/wavetermdev/waveterm/pkg/util/utilfn"
-	"github.com/wavetermdev/waveterm/pkg/wavebase"
-	"github.com/wavetermdev/waveterm/pkg/waveobj"
-	"github.com/wavetermdev/waveterm/pkg/wconfig"
-	"github.com/wavetermdev/waveterm/pkg/wshrpc"
-	"github.com/wavetermdev/waveterm/pkg/wstore"
+	"github.com/sanshao85/tideterm/pkg/panichandler"
+	"github.com/sanshao85/tideterm/pkg/telemetry/telemetrydata"
+	"github.com/sanshao85/tideterm/pkg/util/daystr"
+	"github.com/sanshao85/tideterm/pkg/util/dbutil"
+	"github.com/sanshao85/tideterm/pkg/util/utilfn"
+	"github.com/sanshao85/tideterm/pkg/wavebase"
+	"github.com/sanshao85/tideterm/pkg/waveobj"
+	"github.com/sanshao85/tideterm/pkg/wconfig"
+	"github.com/sanshao85/tideterm/pkg/wshrpc"
+	"github.com/sanshao85/tideterm/pkg/wstore"
 )
 
 const MaxTzNameLen = 50

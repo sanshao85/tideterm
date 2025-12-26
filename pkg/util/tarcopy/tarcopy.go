@@ -15,10 +15,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/wavetermdev/waveterm/pkg/util/iochan"
-	"github.com/wavetermdev/waveterm/pkg/util/iochan/iochantypes"
-	"github.com/wavetermdev/waveterm/pkg/util/utilfn"
-	"github.com/wavetermdev/waveterm/pkg/wshrpc"
+	"github.com/sanshao85/tideterm/pkg/util/iochan"
+	"github.com/sanshao85/tideterm/pkg/util/iochan/iochantypes"
+	"github.com/sanshao85/tideterm/pkg/util/utilfn"
+	"github.com/sanshao85/tideterm/pkg/wshrpc"
 )
 
 const (

@@ -3,7 +3,7 @@
 We welcome and value contributions to Wave Terminal! Wave is an open source project, always open for contributors. There are several ways you can contribute:
 
 - Submit issues related to bugs or new feature requests
-- Fix outstanding [issues](https://github.com/wavetermdev/waveterm/issues) with the existing code
+- Fix outstanding [issues](https://github.com/sanshao85/tideterm/issues) with the existing code
 - Contribute to [documentation](./docs)
 - Spread the word on social media (tag us on [LinkedIn](https://www.linkedin.com/company/wavetermdev), [Twitter/X](https://x.com/wavetermdev))
 - Or simply ⭐️ the repository to show your appreciation
@@ -30,9 +30,9 @@ We have a set of recommended Visual Studio Code extensions to enforce our style 
 
 ## How to contribute
 
-- For minor changes, you are welcome to [open a pull request](https://github.com/wavetermdev/waveterm/pulls).
-- For major changes, please [create an issue](https://github.com/wavetermdev/waveterm/issues/new) first.
-- If you are looking for a place to start take a look at [Good First Issues](https://github.com/wavetermdev/waveterm/issues?q=is:issue%20state:open%20label:%22good%20first%20issue%22).
+- For minor changes, you are welcome to [open a pull request](https://github.com/sanshao85/tideterm/pulls).
+- For major changes, please [create an issue](https://github.com/sanshao85/tideterm/issues/new) first.
+- If you are looking for a place to start take a look at [Good First Issues](https://github.com/sanshao85/tideterm/issues?q=is:issue%20state:open%20label:%22good%20first%20issue%22).
 - Join the [Discord channel](https://discord.gg/XfvZ334gwU) to collaborate with the community on your contribution.
 
 ### Development Environment

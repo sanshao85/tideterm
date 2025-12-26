@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Tooltip } from "@/app/element/tooltip";
+import { useT } from "@/app/i18n/i18n";
 import { globalStore } from "@/app/store/jotaiStore";
 import { tryReinjectKey } from "@/app/store/keymodel";
 import { CodeEditor } from "@/app/view/codeeditor/codeeditor";
@@ -18,6 +19,7 @@ interface ConfigSidebarProps {
 }
 
 const ConfigSidebar = memo(({ model }: ConfigSidebarProps) => {
+    const t = useT();
     const selectedFile = useAtomValue(model.selectedFileAtom);
     const [isMenuOpen, setIsMenuOpen] = useAtom(model.isMenuOpenAtom);
     const configFiles = model.getConfigFiles();
@@ -31,7 +33,7 @@ const ConfigSidebar = memo(({ model }: ConfigSidebarProps) => {
     return (
         <div className="flex flex-col w-48 border-r border-border @w600:h-full @max-w600:absolute @max-w600:left-0.5 @max-w600:top-0 @max-w600:bottom-0.5 @max-w600:z-10 @max-w600:bg-background @max-w600:shadow-xl @max-w600:rounded-bl">
             <div className="flex items-center justify-between px-4 py-2 border-b border-border @w600:hidden">
-                <span className="font-semibold">Config Files</span>
+                <span className="font-semibold">{t("waveconfig.configFiles")}</span>
                 <button
                     onClick={() => setIsMenuOpen(false)}
                     className="hover:bg-secondary/50 rounded p-1 cursor-pointer transition-colors"
@@ -47,10 +49,12 @@ const ConfigSidebar = memo(({ model }: ConfigSidebarProps) => {
                         selectedFile?.path === file.path ? "bg-accentbg text-primary" : "hover:bg-secondary/50"
                     }`}
                 >
-                    <div className="whitespace-nowrap overflow-hidden text-ellipsis">{file.name}</div>
-                    {file.description && (
+                    <div className="whitespace-nowrap overflow-hidden text-ellipsis">
+                        {file.nameKey ? t(file.nameKey) : file.name}
+                    </div>
+                    {(file.descriptionKey || file.description) && (
                         <div className="text-xs text-muted mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
-                            {file.description}
+                            {file.descriptionKey ? t(file.descriptionKey) : file.description}
                         </div>
                     )}
                 </div>
@@ -66,7 +70,7 @@ const ConfigSidebar = memo(({ model }: ConfigSidebarProps) => {
                             }`}
                         >
                             <div className="flex items-center gap-2 overflow-hidden">
-                                <span className="text-secondary truncate">{file.name}</span>
+                                <span className="text-secondary truncate">{file.nameKey ? t(file.nameKey) : file.name}</span>
                                 <span
                                     className={`text-xs px-1.5 py-0.5 rounded shrink-0 ${
                                         selectedFile?.path === file.path
@@ -74,7 +78,7 @@ const ConfigSidebar = memo(({ model }: ConfigSidebarProps) => {
                                             : "text-muted-foreground/70 bg-secondary/30"
                                     }`}
                                 >
-                                    deprecated
+                                    {t("waveconfig.deprecated")}
                                 </span>
                             </div>
                         </div>
@@ -88,6 +92,7 @@ const ConfigSidebar = memo(({ model }: ConfigSidebarProps) => {
 ConfigSidebar.displayName = "ConfigSidebar";
 
 const WaveConfigView = memo(({ blockId, model }: ViewComponentProps<WaveConfigViewModel>) => {
+    const t = useT();
     const selectedFile = useAtomValue(model.selectedFileAtom);
     const [fileContent, setFileContent] = useAtom(model.fileContentAtom);
     const isLoading = useAtomValue(model.isLoadingAtom);
@@ -161,7 +166,7 @@ const WaveConfigView = memo(({ blockId, model }: ViewComponentProps<WaveConfigVi
         return () => resizeObserver.disconnect();
     }, [model]);
 
-    const saveTooltip = `Save (${model.saveShortcut})`;
+    const saveTooltip = t("waveconfig.saveWithShortcut", { shortcut: model.saveShortcut });
 
     return (
         <div className="@container flex flex-row w-full h-full">
@@ -183,10 +188,10 @@ const WaveConfigView = memo(({ blockId, model }: ViewComponentProps<WaveConfigVi
                                     <i className="fa fa-bars" />
                                 </button>
                                 <div className="text-lg font-semibold whitespace-nowrap shrink-0">
-                                    {selectedFile.name}
+                                    {selectedFile.nameKey ? t(selectedFile.nameKey) : selectedFile.name}
                                 </div>
                                 {selectedFile.docsUrl && (
-                                    <Tooltip content="View documentation">
+                                    <Tooltip content={t("waveconfig.viewDocumentation")}>
                                         <a
                                             href={`${selectedFile.docsUrl}?ref=waveconfig`}
                                             target="_blank"
@@ -206,7 +211,7 @@ const WaveConfigView = memo(({ blockId, model }: ViewComponentProps<WaveConfigVi
                                     <>
                                         {hasChanges && (
                                             <span className="text-xs text-warning pb-0.5 @max-w450:hidden">
-                                                Unsaved changes
+                                                {t("waveconfig.unsavedChanges")}
                                             </span>
                                         )}
                                         <Tooltip content={saveTooltip} placement="bottom" divClassName="shrink-0">
@@ -219,7 +224,7 @@ const WaveConfigView = memo(({ blockId, model }: ViewComponentProps<WaveConfigVi
                                                         : "bg-accent/80 text-primary hover:bg-accent cursor-pointer"
                                                 }`}
                                             >
-                                                {isSaving ? "Saving..." : "Save"}
+                                                {isSaving ? t("common.saving") : t("common.save")}
                                             </button>
                                         </Tooltip>
                                     </>
@@ -237,7 +242,7 @@ const WaveConfigView = memo(({ blockId, model }: ViewComponentProps<WaveConfigVi
                                             : "bg-transparent hover:bg-hover"
                                     )}
                                 >
-                                    Visual
+                                    {t("waveconfig.visual")}
                                 </button>
                                 <button
                                     onClick={() => setActiveTab("json")}
@@ -248,7 +253,7 @@ const WaveConfigView = memo(({ blockId, model }: ViewComponentProps<WaveConfigVi
                                             : "bg-transparent hover:bg-hover"
                                     )}
                                 >
-                                    Raw JSON
+                                    {t("waveconfig.rawJson")}
                                 </button>
                             </div>
                         )}
@@ -277,7 +282,7 @@ const WaveConfigView = memo(({ blockId, model }: ViewComponentProps<WaveConfigVi
                         <div className="flex-1 overflow-hidden">
                             {isLoading ? (
                                 <div className="flex items-center justify-center h-full text-muted-foreground">
-                                    Loading...
+                                    {t("common.loading")}
                                 </div>
                             ) : selectedFile.visualComponent && (!selectedFile.hasJsonView || activeTab === "visual") ? (
                                 (() => {

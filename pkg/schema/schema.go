@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/wavetermdev/waveterm/pkg/wavebase"
+	"github.com/sanshao85/tideterm/pkg/wavebase"
 )
 
 var schemaHandler http.Handler

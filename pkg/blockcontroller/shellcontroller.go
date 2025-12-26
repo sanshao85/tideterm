@@ -18,25 +18,25 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/wavetermdev/waveterm/pkg/blocklogger"
-	"github.com/wavetermdev/waveterm/pkg/filestore"
-	"github.com/wavetermdev/waveterm/pkg/panichandler"
-	"github.com/wavetermdev/waveterm/pkg/remote"
-	"github.com/wavetermdev/waveterm/pkg/remote/conncontroller"
-	"github.com/wavetermdev/waveterm/pkg/shellexec"
-	"github.com/wavetermdev/waveterm/pkg/util/envutil"
-	"github.com/wavetermdev/waveterm/pkg/util/fileutil"
-	"github.com/wavetermdev/waveterm/pkg/util/shellutil"
-	"github.com/wavetermdev/waveterm/pkg/util/utilfn"
-	"github.com/wavetermdev/waveterm/pkg/wavebase"
-	"github.com/wavetermdev/waveterm/pkg/waveobj"
-	"github.com/wavetermdev/waveterm/pkg/wconfig"
-	"github.com/wavetermdev/waveterm/pkg/wps"
-	"github.com/wavetermdev/waveterm/pkg/wshrpc"
-	"github.com/wavetermdev/waveterm/pkg/wshrpc/wshclient"
-	"github.com/wavetermdev/waveterm/pkg/wshutil"
-	"github.com/wavetermdev/waveterm/pkg/wslconn"
-	"github.com/wavetermdev/waveterm/pkg/wstore"
+	"github.com/sanshao85/tideterm/pkg/blocklogger"
+	"github.com/sanshao85/tideterm/pkg/filestore"
+	"github.com/sanshao85/tideterm/pkg/panichandler"
+	"github.com/sanshao85/tideterm/pkg/remote"
+	"github.com/sanshao85/tideterm/pkg/remote/conncontroller"
+	"github.com/sanshao85/tideterm/pkg/shellexec"
+	"github.com/sanshao85/tideterm/pkg/util/envutil"
+	"github.com/sanshao85/tideterm/pkg/util/fileutil"
+	"github.com/sanshao85/tideterm/pkg/util/shellutil"
+	"github.com/sanshao85/tideterm/pkg/util/utilfn"
+	"github.com/sanshao85/tideterm/pkg/wavebase"
+	"github.com/sanshao85/tideterm/pkg/waveobj"
+	"github.com/sanshao85/tideterm/pkg/wconfig"
+	"github.com/sanshao85/tideterm/pkg/wps"
+	"github.com/sanshao85/tideterm/pkg/wshrpc"
+	"github.com/sanshao85/tideterm/pkg/wshrpc/wshclient"
+	"github.com/sanshao85/tideterm/pkg/wshutil"
+	"github.com/sanshao85/tideterm/pkg/wslconn"
+	"github.com/sanshao85/tideterm/pkg/wstore"
 )
 
 const (
@@ -390,7 +390,9 @@ func (bc *ShellController) setupAndStartShellProcess(logCtx context.Context, rc 
 		cmdOpts.Interactive = true
 		cmdOpts.Login = true
 		cmdOpts.Cwd = blockMeta.GetString(waveobj.MetaKey_CmdCwd, "")
-		if cmdOpts.Cwd != "" {
+		// cmd:cwd is only expanded locally; for remote (ssh/wsl) the value may contain "~" which must be
+		// interpreted on the remote machine, not expanded using the local machine's home directory.
+		if cmdOpts.Cwd != "" && connUnion.ConnType == ConnType_Local {
 			cwdPath, err := wavebase.ExpandHomeDir(cmdOpts.Cwd)
 			if err != nil {
 				return nil, err
@@ -702,7 +704,9 @@ func createCmdStrAndOpts(blockId string, blockMeta waveobj.MetaMapType, connName
 		return "", nil, fmt.Errorf("missing cmd in block meta")
 	}
 	cmdOpts.Cwd = blockMeta.GetString(waveobj.MetaKey_CmdCwd, "")
-	if cmdOpts.Cwd != "" {
+	// cmd:cwd is only expanded locally; for remote (ssh/wsl) the value may contain "~" which must be
+	// interpreted on the remote machine, not expanded using the local machine's home directory.
+	if cmdOpts.Cwd != "" && (connName == "" || strings.HasPrefix(connName, "local:")) {
 		cwdPath, err := wavebase.ExpandHomeDir(cmdOpts.Cwd)
 		if err != nil {
 			return "", nil, err
@@ -730,31 +734,31 @@ func (bc *ShellController) makeSwapToken(ctx context.Context, logCtx context.Con
 		Env:   make(map[string]string),
 		Exp:   time.Now().Add(5 * time.Minute),
 	}
-	token.Env["TERM_PROGRAM"] = "waveterm"
-	token.Env["WAVETERM_BLOCKID"] = bc.BlockId
-	token.Env["WAVETERM_VERSION"] = wavebase.WaveVersion
-	token.Env["WAVETERM"] = "1"
+		token.Env["TERM_PROGRAM"] = "tideterm"
+		token.Env["TIDETERM_BLOCKID"] = bc.BlockId
+		token.Env["TIDETERM_VERSION"] = wavebase.WaveVersion
+		token.Env["TIDETERM"] = "1"
 	tabId, err := wstore.DBFindTabForBlockId(ctx, bc.BlockId)
 	if err != nil {
 		log.Printf("error finding tab for block: %v\n", err)
 	} else {
-		token.Env["WAVETERM_TABID"] = tabId
+			token.Env["TIDETERM_TABID"] = tabId
 	}
 	if tabId != "" {
 		wsId, err := wstore.DBFindWorkspaceForTabId(ctx, tabId)
 		if err != nil {
 			log.Printf("error finding workspace for tab: %v\n", err)
 		} else {
-			token.Env["WAVETERM_WORKSPACEID"] = wsId
+			token.Env["TIDETERM_WORKSPACEID"] = wsId
 		}
 	}
 	clientData, err := wstore.DBGetSingleton[*waveobj.Client](ctx)
 	if err != nil {
 		log.Printf("error getting client data: %v\n", err)
 	} else {
-		token.Env["WAVETERM_CLIENTID"] = clientData.OID
+			token.Env["TIDETERM_CLIENTID"] = clientData.OID
 	}
-	token.Env["WAVETERM_CONN"] = remoteName
+	token.Env["TIDETERM_CONN"] = remoteName
 	envMap, err := resolveEnvMap(bc.BlockId, blockMeta, remoteName)
 	if err != nil {
 		log.Printf("error resolving env map: %v\n", err)

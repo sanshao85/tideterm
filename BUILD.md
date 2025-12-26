@@ -82,7 +82,7 @@ git clone git@github.com:wavetermdev/waveterm.git
 or
 
 ```sh
-git clone https://github.com/wavetermdev/waveterm.git
+git clone https://github.com/sanshao85/tideterm.git
 ```
 
 ## Install code dependencies

@@ -14,36 +14,36 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
-	"github.com/wavetermdev/waveterm/pkg/aiusechat"
-	"github.com/wavetermdev/waveterm/pkg/authkey"
-	"github.com/wavetermdev/waveterm/pkg/blockcontroller"
-	"github.com/wavetermdev/waveterm/pkg/blocklogger"
-	"github.com/wavetermdev/waveterm/pkg/filebackup"
-	"github.com/wavetermdev/waveterm/pkg/filestore"
-	"github.com/wavetermdev/waveterm/pkg/panichandler"
-	"github.com/wavetermdev/waveterm/pkg/remote/conncontroller"
-	"github.com/wavetermdev/waveterm/pkg/remote/fileshare/wshfs"
-	"github.com/wavetermdev/waveterm/pkg/secretstore"
-	"github.com/wavetermdev/waveterm/pkg/service"
-	"github.com/wavetermdev/waveterm/pkg/telemetry"
-	"github.com/wavetermdev/waveterm/pkg/telemetry/telemetrydata"
-	"github.com/wavetermdev/waveterm/pkg/util/shellutil"
-	"github.com/wavetermdev/waveterm/pkg/util/sigutil"
-	"github.com/wavetermdev/waveterm/pkg/util/utilfn"
-	"github.com/wavetermdev/waveterm/pkg/wavebase"
-	"github.com/wavetermdev/waveterm/pkg/waveobj"
-	"github.com/wavetermdev/waveterm/pkg/wcloud"
-	"github.com/wavetermdev/waveterm/pkg/wconfig"
-	"github.com/wavetermdev/waveterm/pkg/wcore"
-	"github.com/wavetermdev/waveterm/pkg/web"
-	"github.com/wavetermdev/waveterm/pkg/wps"
-	"github.com/wavetermdev/waveterm/pkg/wshrpc"
-	"github.com/wavetermdev/waveterm/pkg/wshrpc/wshclient"
-	"github.com/wavetermdev/waveterm/pkg/wshrpc/wshremote"
-	"github.com/wavetermdev/waveterm/pkg/wshrpc/wshserver"
-	"github.com/wavetermdev/waveterm/pkg/wshutil"
-	"github.com/wavetermdev/waveterm/pkg/wslconn"
-	"github.com/wavetermdev/waveterm/pkg/wstore"
+	"github.com/sanshao85/tideterm/pkg/aiusechat"
+	"github.com/sanshao85/tideterm/pkg/authkey"
+	"github.com/sanshao85/tideterm/pkg/blockcontroller"
+	"github.com/sanshao85/tideterm/pkg/blocklogger"
+	"github.com/sanshao85/tideterm/pkg/filebackup"
+	"github.com/sanshao85/tideterm/pkg/filestore"
+	"github.com/sanshao85/tideterm/pkg/panichandler"
+	"github.com/sanshao85/tideterm/pkg/remote/conncontroller"
+	"github.com/sanshao85/tideterm/pkg/remote/fileshare/wshfs"
+	"github.com/sanshao85/tideterm/pkg/secretstore"
+	"github.com/sanshao85/tideterm/pkg/service"
+	"github.com/sanshao85/tideterm/pkg/telemetry"
+	"github.com/sanshao85/tideterm/pkg/telemetry/telemetrydata"
+	"github.com/sanshao85/tideterm/pkg/util/shellutil"
+	"github.com/sanshao85/tideterm/pkg/util/sigutil"
+	"github.com/sanshao85/tideterm/pkg/util/utilfn"
+	"github.com/sanshao85/tideterm/pkg/wavebase"
+	"github.com/sanshao85/tideterm/pkg/waveobj"
+	"github.com/sanshao85/tideterm/pkg/wcloud"
+	"github.com/sanshao85/tideterm/pkg/wconfig"
+	"github.com/sanshao85/tideterm/pkg/wcore"
+	"github.com/sanshao85/tideterm/pkg/web"
+	"github.com/sanshao85/tideterm/pkg/wps"
+	"github.com/sanshao85/tideterm/pkg/wshrpc"
+	"github.com/sanshao85/tideterm/pkg/wshrpc/wshclient"
+	"github.com/sanshao85/tideterm/pkg/wshrpc/wshremote"
+	"github.com/sanshao85/tideterm/pkg/wshrpc/wshserver"
+	"github.com/sanshao85/tideterm/pkg/wshutil"
+	"github.com/sanshao85/tideterm/pkg/wslconn"
+	"github.com/sanshao85/tideterm/pkg/wstore"
 
 	"net/http"
 	_ "net/http/pprof"
@@ -66,7 +66,7 @@ const DiagnosticTick = 10 * time.Minute
 var shutdownOnce sync.Once
 
 func init() {
-	envFilePath := os.Getenv("WAVETERM_ENVFILE")
+		envFilePath := os.Getenv("TIDETERM_ENVFILE")
 	if envFilePath != "" {
 		log.Printf("applying env file: %s\n", envFilePath)
 		_ = godotenv.Load(envFilePath)
@@ -135,8 +135,8 @@ func diagnosticLoop() {
 	defer func() {
 		panichandler.PanicHandler("diagnosticLoop", recover())
 	}()
-	if os.Getenv("WAVETERM_NOPING") != "" {
-		log.Printf("WAVETERM_NOPING set, disabling diagnostic ping\n")
+	if os.Getenv("TIDETERM_NOPING") != "" {
+		log.Printf("TIDETERM_NOPING set, disabling diagnostic ping\n")
 		return
 	}
 	var lastSentDate string
@@ -410,17 +410,17 @@ func grabAndRemoveEnvVars() error {
 		return err
 	}
 
-	// Remove WAVETERM env vars that leak from prod => dev
-	os.Unsetenv("WAVETERM_CLIENTID")
-	os.Unsetenv("WAVETERM_WORKSPACEID")
-	os.Unsetenv("WAVETERM_TABID")
-	os.Unsetenv("WAVETERM_BLOCKID")
-	os.Unsetenv("WAVETERM_CONN")
-	os.Unsetenv("WAVETERM_JWT")
-	os.Unsetenv("WAVETERM_VERSION")
+		// Remove TIDETERM env vars that leak from prod => dev
+		os.Unsetenv("TIDETERM_CLIENTID")
+		os.Unsetenv("TIDETERM_WORKSPACEID")
+		os.Unsetenv("TIDETERM_TABID")
+		os.Unsetenv("TIDETERM_BLOCKID")
+		os.Unsetenv("TIDETERM_CONN")
+		os.Unsetenv("TIDETERM_JWT")
+		os.Unsetenv("TIDETERM_VERSION")
 
-	return nil
-}
+		return nil
+	}
 
 func clearTempFiles() error {
 	ctx, cancelFn := context.WithTimeout(context.Background(), 2*time.Second)

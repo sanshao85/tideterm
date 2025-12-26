@@ -140,6 +140,7 @@ export class WaveBrowserWindow extends BaseWindow {
     workspaceId: string;
     allLoadedTabViews: Map<string, WaveTabView>;
     activeTabView: WaveTabView;
+    private activeTabTitleListener: ((event: Electron.Event, title: string) => void) | null = null;
     private canClose: boolean;
     private deleteAllowed: boolean;
     private actionQueue: WindowActionQueueEntry[];
@@ -451,6 +452,28 @@ export class WaveBrowserWindow extends BaseWindow {
                 tabView.webContents.focus();
             }
         }, 30);
+
+        // Ensure the native window title matches the active tab's document.title.
+        if (oldActiveView != null && this.activeTabTitleListener != null) {
+            oldActiveView.webContents.removeListener("page-title-updated", this.activeTabTitleListener);
+        }
+        this.activeTabTitleListener = (_event: Electron.Event, title: string) => {
+            if (this.isDestroyed()) {
+                return;
+            }
+            // Only accept title updates from the active tab view.
+            if (this.activeTabView?.webContents?.id !== tabView.webContents.id) {
+                return;
+            }
+            if (typeof title === "string" && title.length > 0) {
+                this.setTitle(title);
+            }
+        };
+        tabView.webContents.on("page-title-updated", this.activeTabTitleListener);
+        const initialTitle = tabView.webContents.getTitle();
+        if (initialTitle) {
+            this.setTitle(initialTitle);
+        }
     }
 
     private async repositionTabsSlowly(delayMs: number) {

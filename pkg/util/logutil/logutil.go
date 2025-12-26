@@ -6,7 +6,7 @@ package logutil
 import (
 	"log"
 
-	"github.com/wavetermdev/waveterm/pkg/wavebase"
+	"github.com/sanshao85/tideterm/pkg/wavebase"
 )
 
 // DevPrintf logs using log.Printf only if running in dev mode

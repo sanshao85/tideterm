@@ -20,17 +20,18 @@ import (
 	"maps"
 
 	"github.com/creack/pty"
-	"github.com/wavetermdev/waveterm/pkg/blocklogger"
-	"github.com/wavetermdev/waveterm/pkg/panichandler"
-	"github.com/wavetermdev/waveterm/pkg/remote/conncontroller"
-	"github.com/wavetermdev/waveterm/pkg/util/pamparse"
-	"github.com/wavetermdev/waveterm/pkg/util/shellutil"
-	"github.com/wavetermdev/waveterm/pkg/wavebase"
-	"github.com/wavetermdev/waveterm/pkg/waveobj"
-	"github.com/wavetermdev/waveterm/pkg/wshrpc"
-	"github.com/wavetermdev/waveterm/pkg/wshrpc/wshclient"
-	"github.com/wavetermdev/waveterm/pkg/wshutil"
-	"github.com/wavetermdev/waveterm/pkg/wslconn"
+	"github.com/sanshao85/tideterm/pkg/blocklogger"
+	"github.com/sanshao85/tideterm/pkg/panichandler"
+	"github.com/sanshao85/tideterm/pkg/remote/conncontroller"
+	"github.com/sanshao85/tideterm/pkg/util/pamparse"
+	"github.com/sanshao85/tideterm/pkg/util/shellutil"
+	"github.com/sanshao85/tideterm/pkg/util/utilfn"
+	"github.com/sanshao85/tideterm/pkg/wavebase"
+	"github.com/sanshao85/tideterm/pkg/waveobj"
+	"github.com/sanshao85/tideterm/pkg/wshrpc"
+	"github.com/sanshao85/tideterm/pkg/wshrpc/wshclient"
+	"github.com/sanshao85/tideterm/pkg/wshutil"
+	"github.com/sanshao85/tideterm/pkg/wslconn"
 )
 
 const DefaultGracefulKillWait = 400 * time.Millisecond
@@ -116,6 +117,126 @@ func checkCwd(cwd string) error {
 	return nil
 }
 
+func escapeForPosixDoubleQuotes(s string) string {
+	// Conservative escaping for the subset of chars that are special inside double quotes.
+	// This is used for "$HOME<rest>" where <rest> should be treated literally.
+	var b strings.Builder
+	b.Grow(len(s))
+	for i := 0; i < len(s); i++ {
+		switch s[i] {
+		case '\\', '"', '$', '`':
+			b.WriteByte('\\')
+			b.WriteByte(s[i])
+		default:
+			b.WriteByte(s[i])
+		}
+	}
+	return b.String()
+}
+
+func posixCwdExpr(cwd string) string {
+	cwd = strings.TrimSpace(cwd)
+	if cwd == "" {
+		return ""
+	}
+	if cwd == "~" {
+		return "~"
+	}
+	if strings.HasPrefix(cwd, "~/") {
+		// "~" must be expanded on the target machine. Use $HOME so we can still quote paths with spaces safely.
+		rest := cwd[1:] // includes leading "/"
+		return fmt.Sprintf("\"$HOME%s\"", escapeForPosixDoubleQuotes(rest))
+	}
+	return utilfn.ShellQuote(cwd, false, -1)
+}
+
+func fishCwdExpr(cwd string) string {
+	cwd = strings.TrimSpace(cwd)
+	if cwd == "" {
+		return ""
+	}
+	if cwd == "~" {
+		return "~"
+	}
+	if strings.HasPrefix(cwd, "~/") {
+		// "~" must be expanded on the target machine. Use $HOME so we can still quote paths with spaces safely.
+		rest := cwd[1:] // includes leading "/"
+		return fmt.Sprintf("\"$HOME%s\"", escapeForPosixDoubleQuotes(rest))
+	}
+	return shellutil.HardQuoteFish(cwd)
+}
+
+func makeCwdInitScript(shellType string, cwd string) string {
+	cwd = strings.TrimSpace(cwd)
+	if cwd == "" {
+		return ""
+	}
+	switch shellType {
+	case shellutil.ShellType_pwsh:
+		quoted := shellutil.HardQuotePowerShell(cwd)
+		if quoted == "" {
+			return ""
+		}
+		return fmt.Sprintf("try { Set-Location -Path %s } catch {}\n", quoted)
+	case shellutil.ShellType_fish:
+		cwdExpr := fishCwdExpr(cwd)
+		if cwdExpr == "" {
+			return ""
+		}
+		// Fish doesn't use "||"; a failed cd won't abort the shell, so keep it simple.
+		return fmt.Sprintf("cd %s\n", cwdExpr)
+	default:
+		cwdExpr := posixCwdExpr(cwd)
+		if cwdExpr == "" {
+			return ""
+		}
+		return fmt.Sprintf("cd -- %s || true\n", cwdExpr)
+	}
+}
+
+func prependCwdInitScriptToSwapToken(shellType string, cwd string, swapToken *shellutil.TokenSwapEntry) {
+	if swapToken == nil {
+		return
+	}
+	initScript := makeCwdInitScript(shellType, cwd)
+	if initScript == "" {
+		return
+	}
+	swapToken.ScriptText = initScript + swapToken.ScriptText
+}
+
+func makeHomeResetInitScript(shellType string) string {
+	switch shellType {
+	case shellutil.ShellType_bash, shellutil.ShellType_zsh:
+		// Some environments override HOME unexpectedly (e.g. to /tmp), which breaks "~" expansion
+		// and any "$HOME/..." paths injected by Wave (e.g. remote cwd init scripts).
+		// Prefer the passwd entry for the current user.
+		return "if command -v id >/dev/null 2>&1; then\n" +
+			"  _waveterm_user=\"$(id -un 2>/dev/null)\" || _waveterm_user=\"\"\n" +
+			"  if [ -n \"$_waveterm_user\" ]; then\n" +
+			"    _waveterm_home=\"$(eval echo ~${_waveterm_user} 2>/dev/null)\" || _waveterm_home=\"\"\n" +
+			"    if [ -n \"$_waveterm_home\" ] && [ \"$_waveterm_home\" != \"$HOME\" ]; then\n" +
+			"      export HOME=\"$_waveterm_home\"\n" +
+			"    fi\n" +
+			"  fi\n" +
+			"  unset _waveterm_user _waveterm_home\n" +
+			"fi\n"
+	default:
+		return ""
+	}
+}
+
+func prependHomeResetInitScriptToSwapToken(shellType string, swapToken *shellutil.TokenSwapEntry) {
+	if swapToken == nil {
+		return
+	}
+	initScript := makeHomeResetInitScript(shellType)
+	if initScript == "" {
+		return
+	}
+	swapToken.ScriptText = initScript + swapToken.ScriptText
+}
+
 type PipePty struct {
 	remoteStdinWrite *os.File
 	remoteStdoutRead *os.File
@@ -168,6 +289,11 @@ func StartWslShellProcNoWsh(ctx context.Context, termSize waveobj.TermSize, cmdS
 	if err != nil {
 		return nil, err
 	}
+	if cmdOpts.Cwd != "" {
+		if cwdExpr := posixCwdExpr(cmdOpts.Cwd); cwdExpr != "" {
+			cmdPty.Write([]byte("cd " + cwdExpr + "\n"))
+		}
+	}
 	cmdWrap := MakeCmdWrap(ecmd, cmdPty)
 	return &ShellProc{Cmd: cmdWrap, ConnName: conn.GetName(), CloseOnce: &sync.Once{}, DoneCh: make(chan any)}, nil
 }
@@ -216,25 +342,25 @@ func StartWslShellProc(ctx context.Context, termSize waveobj.TermSize, cmdStr st
 
 	if cmdStr == "" {
 		/* transform command in order to inject environment vars */
-		if shellType == shellutil.ShellType_bash {
-			// add --rcfile
-			// cant set -l or -i with --rcfile
-			bashPath := fmt.Sprintf("~/.waveterm/%s/.bashrc", shellutil.BashIntegrationDir)
-			shellOpts = append(shellOpts, "--rcfile", bashPath)
-		} else if shellType == shellutil.ShellType_fish {
-			if cmdOpts.Login {
-				shellOpts = append(shellOpts, "-l")
-			}
-			// source the wave.fish file
-			waveFishPath := fmt.Sprintf("~/.waveterm/%s/wave.fish", shellutil.FishIntegrationDir)
-			carg := fmt.Sprintf(`"source %s"`, waveFishPath)
-			shellOpts = append(shellOpts, "-C", carg)
-		} else if shellType == shellutil.ShellType_pwsh {
-			pwshPath := fmt.Sprintf("~/.waveterm/%s/wavepwsh.ps1", shellutil.PwshIntegrationDir)
-			// powershell is weird about quoted path executables and requires an ampersand first
-			shellPath = "& " + shellPath
-			shellOpts = append(shellOpts, "-ExecutionPolicy", "Bypass", "-NoExit", "-File", pwshPath)
-		} else {
+			if shellType == shellutil.ShellType_bash {
+				// add --rcfile
+				// cant set -l or -i with --rcfile
+				bashPath := fmt.Sprintf("~/%s/%s/.bashrc", wavebase.RemoteWaveHomeDirName, shellutil.BashIntegrationDir)
+				shellOpts = append(shellOpts, "--rcfile", bashPath)
+			} else if shellType == shellutil.ShellType_fish {
+				if cmdOpts.Login {
+					shellOpts = append(shellOpts, "-l")
+				}
+				// source the wave.fish file
+				waveFishPath := fmt.Sprintf("~/%s/%s/tideterm.fish", wavebase.RemoteWaveHomeDirName, shellutil.FishIntegrationDir)
+				carg := fmt.Sprintf(`"source %s"`, waveFishPath)
+				shellOpts = append(shellOpts, "-C", carg)
+			} else if shellType == shellutil.ShellType_pwsh {
+				pwshPath := fmt.Sprintf("~/%s/%s/tidetermpwsh.ps1", wavebase.RemoteWaveHomeDirName, shellutil.PwshIntegrationDir)
+				// powershell is weird about quoted path executables and requires an ampersand first
+				shellPath = "& " + shellPath
+				shellOpts = append(shellOpts, "-ExecutionPolicy", "Bypass", "-NoExit", "-File", pwshPath)
+			} else {
 			if cmdOpts.Login {
 				shellOpts = append(shellOpts, "-l")
 			}
@@ -250,13 +376,13 @@ func StartWslShellProc(ctx context.Context, termSize waveobj.TermSize, cmdStr st
 		cmdCombined = fmt.Sprintf("%s %s", shellPath, strings.Join(shellOpts, " "))
 	}
 	conn.Infof(ctx, "starting shell, using command: %s\n", cmdCombined)
-	conn.Infof(ctx, "WSL-NEWSESSION (StartWslShellProc)\n")
+		conn.Infof(ctx, "WSL-NEWSESSION (StartWslShellProc)\n")
 
-	if shellType == shellutil.ShellType_zsh {
-		zshDir := fmt.Sprintf("~/.waveterm/%s", shellutil.ZshIntegrationDir)
-		conn.Infof(ctx, "setting ZDOTDIR to %s\n", zshDir)
-		cmdCombined = fmt.Sprintf(`ZDOTDIR=%s %s`, zshDir, cmdCombined)
-	}
+		if shellType == shellutil.ShellType_zsh {
+			zshDir := fmt.Sprintf("~/%s/%s", wavebase.RemoteWaveHomeDirName, shellutil.ZshIntegrationDir)
+			conn.Infof(ctx, "setting ZDOTDIR to %s\n", zshDir)
+			cmdCombined = fmt.Sprintf(`ZDOTDIR=%s %s`, zshDir, cmdCombined)
+		}
 	packedToken, err := cmdOpts.SwapToken.PackForClient()
 	if err != nil {
 		conn.Infof(ctx, "error packing swap token: %v", err)
@@ -269,6 +395,8 @@ func StartWslShellProc(ctx context.Context, termSize waveobj.TermSize, cmdStr st
 		conn.Debugf(ctx, "adding JWT token to environment\n")
 		cmdCombined = fmt.Sprintf(`%s=%s %s`, wavebase.WaveJwtTokenVarName, jwtToken, cmdCombined)
 	}
+	prependCwdInitScriptToSwapToken(shellType, cmdOpts.Cwd, cmdOpts.SwapToken)
+	prependHomeResetInitScriptToSwapToken(shellType, cmdOpts.SwapToken)
 	log.Printf("full combined command: %s", cmdCombined)
 	ecmd := exec.Command("wsl.exe", "~", "-d", client.Name(), "--", "sh", "-c", cmdCombined)
 	if termSize.Rows == 0 || termSize.Cols == 0 {
@@ -327,6 +455,11 @@ func StartRemoteShellProcNoWsh(ctx context.Context, termSize waveobj.TermSize, c
 		pipePty.Close()
 		return nil, err
 	}
+	if cmdOpts.Cwd != "" {
+		if cwdExpr := posixCwdExpr(cmdOpts.Cwd); cwdExpr != "" {
+			pipePty.WriteString("cd " + cwdExpr + "\n")
+		}
+	}
 	return &ShellProc{Cmd: sessionWrap, ConnName: conn.GetName(), CloseOnce: &sync.Once{}, DoneCh: make(chan any)}, nil
 }
 
@@ -371,18 +504,18 @@ func StartRemoteShellProc(ctx context.Context, logCtx context.Context, termSize 
 		if shellType == shellutil.ShellType_bash {
 			// add --rcfile
 			// cant set -l or -i with --rcfile
-			bashPath := fmt.Sprintf("~/.waveterm/%s/.bashrc", shellutil.BashIntegrationDir)
+			bashPath := fmt.Sprintf("~/%s/%s/.bashrc", wavebase.RemoteWaveHomeDirName, shellutil.BashIntegrationDir)
 			shellOpts = append(shellOpts, "--rcfile", bashPath)
 		} else if shellType == shellutil.ShellType_fish {
 			if cmdOpts.Login {
 				shellOpts = append(shellOpts, "-l")
 			}
 			// source the wave.fish file
-			waveFishPath := fmt.Sprintf("~/.waveterm/%s/wave.fish", shellutil.FishIntegrationDir)
+			waveFishPath := fmt.Sprintf("~/%s/%s/tideterm.fish", wavebase.RemoteWaveHomeDirName, shellutil.FishIntegrationDir)
 			carg := fmt.Sprintf(`"source %s"`, waveFishPath)
 			shellOpts = append(shellOpts, "-C", carg)
 		} else if shellType == shellutil.ShellType_pwsh {
-			pwshPath := fmt.Sprintf("~/.waveterm/%s/wavepwsh.ps1", shellutil.PwshIntegrationDir)
+			pwshPath := fmt.Sprintf("~/%s/%s/tidetermpwsh.ps1", wavebase.RemoteWaveHomeDirName, shellutil.PwshIntegrationDir)
 			// powershell is weird about quoted path executables and requires an ampersand first
 			shellPath = "& " + shellPath
 			shellOpts = append(shellOpts, "-ExecutionPolicy", "Bypass", "-NoExit", "-File", pwshPath)
@@ -432,7 +565,7 @@ func StartRemoteShellProc(ctx context.Context, logCtx context.Context, termSize 
 	session.Stdout = remoteStdoutWrite
 	session.Stderr = remoteStdoutWrite
 	if shellType == shellutil.ShellType_zsh {
-		zshDir := fmt.Sprintf("~/.waveterm/%s", shellutil.ZshIntegrationDir)
+		zshDir := fmt.Sprintf("~/%s/%s", wavebase.RemoteWaveHomeDirName, shellutil.ZshIntegrationDir)
 		conn.Infof(logCtx, "setting ZDOTDIR to %s\n", zshDir)
 		cmdCombined = fmt.Sprintf(`ZDOTDIR=%s %s`, zshDir, cmdCombined)
 	}
@@ -448,6 +581,8 @@ func StartRemoteShellProc(ctx context.Context, logCtx context.Context, termSize 
 		conn.Debugf(logCtx, "adding JWT token to environment\n")
 		cmdCombined = fmt.Sprintf(`%s=%s %s`, wavebase.WaveJwtTokenVarName, jwtToken, cmdCombined)
 	}
+	prependCwdInitScriptToSwapToken(shellType, cmdOpts.Cwd, cmdOpts.SwapToken)
+	prependHomeResetInitScriptToSwapToken(shellType, cmdOpts.SwapToken)
 	shellutil.AddTokenSwapEntry(cmdOpts.SwapToken)
 	session.RequestPty("xterm-256color", termSize.Rows, termSize.Cols, nil)
 	sessionWrap := MakeSessionWrap(session, cmdCombined, pipePty)

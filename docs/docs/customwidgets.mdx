@@ -107,7 +107,7 @@ The `WidgetConfigType` takes the usual options common to all widgets. The `MetaT
 | "cmd:closeonexitforce" | (optional) Automatically closes the block if when the command exits (success or failure)                                                                                                                                                                                           |
 | "cmd:closeonexitdelay  | (optional) Change the delay between when the command exits and when the block gets closed, in milliseconds, default 2000                                                                                                                                                           |
 | "cmd:env"              | (optional) A key-value object represting environment variables to be run with the command. Defaults to an empty object.                                                                                                                                                            |
-| "cmd:cwd"              | (optional) A string representing the current working directory to be run with the command. Currently only works locally. Defaults to the home directory.                                                                                                                           |
+| "cmd:cwd"              | (optional) A string representing the current working directory for the block/command. Supports local and SSH/WSL shells; for remote, `~` is interpreted on the remote machine. Defaults to the home directory.                                                                     |
 | "cmd:nowsh"            | (optional) A boolean that will turn off wsh integration for the command. Defaults to false.                                                                                                                                                                                        |
 | "cmd:jwt"              | (optional) A boolean that forces adding JWT token to the environment. Required for running waveapps as widgets (both local and remote). Defaults to false.                                                                                                                        |
 | "term:localshellpath"  | (optional) Sets the shell used for running your widget command. Only works locally. If left blank, wave will determine your system default instead.                                                                                                                                |
@@ -284,8 +284,8 @@ The `WidgetConfigType` takes the usual options common to all widgets. The `MetaT
 | Key | Description |
 |-----|-------------|
 | "view" | A string that specifies the general type of widget. In the case of custom web widgets, this must be set to `"web"`.|
-| "url" | This string is the url of the current page. As part of a widget, it will serve as the page the widget starts at. If not specified, this will default to the globally configurable `"web:defaulturl"` which is [https://github.com/wavetermdev/waveterm](https://github.com/wavetermdev/waveterm) on a fresh install. |
-| "pinnedurl" | (optional) This string is the url the homepage button will take you to. If not specified, this will default to the globally configurable `"web:defaulturl"` which is [https://github.com/wavetermdev/waveterm](https://github.com/wavetermdev/waveterm) on a fresh install. |
+| "url" | This string is the url of the current page. As part of a widget, it will serve as the page the widget starts at. If not specified, this will default to the globally configurable `"web:defaulturl"` which is [https://github.com/sanshao85/tideterm](https://github.com/sanshao85/tideterm) on a fresh install. |
+| "pinnedurl" | (optional) This string is the url the homepage button will take you to. If not specified, this will default to the globally configurable `"web:defaulturl"` which is [https://github.com/sanshao85/tideterm](https://github.com/sanshao85/tideterm) on a fresh install. |
 
 ### Example Web Widgets
 
@@ -425,4 +425,4 @@ Wave ships with 5 default widgets in the widgets bar (terminal, files, web, ai, 
 
 To remove any of them, just set that key to `null` in your widgets.json file.
 
-To see their definitions, to copy/paste them, or to understand how they work, you can view all of their definitions on [GitHub - default widgets.json](https://github.com/wavetermdev/waveterm/blob/main/pkg/wconfig/defaultconfig/widgets.json)
+To see their definitions, to copy/paste them, or to understand how they work, you can view all of their definitions on [GitHub - default widgets.json](https://github.com/sanshao85/tideterm/blob/main/pkg/wconfig/defaultconfig/widgets.json)

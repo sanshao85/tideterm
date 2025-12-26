@@ -66,7 +66,7 @@ const UpgradeOnboardingMinor = () => {
             oref: WOS.makeORef("client", clientId),
             meta: { "onboarding:githubstar": true },
         });
-        window.open("https://github.com/wavetermdev/waveterm?ref=upgrade", "_blank");
+        window.open("https://github.com/sanshao85/tideterm?ref=upgrade", "_blank");
         setPageName("features");
     };
 

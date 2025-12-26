@@ -10,8 +10,10 @@ import (
 	"strings"
 )
 
-const DefaultAIEndpoint = "https://cfapi.waveterm.dev/api/waveai"
-const WaveAIEndpointEnvName = "WAVETERM_WAVEAI_ENDPOINT"
+// TideTerm does not ship with a default cloud AI endpoint configured.
+// To use a proxy endpoint, set it via the TIDETERM_AI_ENDPOINT environment variable.
+const DefaultAIEndpoint = ""
+const WaveAIEndpointEnvName = "TIDETERM_AI_ENDPOINT"
 const DefaultAnthropicModel = "claude-sonnet-4-5"
 const DefaultOpenAIModel = "gpt-5-mini"
 const PremiumOpenAIModel = "gpt-5.1"

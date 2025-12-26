@@ -2,21 +2,21 @@
 $env:PATH = {{.WSHBINDIR_PWSH}} + "{{.PATHSEP}}" + $env:PATH
 
 # Source dynamic script from wsh token
-$waveterm_swaptoken_output = wsh token $env:WAVETERM_SWAPTOKEN pwsh 2>$null | Out-String
-if ($waveterm_swaptoken_output -and $waveterm_swaptoken_output -ne "") {
-    Invoke-Expression $waveterm_swaptoken_output
+$tideterm_swaptoken_output = wsh token $env:TIDETERM_SWAPTOKEN pwsh 2>$null | Out-String
+if ($tideterm_swaptoken_output -and $tideterm_swaptoken_output -ne "") {
+    Invoke-Expression $tideterm_swaptoken_output
 }
-Remove-Variable -Name waveterm_swaptoken_output
-Remove-Item Env:WAVETERM_SWAPTOKEN
+Remove-Variable -Name tideterm_swaptoken_output
+Remove-Item Env:TIDETERM_SWAPTOKEN
 
-# Load Wave completions
+# Load TideTerm completions
 wsh completion powershell | Out-String | Invoke-Expression
 
 if ($PSVersionTable.PSVersion.Major -lt 7) {
     return  # skip OSC setup entirely
 }
 
-$Global:_WAVETERM_SI_FIRSTPROMPT = $true
+$Global:_TIDETERM_SI_FIRSTPROMPT = $true
 
 # shell integration
 function Global:_waveterm_si_blocked {
@@ -37,11 +37,11 @@ function Global:_waveterm_si_osc7 {
 function Global:_waveterm_si_prompt {
     if (_waveterm_si_blocked) { return }
     
-    if ($Global:_WAVETERM_SI_FIRSTPROMPT) {
+    if ($Global:_TIDETERM_SI_FIRSTPROMPT) {
 		# not sending uname
 		       $shellversion = $PSVersionTable.PSVersion.ToString()
 		       Write-Host -NoNewline "`e]16162;M;{`"shell`":`"pwsh`",`"shellversion`":`"$shellversion`",`"integration`":false}`a"
-        $Global:_WAVETERM_SI_FIRSTPROMPT = $false
+        $Global:_TIDETERM_SI_FIRSTPROMPT = $false
     }
     
     _waveterm_si_osc7

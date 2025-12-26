@@ -21,7 +21,7 @@ const AboutModal = ({}: AboutModalProps) => {
             <div className="flex flex-col gap-[26px] w-full">
                 <div className="flex flex-col items-center justify-center gap-4 self-stretch w-full text-center">
                     <Logo />
-                    <div className="text-[25px]">Wave Terminal</div>
+                    <div className="text-[25px]">TideTerm</div>
                     <div className="leading-5">
                         Open-Source AI-Native Terminal
                         <br />
@@ -36,7 +36,7 @@ const AboutModal = ({}: AboutModalProps) => {
                 </div>
                 <div className="flex items-start gap-[10px] self-stretch w-full text-center">
                     <a
-                        href="https://github.com/wavetermdev/waveterm?ref=about"
+                        href="https://github.com/sanshao85/tideterm?ref=about"
                         target="_blank"
                         rel="noopener"
                         className="inline-flex items-center px-4 py-2 rounded border border-border hover:bg-hoverbg transition-colors duration-200"
@@ -44,7 +44,7 @@ const AboutModal = ({}: AboutModalProps) => {
                         <i className="fa-brands fa-github mr-2"></i>Github
                     </a>
                     <a
-                        href="https://www.waveterm.dev/?ref=about"
+                        href="https://github.com/sanshao85/tideterm#readme"
                         target="_blank"
                         rel="noopener"
                         className="inline-flex items-center px-4 py-2 rounded border border-border hover:bg-hoverbg transition-colors duration-200"
@@ -52,7 +52,7 @@ const AboutModal = ({}: AboutModalProps) => {
                         <i className="fa-sharp fa-light fa-globe mr-2"></i>Website
                     </a>
                     <a
-                        href="https://github.com/wavetermdev/waveterm/blob/main/ACKNOWLEDGEMENTS.md"
+                        href="https://github.com/sanshao85/tideterm/blob/main/ACKNOWLEDGEMENTS.md"
                         target="_blank"
                         rel="noopener"
                         className="inline-flex items-center px-4 py-2 rounded border border-border hover:bg-hoverbg transition-colors duration-200"
@@ -61,7 +61,7 @@ const AboutModal = ({}: AboutModalProps) => {
                     </a>
                 </div>
                 <div className="items-center gap-4 self-stretch w-full text-center">
-                    &copy; {currentDate.getFullYear()} Command Line Inc.
+                    &copy; {currentDate.getFullYear()} sanshao85 (based on Wave Terminal &copy; Command Line Inc.)
                 </div>
             </div>
         </Modal>

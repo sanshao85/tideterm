@@ -9,7 +9,7 @@ import { TabRpcClient } from "@/app/store/wshrpcutil";
 import { WebView, WebViewModel } from "@/app/view/webview/webview";
 import { atom } from "jotai";
 
-const docsiteUrl = "https://docs.waveterm.dev/?ref=app";
+const docsiteUrl = "https://github.com/sanshao85/tideterm#readme";
 
 class HelpViewModel extends WebViewModel {
     get viewComponent(): ViewComponent {

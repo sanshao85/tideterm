@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/wavetermdev/waveterm/pkg/util/utilfn"
+	"github.com/sanshao85/tideterm/pkg/util/utilfn"
 )
 
 var customDayStrRe = regexp.MustCompile(`^((?:\d{4}-\d{2}-\d{2})|today|yesterday|bom|bow)?((?:[+-]\d+[dwm])*)$`)

@@ -40,7 +40,7 @@ const config: Config = {
                 path: "docs",
                 routeBasePath: "/",
                 exclude: ["features/**"],
-                editUrl: !process.env.EMBEDDED ? "https://github.com/wavetermdev/waveterm/edit/main/docs/" : undefined,
+                editUrl: !process.env.EMBEDDED ? "https://github.com/sanshao85/tideterm/edit/main/docs/" : undefined,
                 rehypePlugins: [rehypeHighlight],
             } as import("@docusaurus/plugin-content-docs").Options,
         ],
@@ -108,7 +108,7 @@ const config: Config = {
                               "aria-label": "Discord invite",
                           },
                           {
-                              href: "https://github.com/wavetermdev/waveterm",
+                              href: "https://github.com/sanshao85/tideterm",
                               position: "right",
                               className: "header-link-custom custom-icon-github",
                               "aria-label": "GitHub repository",

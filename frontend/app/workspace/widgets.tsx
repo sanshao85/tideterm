@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Tooltip } from "@/app/element/tooltip";
+import { useT } from "@/app/i18n/i18n";
 import { ContextMenuModel } from "@/app/store/contextmenu";
 import { RpcApi } from "@/app/store/wshclientapi";
 import { TabRpcClient } from "@/app/store/wshrpcutil";
@@ -212,6 +213,7 @@ const SettingsFloatingWindow = memo(
         onClose: () => void;
         referenceElement: HTMLElement;
     }) => {
+        const t = useT();
         const { refs, floatingStyles, context } = useFloating({
             open: isOpen,
             onOpenChange: onClose,
@@ -231,7 +233,7 @@ const SettingsFloatingWindow = memo(
         const menuItems = [
             {
                 icon: "gear",
-                label: "Settings",
+                label: t("workspace.menu.settings"),
                 onClick: () => {
                     const blockDef: BlockDef = {
                         meta: {
@@ -244,7 +246,7 @@ const SettingsFloatingWindow = memo(
             },
             {
                 icon: "lightbulb",
-                label: "Tips",
+                label: t("workspace.menu.tips"),
                 onClick: () => {
                     const blockDef: BlockDef = {
                         meta: {
@@ -257,7 +259,7 @@ const SettingsFloatingWindow = memo(
             },
             {
                 icon: "lock",
-                label: "Secrets",
+                label: t("workspace.menu.secrets"),
                 onClick: () => {
                     const blockDef: BlockDef = {
                         meta: {
@@ -271,7 +273,7 @@ const SettingsFloatingWindow = memo(
             },
             {
                 icon: "circle-question",
-                label: "Help",
+                label: t("workspace.menu.help"),
                 onClick: () => {
                     const blockDef: BlockDef = {
                         meta: {
@@ -313,6 +315,7 @@ const SettingsFloatingWindow = memo(
 SettingsFloatingWindow.displayName = "SettingsFloatingWindow";
 
 const Widgets = memo(() => {
+    const t = useT();
     const fullConfig = useAtomValue(atoms.fullConfigAtom);
     const hasCustomAIPresets = useAtomValue(atoms.hasCustomAIPresetsAtom);
     const [mode, setMode] = useState<"normal" | "compact" | "supercompact">("normal");
@@ -353,14 +356,17 @@ const Widgets = memo(() => {
             }
         }
 
-        if (newMode !== mode) {
-            setMode(newMode);
-        }
-    }, [mode, widgets]);
+        // Use functional update to avoid depending on mode
+        setMode((prevMode) => (newMode !== prevMode ? newMode : prevMode));
+    }, [widgets]);
+
+    // Use ref to hold the latest checkModeNeeded without re-creating ResizeObserver
+    const checkModeNeededRef = useRef(checkModeNeeded);
+    checkModeNeededRef.current = checkModeNeeded;
 
     useEffect(() => {
         const resizeObserver = new ResizeObserver(() => {
-            checkModeNeeded();
+            checkModeNeededRef.current();
         });
 
         if (containerRef.current) {
@@ -370,11 +376,11 @@ const Widgets = memo(() => {
         return () => {
             resizeObserver.disconnect();
         };
-    }, [checkModeNeeded]);
+    }, []);
 
     useEffect(() => {
         checkModeNeeded();
-    }, [widgets, checkModeNeeded]);
+    }, [widgets]);
 
     const handleWidgetsBarContextMenu = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -419,7 +425,7 @@ const Widgets = memo(() => {
                                     className="flex flex-col justify-center items-center w-full py-1.5 pr-0.5 text-secondary text-sm overflow-hidden rounded-sm hover:bg-hoverbg hover:text-white cursor-pointer"
                                     onClick={() => setIsAppsOpen(!isAppsOpen)}
                                 >
-                                    <Tooltip content="Local WaveApps" placement="left" disable={isAppsOpen}>
+                                    <Tooltip content={t("workspace.localWaveApps")} placement="left" disable={isAppsOpen}>
                                         <div>
                                             <i className={makeIconClass("cube", true)}></i>
                                         </div>
@@ -431,7 +437,7 @@ const Widgets = memo(() => {
                                 className="flex flex-col justify-center items-center w-full py-1.5 pr-0.5 text-secondary text-sm overflow-hidden rounded-sm hover:bg-hoverbg hover:text-white cursor-pointer"
                                 onClick={() => setIsSettingsOpen(!isSettingsOpen)}
                             >
-                                <Tooltip content="Settings & Help" placement="left" disable={isSettingsOpen}>
+                                <Tooltip content={t("workspace.settingsAndHelp")} placement="left" disable={isSettingsOpen}>
                                     <div>
                                         <i className={makeIconClass("gear", true)}></i>
                                     </div>
@@ -451,14 +457,14 @@ const Widgets = memo(() => {
                                 className="flex flex-col justify-center items-center w-full py-1.5 pr-0.5 text-secondary text-lg overflow-hidden rounded-sm hover:bg-hoverbg hover:text-white cursor-pointer"
                                 onClick={() => setIsAppsOpen(!isAppsOpen)}
                             >
-                                <Tooltip content="Local WaveApps" placement="left" disable={isAppsOpen}>
+                                <Tooltip content={t("workspace.localWaveApps")} placement="left" disable={isAppsOpen}>
                                     <div className="flex flex-col items-center w-full">
                                         <div>
                                             <i className={makeIconClass("cube", true)}></i>
                                         </div>
                                         {mode === "normal" && (
                                             <div className="text-xxs mt-0.5 w-full px-0.5 text-center whitespace-nowrap overflow-hidden text-ellipsis">
-                                                apps
+                                                {t("workspace.appsLabel")}
                                             </div>
                                         )}
                                     </div>
@@ -470,7 +476,7 @@ const Widgets = memo(() => {
                             className="flex flex-col justify-center items-center w-full py-1.5 pr-0.5 text-secondary text-lg overflow-hidden rounded-sm hover:bg-hoverbg hover:text-white cursor-pointer"
                             onClick={() => setIsSettingsOpen(!isSettingsOpen)}
                         >
-                            <Tooltip content="Settings & Help" placement="left" disable={isSettingsOpen}>
+                            <Tooltip content={t("workspace.settingsAndHelp")} placement="left" disable={isSettingsOpen}>
                                 <div>
                                     <i className={makeIconClass("gear", true)}></i>
                                 </div>
@@ -514,14 +520,14 @@ const Widgets = memo(() => {
                     <div>
                         <i className={makeIconClass("gear", true)}></i>
                     </div>
-                    <div className="text-xxs mt-0.5 w-full px-0.5 text-center">settings</div>
+                    <div className="text-xxs mt-0.5 w-full px-0.5 text-center">{t("workspace.settingsLabel")}</div>
                 </div>
                 {isDev() ? (
                     <div className="flex flex-col justify-center items-center w-full py-1.5 pr-0.5 text-lg">
                         <div>
                             <i className={makeIconClass("cube", true)}></i>
                         </div>
-                        <div className="text-xxs mt-0.5 w-full px-0.5 text-center">apps</div>
+                        <div className="text-xxs mt-0.5 w-full px-0.5 text-center">{t("workspace.appsLabel")}</div>
                     </div>
                 ) : null}
                 {isDev() ? (

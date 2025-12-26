@@ -1057,6 +1057,7 @@ declare global {
         "app:defaultnewblock"?: string;
         "app:showoverlayblocknums"?: boolean;
         "app:ctrlvpaste"?: boolean;
+        "app:language"?: string;
         "feature:waveappbuilder"?: boolean;
         "ai:*"?: boolean;
         "ai:preset"?: string;

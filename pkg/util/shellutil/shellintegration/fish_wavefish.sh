@@ -1,15 +1,15 @@
 # this file is sourced with -C
-# Add Wave binary directory to PATH
+# Add TideTerm binary directory to PATH
 set -x PATH {{.WSHBINDIR}} $PATH
 
 # Source dynamic script from wsh token (the echo is to prevent fish from complaining about empty input)
-wsh token "$WAVETERM_SWAPTOKEN" fish 2>/dev/null | source
-set -e WAVETERM_SWAPTOKEN
+wsh token "$TIDETERM_SWAPTOKEN" fish 2>/dev/null | source
+set -e TIDETERM_SWAPTOKEN
 
-# Load Wave completions
+# Load TideTerm completions
 wsh completion fish | source
 
-set -g _WAVETERM_SI_FIRSTPROMPT 1
+set -g _TIDETERM_SI_FIRSTPROMPT 1
 
 # shell integration
 function _waveterm_si_blocked
@@ -27,7 +27,7 @@ end
 function _waveterm_si_prompt --on-event fish_prompt
     set -l _waveterm_si_status $status
     _waveterm_si_blocked; and return
-    if test $_WAVETERM_SI_FIRSTPROMPT -eq 1
+    if test $_TIDETERM_SI_FIRSTPROMPT -eq 1
         set -l uname_info (uname -smr 2>/dev/null)
         printf '\033]16162;M;{"shell":"fish","shellversion":"%s","uname":"%s","integration":true}\007' $FISH_VERSION "$uname_info"
         # OSC 7 only sent on first prompt - chpwd hook handles directory changes
@@ -36,7 +36,7 @@ function _waveterm_si_prompt --on-event fish_prompt
         printf '\033]16162;D;{"exitcode":%d}\007' $_waveterm_si_status
     end
     printf '\033]16162;A\007'
-    set -g _WAVETERM_SI_FIRSTPROMPT 0
+    set -g _TIDETERM_SI_FIRSTPROMPT 0
 end
 
 function _waveterm_si_preexec --on-event fish_preexec

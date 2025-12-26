@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wavetermdev/waveterm/pkg/utilds"
+	"github.com/sanshao85/tideterm/pkg/utilds"
 )
 
 // see /aiprompts/usechat-streamingproto.md for protocol

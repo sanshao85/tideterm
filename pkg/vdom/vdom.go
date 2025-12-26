@@ -13,7 +13,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/wavetermdev/waveterm/pkg/util/utilfn"
+	"github.com/sanshao85/tideterm/pkg/util/utilfn"
 )
 
 // ReactNode types = nil | string | Elem

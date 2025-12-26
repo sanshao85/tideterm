@@ -10,8 +10,8 @@ import (
 	"os"
 
 	"github.com/invopop/jsonschema"
-	"github.com/wavetermdev/waveterm/pkg/util/utilfn"
-	"github.com/wavetermdev/waveterm/pkg/wconfig"
+	"github.com/sanshao85/tideterm/pkg/util/utilfn"
+	"github.com/sanshao85/tideterm/pkg/wconfig"
 )
 
 const WaveSchemaSettingsFileName = "schema/settings.json"

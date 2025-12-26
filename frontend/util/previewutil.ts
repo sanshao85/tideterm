@@ -1,9 +1,30 @@
 import { createBlock, getApi } from "@/app/store/global";
-import { makeNativeLabel } from "./platformutil";
+import type { I18nKey } from "@/app/i18n/i18n-core";
+import { isMacOS, isWindows } from "./platformutil";
 import { fireAndForget } from "./util";
 import { formatRemoteUri } from "./waveutil";
 
-export function addOpenMenuItems(menu: ContextMenuItem[], conn: string, finfo: FileInfo): ContextMenuItem[] {
+export type TranslateFn = (key: I18nKey, vars?: Record<string, string | number>) => string;
+
+function getNativeLabel(isDirectory: boolean, t: TranslateFn): string {
+    if (!isDirectory) {
+        return t("filemenu.openFileInDefaultApplication");
+    }
+    if (isMacOS()) {
+        return t("filemenu.revealInFinder");
+    }
+    if (isWindows()) {
+        return t("filemenu.revealInExplorer");
+    }
+    return t("filemenu.revealInFileManager");
+}
+
+export function addOpenMenuItems(
+    menu: ContextMenuItem[],
+    conn: string,
+    finfo: FileInfo,
+    t: TranslateFn
+): ContextMenuItem[] {
     if (!finfo) {
         return menu;
     }
@@ -14,7 +35,7 @@ export function addOpenMenuItems(menu: ContextMenuItem[], conn: string, finfo: F
         // TODO:  resolve correct host path if connection is WSL
         // if the entry is a directory, reveal it in the file manager, if the entry is a file, reveal its parent directory
         menu.push({
-            label: makeNativeLabel(true),
+            label: getNativeLabel(true, t),
             click: () => {
                 getApi().openNativePath(finfo.isdir ? finfo.path : finfo.dir);
             },
@@ -22,7 +43,7 @@ export function addOpenMenuItems(menu: ContextMenuItem[], conn: string, finfo: F
         // if the entry is a file, open it in the default application
         if (!finfo.isdir) {
             menu.push({
-                label: makeNativeLabel(false),
+                label: getNativeLabel(false, t),
                 click: () => {
                     getApi().openNativePath(finfo.path);
                 },
@@ -30,7 +51,7 @@ export function addOpenMenuItems(menu: ContextMenuItem[], conn: string, finfo: F
         }
     } else {
         menu.push({
-            label: "Download File",
+            label: t("filemenu.downloadFile"),
             click: () => {
                 const remoteUri = formatRemoteUri(finfo.path, conn);
                 getApi().downloadFile(remoteUri);
@@ -42,7 +63,7 @@ export function addOpenMenuItems(menu: ContextMenuItem[], conn: string, finfo: F
     });
     if (!finfo.isdir) {
         menu.push({
-            label: "Open Preview in New Block",
+            label: t("filemenu.openPreviewInNewBlock"),
             click: () =>
                 fireAndForget(async () => {
                     const blockDef: BlockDef = {
@@ -59,7 +80,7 @@ export function addOpenMenuItems(menu: ContextMenuItem[], conn: string, finfo: F
     // TODO: improve behavior as we add more connection types
     if (!conn?.startsWith("aws:")) {
         menu.push({
-            label: "Open Terminal in New Block",
+            label: t("filemenu.openTerminalInNewBlock"),
             click: () => {
                 const termBlockDef: BlockDef = {
                     meta: {

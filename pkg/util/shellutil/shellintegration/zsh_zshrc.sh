@@ -1,29 +1,29 @@
 # add wsh to path, source dynamic script from wsh token
-WAVETERM_WSHBINDIR={{.WSHBINDIR}}
-export PATH="$WAVETERM_WSHBINDIR:$PATH"
-source <(wsh token "$WAVETERM_SWAPTOKEN" zsh 2>/dev/null)
-unset WAVETERM_SWAPTOKEN
+TIDETERM_WSHBINDIR={{.WSHBINDIR}}
+export PATH="$TIDETERM_WSHBINDIR:$PATH"
+source <(wsh token "$TIDETERM_SWAPTOKEN" zsh 2>/dev/null)
+unset TIDETERM_SWAPTOKEN
 
 # Source the original zshrc only if ZDOTDIR has not been changed
-if [ "$ZDOTDIR" = "$WAVETERM_ZDOTDIR" ]; then
+if [ "$ZDOTDIR" = "$TIDETERM_ZDOTDIR" ]; then
   [ -f ~/.zshrc ] && source ~/.zshrc
 fi
 
-if [[ ":$PATH:" != *":$WAVETERM_WSHBINDIR:"* ]]; then
-  export PATH="$WAVETERM_WSHBINDIR:$PATH"
+if [[ ":$PATH:" != *":$TIDETERM_WSHBINDIR:"* ]]; then
+  export PATH="$TIDETERM_WSHBINDIR:$PATH"
 fi
-unset WAVETERM_WSHBINDIR
+unset TIDETERM_WSHBINDIR
 
 if [[ -n ${_comps+x} ]]; then
   source <(wsh completion zsh)
 fi
 
 # fix history (macos)
-if [[ "$HISTFILE" == "$WAVETERM_ZDOTDIR/.zsh_history" ]]; then
+if [[ "$HISTFILE" == "$TIDETERM_ZDOTDIR/.zsh_history" ]]; then
   HISTFILE="$HOME/.zsh_history"
 fi
 
-typeset -g _WAVETERM_SI_FIRSTPRECMD=1
+typeset -g _TIDETERM_SI_FIRSTPRECMD=1
 
 # shell integration
 _waveterm_si_blocked() {
@@ -58,7 +58,7 @@ _waveterm_si_precmd() {
   local _waveterm_si_status=$?
   _waveterm_si_blocked && return
   # D;status for previous command (skip before first prompt)
-  if (( !_WAVETERM_SI_FIRSTPRECMD )); then
+  if (( !_TIDETERM_SI_FIRSTPRECMD )); then
     printf '\033]16162;D;{"exitcode":%d}\007' $_waveterm_si_status
   else
     local uname_info=$(uname -smr 2>/dev/null)
@@ -67,7 +67,7 @@ _waveterm_si_precmd() {
     _waveterm_si_osc7
   fi
   printf '\033]16162;A\007'
-  _WAVETERM_SI_FIRSTPRECMD=0
+  _TIDETERM_SI_FIRSTPRECMD=0
 }
 
 _waveterm_si_preexec() {
@@ -86,7 +86,7 @@ _waveterm_si_preexec() {
   fi
 }
 
-typeset -g WAVETERM_SI_INPUTEMPTY=1
+typeset -g TIDETERM_SI_INPUTEMPTY=1
 
 _waveterm_si_inputempty() {
   _waveterm_si_blocked && return
@@ -96,8 +96,8 @@ _waveterm_si_inputempty() {
     current_empty=0
   fi
   
-  if (( current_empty != WAVETERM_SI_INPUTEMPTY )); then
-    WAVETERM_SI_INPUTEMPTY=$current_empty
+  if (( current_empty != TIDETERM_SI_INPUTEMPTY )); then
+    TIDETERM_SI_INPUTEMPTY=$current_empty
     if (( current_empty )); then
       printf '\033]16162;I;{"inputempty":true}\007'
     else

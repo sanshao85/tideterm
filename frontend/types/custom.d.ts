@@ -89,6 +89,7 @@ declare global {
         getDataDir: () => string; // get-data-dir
         getConfigDir: () => string; // get-config-dir
         getHomeDir: () => string; // get-home-dir
+        getPathForFile: (file: File) => string; // get-path-for-file (no ipc, preload webUtils)
         getWebviewPreload: () => string; // get-webview-preload
         getAboutModalDetails: () => AboutModalDetails; // get-about-modal-details
         getZoomFactor: () => number; // get-zoom-factor
@@ -107,6 +108,8 @@ declare global {
         getUpdaterChannel: () => string; // get-updater-channel
         installAppUpdate: () => void; // install-app-update
         onMenuItemAbout: (callback: () => void) => void; // menu-item-about
+        onWindowTitleRename: (callback: () => void) => () => void; // window-title-rename
+        onWindowTitleRestoreAuto: (callback: () => void) => () => void; // window-title-restore-auto
         updateWindowControlsOverlay: (rect: Dimensions) => void; // update-window-controls-overlay
         onReinjectKey: (callback: (waveEvent: WaveKeyboardEvent) => void) => void; // reinject-key
         setWebviewFocus: (focusedId: number) => void; // webview-focus, focusedId is the getWebContentsId of the webview

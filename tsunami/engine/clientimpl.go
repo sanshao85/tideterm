@@ -19,9 +19,9 @@ import (
 	"unicode"
 
 	"github.com/google/uuid"
-	"github.com/wavetermdev/waveterm/tsunami/rpctypes"
-	"github.com/wavetermdev/waveterm/tsunami/util"
-	"github.com/wavetermdev/waveterm/tsunami/vdom"
+	"github.com/sanshao85/tideterm/tsunami/rpctypes"
+	"github.com/sanshao85/tideterm/tsunami/util"
+	"github.com/sanshao85/tideterm/tsunami/vdom"
 )
 
 const TsunamiListenAddrEnvVar = "TSUNAMI_LISTENADDR"

@@ -91,8 +91,8 @@ export class Updater {
             // Display the update banner and create a system notification
             this.status = "ready";
             const updateNotification = new Notification({
-                title: "Wave Terminal",
-                body: "A new version of Wave Terminal is ready to install.",
+                title: "TideTerm",
+                body: "A new version of TideTerm is ready to install.",
             });
             updateNotification.on("click", () => {
                 fireAndForget(this.promptToInstallUpdate.bind(this));

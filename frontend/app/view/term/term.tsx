@@ -16,6 +16,7 @@ import clsx from "clsx";
 import debug from "debug";
 import * as jotai from "jotai";
 import * as React from "react";
+import { useDrop } from "react-dnd";
 import { TermStickers } from "./termsticker";
 import { TermThemeUpdater } from "./termtheme";
 import { computeTheme } from "./termutil";
@@ -27,6 +28,34 @@ const dlog = debug("wave:term");
 interface TerminalViewProps {
     blockId: string;
     model: TermViewModel;
+}
+
+function parseDraggedFileUri(uri: string): { connection: string | null; path: string } | null {
+    if (!uri) {
+        return null;
+    }
+    if (uri.startsWith("wsh://")) {
+        // NOTE: We intentionally do not use `new URL()` here, because connection names can include
+        // user/host/port patterns like `root@hk150:2222` which URL parsing would split into
+        // username/hostname/port.
+        const rest = uri.slice("wsh://".length);
+        const slashIdx = rest.indexOf("/");
+        if (slashIdx === -1) {
+            return { connection: rest || null, path: "" };
+        }
+        const connection = rest.slice(0, slashIdx);
+        let path = decodeURIComponent(rest.slice(slashIdx));
+        if (path.startsWith("//")) {
+            path = path.slice(1);
+        }
+        return { connection: connection || null, path };
+    }
+    const s3Marker = ":s3://";
+    const s3Idx = uri.indexOf(s3Marker);
+    if (s3Idx > 0) {
+        return { connection: uri.slice(0, s3Idx), path: uri.slice(s3Idx + 1) };
+    }
+    return { connection: null, path: uri };
 }
 
 const TermResyncHandler = React.memo(({ blockId, model }: TerminalViewProps) => {
@@ -172,6 +201,62 @@ const TerminalView = ({ blockId, model }: ViewComponentProps<TermViewModel>) => 
     const isFocused = jotai.useAtomValue(model.nodeModel.isFocused);
     const isMI = jotai.useAtomValue(tabModel.isTermMultiInput);
     const isBasicTerm = termMode != "vdom" && blockData?.meta?.controller != "cmd"; // needs to match isBasicTerm
+
+    const terminalConnection = blockData?.meta?.connection ?? "local";
+    const [, dropFileItemToTerm] = useDrop(
+        () => ({
+            accept: "FILE_ITEM",
+            canDrop: (item: DraggedFile) => {
+                if (!isBasicTerm) {
+                    return false;
+                }
+                const parsed = parseDraggedFileUri(item?.uri);
+                if (!parsed?.connection) {
+                    return false;
+                }
+                return parsed.connection === terminalConnection;
+            },
+            drop: async (item: DraggedFile, monitor) => {
+                if (monitor.didDrop()) {
+                    return;
+                }
+                if (!isBasicTerm) {
+                    return;
+                }
+                model.nodeModel.focusNode();
+                model.giveFocus();
+
+                let pathToPaste: string = null;
+                try {
+                    const fileInfo = await RpcApi.FileInfoCommand(TabRpcClient, { info: { path: item.uri } }, null);
+                    pathToPaste = fileInfo?.path ?? null;
+                } catch (_) {
+                    // Fall back to best-effort parsing below.
+                }
+                if (!pathToPaste) {
+                    const parsed = parseDraggedFileUri(item?.uri);
+                    pathToPaste = parsed?.path ?? null;
+                }
+                if (!pathToPaste) {
+                    return;
+                }
+                if (pathToPaste.startsWith("/~")) {
+                    pathToPaste = pathToPaste.slice(1);
+                }
+
+                model.termRef.current?.pasteText(pathToPaste);
+                model.giveFocus();
+            },
+        }),
+        [isBasicTerm, model.termRef, terminalConnection]
+    );
+
+    React.useEffect(() => {
+        if (connectElemRef.current == null) {
+            return;
+        }
+        dropFileItemToTerm(connectElemRef.current);
+    }, [dropFileItemToTerm]);
 
     // search
     const searchProps = useSearch({

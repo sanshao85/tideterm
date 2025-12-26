@@ -19,7 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 
 	"github.com/aws/smithy-go"
-	"github.com/wavetermdev/waveterm/pkg/waveobj"
+	"github.com/sanshao85/tideterm/pkg/waveobj"
 	"gopkg.in/ini.v1"
 )
 

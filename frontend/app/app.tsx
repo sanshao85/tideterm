@@ -22,6 +22,7 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import { AppBackground } from "./app-bg";
 import { CenteredDiv } from "./element/quickelems";
 import { NotificationBubbles } from "./notification/notificationbubbles";
+import { WindowTitleManager } from "./window/windowtitle";
 
 import "./app.scss";
 
@@ -304,6 +305,7 @@ const AppInner = () => {
             <AppKeyHandlers />
             <AppFocusHandler />
             <AppSettingsUpdater />
+            <WindowTitleManager />
             <DndProvider backend={HTML5Backend}>
                 <Workspace />
             </DndProvider>

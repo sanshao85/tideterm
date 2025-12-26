@@ -7,7 +7,7 @@ import (
 	"bytes"
 	"net/http"
 
-	"github.com/wavetermdev/waveterm/pkg/wshrpc"
+	"github.com/sanshao85/tideterm/pkg/wshrpc"
 )
 
 const maxChunkSize = 64 * 1024 // 64KB maximum chunk size

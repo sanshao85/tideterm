@@ -18,12 +18,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wavetermdev/waveterm/pkg/util/envutil"
-	"github.com/wavetermdev/waveterm/pkg/util/utilfn"
-	"github.com/wavetermdev/waveterm/pkg/utilds"
-	"github.com/wavetermdev/waveterm/pkg/wavebase"
-	"github.com/wavetermdev/waveterm/pkg/waveobj"
-	"github.com/wavetermdev/waveterm/pkg/wconfig"
+	"github.com/sanshao85/tideterm/pkg/util/envutil"
+	"github.com/sanshao85/tideterm/pkg/util/utilfn"
+	"github.com/sanshao85/tideterm/pkg/utilds"
+	"github.com/sanshao85/tideterm/pkg/wavebase"
+	"github.com/sanshao85/tideterm/pkg/waveobj"
+	"github.com/sanshao85/tideterm/pkg/wconfig"
 )
 
 var (
@@ -221,10 +221,10 @@ func WaveshellLocalEnvVars(termType string) map[string]string {
 		rtn["TERM"] = termType
 	}
 	// these are not necessary since they should be set with the swap token, but no harm in setting them here
-	rtn["TERM_PROGRAM"] = "waveterm"
-	rtn["WAVETERM"], _ = os.Executable()
-	rtn["WAVETERM_VERSION"] = wavebase.WaveVersion
-	rtn["WAVETERM_WSHBINDIR"] = filepath.Join(wavebase.GetWaveDataDir(), WaveHomeBinDir)
+	rtn["TERM_PROGRAM"] = "tideterm"
+	rtn["TIDETERM"] = "1"
+	rtn["TIDETERM_VERSION"] = wavebase.WaveVersion
+	rtn["TIDETERM_WSHBINDIR"] = filepath.Join(wavebase.GetWaveDataDir(), WaveHomeBinDir)
 	return rtn
 }
 
@@ -280,11 +280,11 @@ func GetLocalBashRcFileOverride() string {
 }
 
 func GetLocalWaveFishFilePath() string {
-	return filepath.Join(wavebase.GetWaveDataDir(), FishIntegrationDir, "wave.fish")
+	return filepath.Join(wavebase.GetWaveDataDir(), FishIntegrationDir, "tideterm.fish")
 }
 
 func GetLocalWavePowershellEnv() string {
-	return filepath.Join(wavebase.GetWaveDataDir(), PwshIntegrationDir, "wavepwsh.ps1")
+	return filepath.Join(wavebase.GetWaveDataDir(), PwshIntegrationDir, "tidetermpwsh.ps1")
 }
 
 func GetLocalZshZDotDir() string {
@@ -411,13 +411,13 @@ func InitRcFiles(waveHome string, absWshBinDir string) error {
 	if err != nil {
 		return fmt.Errorf("error writing bash-integration bash_preexec.sh: %v", err)
 	}
-	err = utilfn.WriteTemplateToFile(filepath.Join(fishDir, "wave.fish"), FishStartup_Wavefish, params)
+	err = utilfn.WriteTemplateToFile(filepath.Join(fishDir, "tideterm.fish"), FishStartup_Wavefish, params)
 	if err != nil {
-		return fmt.Errorf("error writing fish-integration wave.fish: %v", err)
+		return fmt.Errorf("error writing fish-integration tideterm.fish: %v", err)
 	}
-	err = utilfn.WriteTemplateToFile(filepath.Join(pwshDir, "wavepwsh.ps1"), PwshStartup_wavepwsh, params)
+	err = utilfn.WriteTemplateToFile(filepath.Join(pwshDir, "tidetermpwsh.ps1"), PwshStartup_wavepwsh, params)
 	if err != nil {
-		return fmt.Errorf("error writing pwsh-integration wavepwsh.ps1: %v", err)
+		return fmt.Errorf("error writing pwsh-integration tidetermpwsh.ps1: %v", err)
 	}
 
 	return nil

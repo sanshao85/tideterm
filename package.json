@@ -1,16 +1,15 @@
 {
-    "name": "waveterm",
+    "name": "tideterm",
     "author": {
-        "name": "Command Line Inc",
-        "email": "info@commandline.dev"
+        "name": "sanshao85"
     },
-    "productName": "Wave",
+    "productName": "TideTerm",
     "description": "Open-Source AI-Native Terminal Built for Seamless Workflows",
     "license": "Apache-2.0",
-    "version": "0.13.1",
-    "homepage": "https://waveterm.dev",
+    "version": "0.13.1-tideterm.0",
+    "homepage": "https://github.com/sanshao85/tideterm",
     "build": {
-        "appId": "dev.commandline.waveterm"
+        "appId": "io.github.sanshao85.tideterm"
     },
     "private": true,
     "main": "./dist/main/index.js",

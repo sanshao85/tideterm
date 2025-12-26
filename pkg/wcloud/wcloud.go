@@ -17,17 +17,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/wavetermdev/waveterm/pkg/telemetry"
-	"github.com/wavetermdev/waveterm/pkg/telemetry/telemetrydata"
-	"github.com/wavetermdev/waveterm/pkg/util/daystr"
-	"github.com/wavetermdev/waveterm/pkg/wavebase"
+	"github.com/sanshao85/tideterm/pkg/telemetry"
+	"github.com/sanshao85/tideterm/pkg/telemetry/telemetrydata"
+	"github.com/sanshao85/tideterm/pkg/util/daystr"
+	"github.com/sanshao85/tideterm/pkg/wavebase"
 )
 
-const WCloudEndpoint = "https://api.waveterm.dev/central"
+// TideTerm does not ship with a default cloud backend configured.
+// If you run your own backend, set it via WCLOUD_* environment variables.
+const WCloudEndpoint = ""
 const WCloudEndpointVarName = "WCLOUD_ENDPOINT"
-const WCloudWSEndpoint = "wss://wsapi.waveterm.dev/"
+const WCloudWSEndpoint = ""
 const WCloudWSEndpointVarName = "WCLOUD_WS_ENDPOINT"
-const WCloudPingEndpoint = "https://ping.waveterm.dev/central"
+const WCloudPingEndpoint = ""
 const WCloudPingEndpointVarName = "WCLOUD_PING_ENDPOINT"
 
 var WCloudWSEndpoint_VarCache string
@@ -74,7 +76,11 @@ func checkEndpointVar(endpoint string, debugName string, varName string) error {
 	if !wavebase.IsDevMode() {
 		return nil
 	}
-	if endpoint == "" || !strings.HasPrefix(endpoint, "https://") {
+	if endpoint == "" {
+		// allow unset to disable cloud services in dev mode
+		return nil
+	}
+	if !strings.HasPrefix(endpoint, "https://") {
 		return fmt.Errorf("invalid %s, %s not set or invalid", debugName, varName)
 	}
 	return nil
@@ -85,7 +91,11 @@ func checkWSEndpointVar(endpoint string, debugName string, varName string) error
 		return nil
 	}
 	log.Printf("checking endpoint %q\n", endpoint)
-	if endpoint == "" || !strings.HasPrefix(endpoint, "wss://") {
+	if endpoint == "" {
+		// allow unset to disable cloud services in dev mode
+		return nil
+	}
+	if !strings.HasPrefix(endpoint, "wss://") {
 		return fmt.Errorf("invalid %s, %s not set or invalid", debugName, varName)
 	}
 	return nil
@@ -237,6 +247,10 @@ func SendAllTelemetry(clientId string) error {
 		log.Printf("telemetry disabled, not sending\n")
 		return nil
 	}
+	if GetEndpoint() == "" {
+		log.Printf("cloud endpoint not configured, telemetry send skipped\n")
+		return nil
+	}
 	_, err := sendTEvents(clientId)
 	if err != nil {
 		return err
@@ -281,6 +295,9 @@ func sendTelemetry(clientId string) error {
 }
 
 func SendNoTelemetryUpdate(ctx context.Context, clientId string, noTelemetryVal bool) error {
+	if GetEndpoint() == "" {
+		return nil
+	}
 	req, err := makeAnonPostReq(ctx, NoTelemetryUrl, NoTelemetryInputType{ClientId: clientId, Value: noTelemetryVal})
 	if err != nil {
 		return err

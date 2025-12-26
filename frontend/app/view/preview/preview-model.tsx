@@ -6,7 +6,8 @@ import type { TabModel } from "@/app/store/tab-model";
 import { ContextMenuModel } from "@/app/store/contextmenu";
 import { RpcApi } from "@/app/store/wshclientapi";
 import { TabRpcClient } from "@/app/store/wshrpcutil";
-import { getConnStatusAtom, getOverrideConfigAtom, getSettingsKeyAtom, globalStore, refocusNode } from "@/store/global";
+import { getAppLanguageFromSettings, t as tCore } from "@/app/i18n/i18n-core";
+import { atoms, getConnStatusAtom, getOverrideConfigAtom, getSettingsKeyAtom, globalStore, refocusNode } from "@/store/global";
 import * as services from "@/store/services";
 import * as WOS from "@/store/wos";
 import { goHistory, goHistoryBack, goHistoryForward } from "@/util/historyutil";
@@ -768,7 +769,8 @@ export class PreviewModel implements ViewModel {
             submenu: fontSizeSubMenu,
         });
         const finfo = jotaiLoadableValue(globalStore.get(this.loadableFileInfo), null);
-        addOpenMenuItems(menuItems, globalStore.get(this.connectionImmediate), finfo);
+        const lang = getAppLanguageFromSettings(globalStore.get(atoms.settingsAtom));
+        addOpenMenuItems(menuItems, globalStore.get(this.connectionImmediate), finfo, (key, vars) => tCore(lang, key, vars));
         const loadableSV = globalStore.get(this.loadableSpecializedView);
         const wordWrapAtom = getOverrideConfigAtom(this.blockId, "editor:wordwrap");
         const wordWrap = globalStore.get(wordWrapAtom) ?? false;

@@ -9,16 +9,16 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/wavetermdev/waveterm/pkg/service/blockservice"
-	"github.com/wavetermdev/waveterm/pkg/service/clientservice"
-	"github.com/wavetermdev/waveterm/pkg/service/objectservice"
-	"github.com/wavetermdev/waveterm/pkg/service/userinputservice"
-	"github.com/wavetermdev/waveterm/pkg/service/windowservice"
-	"github.com/wavetermdev/waveterm/pkg/service/workspaceservice"
-	"github.com/wavetermdev/waveterm/pkg/tsgen/tsgenmeta"
-	"github.com/wavetermdev/waveterm/pkg/util/utilfn"
-	"github.com/wavetermdev/waveterm/pkg/waveobj"
-	"github.com/wavetermdev/waveterm/pkg/web/webcmd"
+	"github.com/sanshao85/tideterm/pkg/service/blockservice"
+	"github.com/sanshao85/tideterm/pkg/service/clientservice"
+	"github.com/sanshao85/tideterm/pkg/service/objectservice"
+	"github.com/sanshao85/tideterm/pkg/service/userinputservice"
+	"github.com/sanshao85/tideterm/pkg/service/windowservice"
+	"github.com/sanshao85/tideterm/pkg/service/workspaceservice"
+	"github.com/sanshao85/tideterm/pkg/tsgen/tsgenmeta"
+	"github.com/sanshao85/tideterm/pkg/util/utilfn"
+	"github.com/sanshao85/tideterm/pkg/waveobj"
+	"github.com/sanshao85/tideterm/pkg/web/webcmd"
 )
 
 var ServiceMap = map[string]any{

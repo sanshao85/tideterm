@@ -12,14 +12,14 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/sawka/txwrap"
-	"github.com/wavetermdev/waveterm/pkg/util/migrateutil"
-	"github.com/wavetermdev/waveterm/pkg/wavebase"
-	"github.com/wavetermdev/waveterm/pkg/waveobj"
+	"github.com/sanshao85/tideterm/pkg/util/migrateutil"
+	"github.com/sanshao85/tideterm/pkg/wavebase"
+	"github.com/sanshao85/tideterm/pkg/waveobj"
 
-	dbfs "github.com/wavetermdev/waveterm/db"
+	dbfs "github.com/sanshao85/tideterm/db"
 )
 
-const WStoreDBName = "waveterm.db"
+const WStoreDBName = "tideterm.db"
 
 type TxWrap = txwrap.TxWrap
 

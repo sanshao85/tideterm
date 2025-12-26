@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/wavetermdev/waveterm/pkg/vdom"
-	"github.com/wavetermdev/waveterm/pkg/wshutil"
+	"github.com/sanshao85/tideterm/pkg/vdom"
+	"github.com/sanshao85/tideterm/pkg/wshutil"
 )
 
 func Page(ctx context.Context, props map[string]any) any {

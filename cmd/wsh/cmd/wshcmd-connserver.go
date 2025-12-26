@@ -17,15 +17,15 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/wavetermdev/waveterm/pkg/panichandler"
-	"github.com/wavetermdev/waveterm/pkg/remote/fileshare/wshfs"
-	"github.com/wavetermdev/waveterm/pkg/util/packetparser"
-	"github.com/wavetermdev/waveterm/pkg/util/sigutil"
-	"github.com/wavetermdev/waveterm/pkg/wavebase"
-	"github.com/wavetermdev/waveterm/pkg/wshrpc"
-	"github.com/wavetermdev/waveterm/pkg/wshrpc/wshclient"
-	"github.com/wavetermdev/waveterm/pkg/wshrpc/wshremote"
-	"github.com/wavetermdev/waveterm/pkg/wshutil"
+	"github.com/sanshao85/tideterm/pkg/panichandler"
+	"github.com/sanshao85/tideterm/pkg/remote/fileshare/wshfs"
+	"github.com/sanshao85/tideterm/pkg/util/packetparser"
+	"github.com/sanshao85/tideterm/pkg/util/sigutil"
+	"github.com/sanshao85/tideterm/pkg/wavebase"
+	"github.com/sanshao85/tideterm/pkg/wshrpc"
+	"github.com/sanshao85/tideterm/pkg/wshrpc/wshclient"
+	"github.com/sanshao85/tideterm/pkg/wshrpc/wshremote"
+	"github.com/sanshao85/tideterm/pkg/wshutil"
 )
 
 var serverCmd = &cobra.Command{
@@ -198,8 +198,8 @@ func checkForUpdate() error {
 	if needsRestart {
 		// run the restart command here
 		// how to get the correct path?
-		return syscall.Exec("~/.waveterm/bin/wsh", []string{"wsh", "connserver", "--single"}, []string{})
-	}
+			return syscall.Exec("~/.tideterm/bin/wsh", []string{"wsh", "connserver", "--single"}, []string{})
+		}
 	return nil
 }
 

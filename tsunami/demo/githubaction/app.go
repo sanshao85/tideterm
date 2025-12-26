@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/wavetermdev/waveterm/tsunami/app"
-	"github.com/wavetermdev/waveterm/tsunami/vdom"
+	"github.com/sanshao85/tideterm/tsunami/app"
+	"github.com/sanshao85/tideterm/tsunami/vdom"
 )
 
 var AppMeta = app.AppMeta{

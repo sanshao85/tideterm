@@ -21,7 +21,7 @@ const ModalsRenderer = () => {
     for (const modal of modals) {
         const ModalComponent = getModalComponent(modal.displayName);
         if (ModalComponent) {
-            rtn.push(<ModalComponent key={modal.displayName} {...modal.props} />);
+            rtn.push(<ModalComponent key={modal.id} {...modal.props} />);
         }
     }
     if (newInstallOnboardingOpen) {
@@ -50,7 +50,7 @@ const ModalsRenderer = () => {
     }, []);
     useEffect(() => {
         globalStore.set(atoms.modalOpen, rtn.length > 0);
-    }, [rtn]);
+    }, [modals.length, newInstallOnboardingOpen, upgradeOnboardingOpen]);
 
     return <>{rtn}</>;
 };

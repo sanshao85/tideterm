@@ -57,6 +57,139 @@ type TermWrapOptions = {
     sendDataHandler?: (data: string) => void;
 };
 
+function escapePathForShell(path: string): string {
+    // Match typical terminal drag-in behavior: keep paths readable, but escape whitespace and common metacharacters.
+    // This keeps `/Users/a/b` unchanged while making `/Users/a/My Folder` usable in shells like zsh/bash.
+    return path.replace(/([\\\s"'`$&|;<>(){}[\]*?!])/g, "\\$1");
+}
+
+function stripTrailingPathSeparators(path: string): string {
+    if (!path) {
+        return path;
+    }
+    // Preserve root paths.
+    if (path === "/" || path === "\\") {
+        return path;
+    }
+    // Preserve Windows drive roots (e.g. "C:\").
+    if (/^[a-zA-Z]:[\\/]+$/.test(path)) {
+        return path.replace(/\//g, "\\").replace(/[\\]+$/, "\\");
+    }
+    return path.replace(/[\\/]+$/, "");
+}
+
+function isLocalConnectionName(connection: string | null | undefined): boolean {
+    if (connection == null || connection === "") {
+        return true;
+    }
+    if (connection === "local") {
+        return true;
+    }
+    return connection.startsWith("local:");
+}
+
+function dataTransferHasFiles(dt: DataTransfer | null): boolean {
+    if (!dt) {
+        return false;
+    }
+    try {
+        // Prefer types check; on some platforms `dt.files` is empty until drop.
+        const types = Array.from((dt.types as any) ?? []);
+        if (types.includes("Files") || types.includes("text/uri-list")) {
+            return true;
+        }
+    } catch (_) {}
+    try {
+        const items = Array.from((dt.items as any) ?? []);
+        if (items.some((i: any) => i?.kind === "file")) {
+            return true;
+        }
+    } catch (_) {}
+    return dt.files != null && dt.files.length > 0;
+}
+
+function nativeFileUrlToPath(fileUrl: string): string | null {
+    try {
+        const url = new URL(fileUrl);
+        if (url.protocol !== "file:") {
+            return null;
+        }
+        let path = decodeURIComponent(url.pathname || "");
+        if (path.startsWith("//")) {
+            path = path.slice(1);
+        }
+        // Windows file URLs can look like file:///C:/Users/...
+        if (/^\/[a-zA-Z]:\//.test(path)) {
+            path = path.slice(1);
+        }
+        return path || null;
+    } catch (_) {
+        return null;
+    }
+}
+
+function extractNativeFilePaths(dt: DataTransfer): string[] {
+    const fileList = Array.from(dt.files ?? []);
+    const fromFiles = fileList.map((f: any) => (typeof f?.path === "string" ? f.path : "")).filter((p) => p.length > 0);
+    if (fromFiles.length > 0) {
+        return fromFiles;
+    }
+
+    // Electron sandbox: use preload API to get the real native path for File objects.
+    try {
+        const api = getApi();
+        const getPathForFile = (api as any)?.getPathForFile;
+        if (typeof getPathForFile === "function") {
+            const paths = fileList
+                .map((f) => {
+                    try {
+                        return String(getPathForFile(f) ?? "");
+                    } catch (_) {
+                        return "";
+                    }
+                })
+                .filter((p) => p.length > 0);
+            if (paths.length > 0) {
+                return paths;
+            }
+        }
+    } catch (_) {}
+
+    // In some Electron sandbox configurations `File.path` is unavailable; fall back to file:// URLs if present.
+    try {
+        const uriList = dt.getData("text/uri-list");
+        if (uriList) {
+            const paths = uriList
+                .split(/\r?\n/)
+                .map((line) => line.trim())
+                .filter((line) => line.length > 0 && !line.startsWith("#"))
+                .map(nativeFileUrlToPath)
+                .filter((p): p is string => !!p);
+            if (paths.length > 0) {
+                return paths;
+            }
+        }
+    } catch (_) {}
+
+    try {
+        const text = dt.getData("text/plain");
+        if (text) {
+            const candidates = text
+                .split(/\s+/)
+                .map((s) => s.trim())
+                .filter((s) => s.length > 0);
+            const paths = candidates
+                .map((s) => (s.startsWith("file:") ? nativeFileUrlToPath(s) : s))
+                .filter((p): p is string => !!p);
+            if (paths.length > 0) {
+                return paths;
+            }
+        }
+    } catch (_) {}
+
+    return [];
+}
+
 function handleOscWaveCommand(data: string, blockId: string, loaded: boolean): boolean {
     if (!loaded) {
         return true;
@@ -401,6 +534,45 @@ export class TermWrap {
     lastPasteData: string = "";
     lastPasteTime: number = 0;
 
+    private handleNativeDragOver = (e: DragEvent) => {
+        const dt = e.dataTransfer;
+        if (!dt || !dataTransferHasFiles(dt)) {
+            return;
+        }
+        e.preventDefault();
+        dt.dropEffect = this.isLocalConnection() ? "copy" : "none";
+    };
+
+    private handleNativeDrop = (e: DragEvent) => {
+        const dt = e.dataTransfer;
+        if (!dt || !dataTransferHasFiles(dt)) {
+            return;
+        }
+        // Always prevent the browser/Electron default behavior (e.g. navigation to a file:// URL).
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!this.isLocalConnection()) {
+            return;
+        }
+        const filePaths = extractNativeFilePaths(dt);
+        if (filePaths.length === 0) {
+            return;
+        }
+        this.terminal.focus();
+        this.pasteText(filePaths.map(stripTrailingPathSeparators).map(escapePathForShell).join(" "));
+    };
+
+    private isLocalConnection(): boolean {
+        try {
+            const blockData = WOS.getObjectValue<Block>(`block:${this.blockId}`);
+            return isLocalConnectionName(blockData?.meta?.connection);
+        } catch (e) {
+            // If we can't resolve connection info, default to not handling native file drops.
+            return false;
+        }
+    }
+
     constructor(
         tabId: string,
         blockId: string,
@@ -476,9 +648,13 @@ export class TermWrap {
         this.handleResize();
         const pasteHandler = this.pasteHandler.bind(this);
         this.connectElem.addEventListener("paste", pasteHandler, true);
+        this.connectElem.addEventListener("dragover", this.handleNativeDragOver, true);
+        this.connectElem.addEventListener("drop", this.handleNativeDrop, true);
         this.toDispose.push({
             dispose: () => {
                 this.connectElem.removeEventListener("paste", pasteHandler, true);
+                this.connectElem.removeEventListener("dragover", this.handleNativeDragOver, true);
+                this.connectElem.removeEventListener("drop", this.handleNativeDrop, true);
             },
         });
     }
@@ -802,6 +978,23 @@ export class TermWrap {
             setTimeout(() => {
                 this.pasteActive = false;
             }, 30);
+        }
+    }
+
+    pasteText(text: string): void {
+        if (!text) {
+            return;
+        }
+        const wasPasteActive = this.pasteActive;
+        this.pasteActive = true;
+        try {
+            this.terminal.paste(text);
+        } finally {
+            if (!wasPasteActive) {
+                setTimeout(() => {
+                    this.pasteActive = false;
+                }, 30);
+            }
         }
     }
 }

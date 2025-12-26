@@ -173,19 +173,28 @@ const BlockFull = memo(({ nodeModel, viewModel }: FullBlockProps) => {
     }, []);
 
     const [blockContentOffset, setBlockContentOffset] = useState<Dimensions>();
+    const offsetCalculatedRef = useRef(false);
 
-    useEffect(() => {
+    // Calculate offset between block and content only once after mount.
+    // This offset accounts for header, padding, borders, etc.
+    // Use a ref to ensure this only runs once, even with React Strict Mode.
+    useLayoutEffect(() => {
+        if (offsetCalculatedRef.current) {
+            return;
+        }
         if (blockRef.current && contentRef.current) {
+            offsetCalculatedRef.current = true;
             const blockRect = blockRef.current.getBoundingClientRect();
             const contentRect = contentRef.current.getBoundingClientRect();
-            setBlockContentOffset({
+            const nextOffset: Dimensions = {
                 top: 0,
                 left: 0,
                 width: blockRect.width - contentRect.width,
                 height: blockRect.height - contentRect.height,
-            });
+            };
+            setBlockContentOffset(nextOffset);
         }
-    }, [blockRef, contentRef]);
+    }, []);
 
     const blockContentStyle = useMemo<React.CSSProperties>(() => {
         const retVal: React.CSSProperties = {
@@ -266,15 +275,30 @@ const Block = memo((props: BlockProps) => {
     const tabModel = useTabModel();
     const [blockData, loading] = useWaveObjectValue<Block>(makeORef("block", props.nodeModel.blockId));
     const bcm = getBlockComponentModel(props.nodeModel.blockId);
+    const viewModelRef = useRef<ViewModel | null>(null);
     let viewModel = bcm?.viewModel;
     if (viewModel == null || viewModel.viewType != blockData?.meta?.view) {
+        // Dispose the previous viewModel(s) for this block before replacing it.
+        // (During HMR or unusual remounts, the BCM viewModel and our ref can temporarily diverge.)
+        const toDispose = new Set<ViewModel>();
+        if (viewModelRef.current) {
+            toDispose.add(viewModelRef.current);
+        }
+        if (viewModel) {
+            toDispose.add(viewModel);
+        }
+        for (const vm of toDispose) {
+            vm.dispose?.();
+        }
         viewModel = makeViewModel(props.nodeModel.blockId, blockData?.meta?.view, props.nodeModel, tabModel);
         registerBlockComponentModel(props.nodeModel.blockId, { viewModel });
     }
+    viewModelRef.current = viewModel;
     useEffect(() => {
         return () => {
             unregisterBlockComponentModel(props.nodeModel.blockId);
-            viewModel?.dispose?.();
+            viewModelRef.current?.dispose?.();
+            viewModelRef.current = null;
         };
     }, []);
     if (loading || isBlank(props.nodeModel.blockId) || blockData == null) {
@@ -292,15 +316,29 @@ const SubBlock = memo((props: SubBlockProps) => {
     const tabModel = useTabModel();
     const [blockData, loading] = useWaveObjectValue<Block>(makeORef("block", props.nodeModel.blockId));
     const bcm = getBlockComponentModel(props.nodeModel.blockId);
+    const viewModelRef = useRef<ViewModel | null>(null);
     let viewModel = bcm?.viewModel;
     if (viewModel == null || viewModel.viewType != blockData?.meta?.view) {
+        // Dispose the previous viewModel(s) for this block before replacing it.
+        const toDispose = new Set<ViewModel>();
+        if (viewModelRef.current) {
+            toDispose.add(viewModelRef.current);
+        }
+        if (viewModel) {
+            toDispose.add(viewModel);
+        }
+        for (const vm of toDispose) {
+            vm.dispose?.();
+        }
         viewModel = makeViewModel(props.nodeModel.blockId, blockData?.meta?.view, props.nodeModel, tabModel);
         registerBlockComponentModel(props.nodeModel.blockId, { viewModel });
     }
+    viewModelRef.current = viewModel;
     useEffect(() => {
         return () => {
             unregisterBlockComponentModel(props.nodeModel.blockId);
-            viewModel?.dispose?.();
+            viewModelRef.current?.dispose?.();
+            viewModelRef.current = null;
         };
     }, []);
     if (loading || isBlank(props.nodeModel.blockId) || blockData == null) {

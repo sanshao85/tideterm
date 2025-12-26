@@ -3,7 +3,7 @@
 
 package wps
 
-import "github.com/wavetermdev/waveterm/pkg/util/utilfn"
+import "github.com/sanshao85/tideterm/pkg/util/utilfn"
 
 const (
 	Event_BlockClose          = "blockclose"

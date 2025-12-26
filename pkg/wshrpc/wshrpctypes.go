@@ -12,14 +12,14 @@ import (
 	"os"
 	"reflect"
 
-	"github.com/wavetermdev/waveterm/pkg/aiusechat/uctypes"
-	"github.com/wavetermdev/waveterm/pkg/ijson"
-	"github.com/wavetermdev/waveterm/pkg/telemetry/telemetrydata"
-	"github.com/wavetermdev/waveterm/pkg/util/iochan/iochantypes"
-	"github.com/wavetermdev/waveterm/pkg/vdom"
-	"github.com/wavetermdev/waveterm/pkg/waveobj"
-	"github.com/wavetermdev/waveterm/pkg/wconfig"
-	"github.com/wavetermdev/waveterm/pkg/wps"
+	"github.com/sanshao85/tideterm/pkg/aiusechat/uctypes"
+	"github.com/sanshao85/tideterm/pkg/ijson"
+	"github.com/sanshao85/tideterm/pkg/telemetry/telemetrydata"
+	"github.com/sanshao85/tideterm/pkg/util/iochan/iochantypes"
+	"github.com/sanshao85/tideterm/pkg/vdom"
+	"github.com/sanshao85/tideterm/pkg/waveobj"
+	"github.com/sanshao85/tideterm/pkg/wconfig"
+	"github.com/sanshao85/tideterm/pkg/wps"
 )
 
 const (
@@ -373,7 +373,7 @@ type RpcOpts struct {
 	NoResponse bool   `json:"noresponse,omitempty"`
 	Route      string `json:"route,omitempty"`
 
-	StreamCancelFn func() `json:"-"` // this is an *output* parameter, set by the handler
+	StreamCancelFn func(context.Context) error `json:"-"` // this is an *output* parameter, set by the handler
 }
 
 const (

@@ -18,7 +18,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wavetermdev/waveterm/pkg/util/utilfn"
+	"github.com/sanshao85/tideterm/pkg/util/utilfn"
 )
 
 // set by main-server.go
@@ -26,17 +26,17 @@ var WaveVersion = "0.0.0"
 var BuildTime = "0"
 
 const (
-	WaveConfigHomeEnvVar           = "WAVETERM_CONFIG_HOME"
-	WaveDataHomeEnvVar             = "WAVETERM_DATA_HOME"
-	WaveAppPathVarName             = "WAVETERM_APP_PATH"
-	WaveAppResourcesPathVarName    = "WAVETERM_RESOURCES_PATH"
-	WaveAppElectronExecPathVarName = "WAVETERM_ELECTRONEXECPATH"
-	WaveDevVarName                 = "WAVETERM_DEV"
-	WaveDevViteVarName             = "WAVETERM_DEV_VITE"
-	WaveWshForceUpdateVarName      = "WAVETERM_WSHFORCEUPDATE"
+	WaveConfigHomeEnvVar           = "TIDETERM_CONFIG_HOME"
+	WaveDataHomeEnvVar             = "TIDETERM_DATA_HOME"
+	WaveAppPathVarName             = "TIDETERM_APP_PATH"
+	WaveAppResourcesPathVarName    = "TIDETERM_RESOURCES_PATH"
+	WaveAppElectronExecPathVarName = "TIDETERM_ELECTRONEXECPATH"
+	WaveDevVarName                 = "TIDETERM_DEV"
+	WaveDevViteVarName             = "TIDETERM_DEV_VITE"
+	WaveWshForceUpdateVarName      = "TIDETERM_WSHFORCEUPDATE"
 
-	WaveJwtTokenVarName  = "WAVETERM_JWT"
-	WaveSwapTokenVarName = "WAVETERM_SWAPTOKEN"
+	WaveJwtTokenVarName  = "TIDETERM_JWT"
+	WaveSwapTokenVarName = "TIDETERM_SWAPTOKEN"
 )
 
 const (
@@ -55,16 +55,16 @@ var AppResourcesPath_VarCache string    // caches WAVETERM_RESOURCES_PATH
 var AppElectronExecPath_VarCache string // caches WAVETERM_ELECTRONEXECPATH
 var Dev_VarCache string                 // caches WAVETERM_DEV
 
-const WaveLockFile = "wave.lock"
-const DomainSocketBaseName = "wave.sock"
-const RemoteDomainSocketBaseName = "wave-remote.sock"
+const WaveLockFile = "tideterm.lock"
+const DomainSocketBaseName = "tideterm.sock"
+const RemoteDomainSocketBaseName = "tideterm-remote.sock"
 const WaveDBDir = "db"
-const JwtSecret = "waveterm" // TODO generate and store this
+const JwtSecret = "tideterm" // TODO generate and store this
 const ConfigDir = "config"
-const RemoteWaveHomeDirName = ".waveterm"
+const RemoteWaveHomeDirName = ".tideterm"
 const RemoteWshBinDirName = "bin"
-const RemoteFullWshBinPath = "~/.waveterm/bin/wsh"
-const RemoteFullDomainSocketPath = "~/.waveterm/wave-remote.sock"
+const RemoteFullWshBinPath = "~/.tideterm/bin/wsh"
+const RemoteFullDomainSocketPath = "~/.tideterm/tideterm-remote.sock"
 
 const AppPathBinDir = "bin"
 
@@ -200,9 +200,9 @@ func EnsureWavePresetsDir() error {
 
 func resolveWaveCachesDir() string {
 	var cacheDir string
-	appBundle := "waveterm"
+	appBundle := "tideterm"
 	if IsDevMode() {
-		appBundle = "waveterm-dev"
+		appBundle = "tideterm-dev"
 	}
 
 	switch runtime.GOOS {

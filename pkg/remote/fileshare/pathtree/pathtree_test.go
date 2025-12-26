@@ -5,7 +5,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/wavetermdev/waveterm/pkg/remote/fileshare/pathtree"
+	"github.com/sanshao85/tideterm/pkg/remote/fileshare/pathtree"
 )
 
 func TestAdd(t *testing.T) {

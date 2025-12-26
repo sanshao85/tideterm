@@ -42,12 +42,12 @@ function BuilderAppInner() {
                 style={{ WebkitAppRegion: "drag" } as React.CSSProperties}
             >
                 {isDev() ? (
-                    <div className="text-accent text-xl" title="Running Wave Dev Build">
+                    <div className="text-accent text-xl" title="Running TideTerm Dev Build">
                         <i className="fa fa-brands fa-dev fa-fw" />
                     </div>
                 ) : null}
                 <div className="text-sm font-medium">
-                    WaveApp Builder{!isBlank(builderAppId) && ` (${builderAppId})`}
+                    App Builder{!isBlank(builderAppId) && ` (${builderAppId})`}
                 </div>
             </div>
             <DndProvider backend={HTML5Backend}>

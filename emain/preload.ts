@@ -1,7 +1,7 @@
 // Copyright 2025, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-import { contextBridge, ipcRenderer, Rectangle, WebviewTag } from "electron";
+import { contextBridge, ipcRenderer, Rectangle, WebviewTag, webUtils } from "electron";
 
 // update type in custom.d.ts (ElectronApi type)
 contextBridge.exposeInMainWorld("api", {
@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld("api", {
     getDataDir: () => ipcRenderer.sendSync("get-data-dir"),
     getConfigDir: () => ipcRenderer.sendSync("get-config-dir"),
     getHomeDir: () => ipcRenderer.sendSync("get-home-dir"),
+    getPathForFile: (file: File) => webUtils.getPathForFile(file),
     getAboutModalDetails: () => ipcRenderer.sendSync("get-about-modal-details"),
     getWebviewPreload: () => ipcRenderer.sendSync("get-webview-preload"),
     getZoomFactor: () => ipcRenderer.sendSync("get-zoom-factor"),
@@ -40,6 +41,16 @@ contextBridge.exposeInMainWorld("api", {
     getUpdaterChannel: () => ipcRenderer.sendSync("get-updater-channel"),
     installAppUpdate: () => ipcRenderer.send("install-app-update"),
     onMenuItemAbout: (callback) => ipcRenderer.on("menu-item-about", callback),
+    onWindowTitleRename: (callback) => {
+        const handler = (_event: Electron.IpcRendererEvent) => callback();
+        ipcRenderer.on("window-title-rename", handler);
+        return () => ipcRenderer.removeListener("window-title-rename", handler);
+    },
+    onWindowTitleRestoreAuto: (callback) => {
+        const handler = (_event: Electron.IpcRendererEvent) => callback();
+        ipcRenderer.on("window-title-restore-auto", handler);
+        return () => ipcRenderer.removeListener("window-title-restore-auto", handler);
+    },
     updateWindowControlsOverlay: (rect) => ipcRenderer.send("update-window-controls-overlay", rect),
     onReinjectKey: (callback) => ipcRenderer.on("reinject-key", (_event, waveEvent) => callback(waveEvent)),
     setWebviewFocus: (focused: number) => ipcRenderer.send("webview-focus", focused),

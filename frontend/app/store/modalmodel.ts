@@ -5,19 +5,22 @@ import * as jotai from "jotai";
 import { globalStore } from "./global";
 
 class ModalsModel {
-    modalsAtom: jotai.PrimitiveAtom<Array<{ displayName: string; props?: any }>>;
+    modalsAtom: jotai.PrimitiveAtom<Array<{ id: string; displayName: string; props?: any }>>;
     newInstallOnboardingOpen: jotai.PrimitiveAtom<boolean>;
     upgradeOnboardingOpen: jotai.PrimitiveAtom<boolean>;
+    private modalIdCounter: number;
 
     constructor() {
         this.newInstallOnboardingOpen = jotai.atom(false);
         this.upgradeOnboardingOpen = jotai.atom(false);
         this.modalsAtom = jotai.atom([]);
+        this.modalIdCounter = 0;
     }
 
     pushModal = (displayName: string, props?: any) => {
+        const id = `modal-${Date.now()}-${this.modalIdCounter++}`;
         const modals = globalStore.get(this.modalsAtom);
-        globalStore.set(this.modalsAtom, [...modals, { displayName, props }]);
+        globalStore.set(this.modalsAtom, [...modals, { id, displayName, props }]);
     };
 
     popModal = (callback?: () => void) => {

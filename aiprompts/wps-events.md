@@ -84,7 +84,7 @@ This will update [`frontend/types/gotypes.d.ts`](../frontend/types/gotypes.d.ts)
 To publish an event, use the global broker:
 
 ```go
-import "github.com/wavetermdev/waveterm/pkg/wps"
+import "github.com/sanshao85/tideterm/pkg/wps"
 
 wps.Broker.Publish(wps.WaveEvent{
     Event: wps.Event_YourNewEvent,
@@ -154,7 +154,7 @@ const (
 In [`pkg/aiusechat/usechat.go`](../pkg/aiusechat/usechat.go:94-108):
 
 ```go
-import "github.com/wavetermdev/waveterm/pkg/wps"
+import "github.com/sanshao85/tideterm/pkg/wps"
 
 func updateRateLimit(info *uctypes.RateLimitInfo) {
     if info == nil {
