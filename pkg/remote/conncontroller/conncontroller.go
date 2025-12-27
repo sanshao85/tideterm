@@ -57,6 +57,7 @@ type SSHConn struct {
 	Lock               *sync.Mutex
 	Status             string
 	WshEnabled         *atomic.Bool
+	WshEnsuring        *atomic.Bool
 	Opts               *remote.SSHOpts
 	Client             *ssh.Client
 	DomainSockName     string // if "", then no domain socket
@@ -201,12 +202,23 @@ func (conn *SSHConn) GetName() string {
 func (conn *SSHConn) OpenDomainSocketListener(ctx context.Context) error {
 	conn.Infof(ctx, "running OpenDomainSocketListener...\n")
 	allowed := WithLockRtn(conn, func() bool {
-		return conn.Status == Status_Connecting
+		// If it's already set up, allow callers to reuse it even if the conn is already connected.
+		if conn.DomainSockListener != nil && conn.DomainSockName != "" {
+			return true
+		}
+		return conn.Status == Status_Connecting || conn.Status == Status_Connected
 	})
 	if !allowed {
 		return fmt.Errorf("cannot open domain socket for %q when status is %q", conn.GetName(), conn.GetStatus())
 	}
+	if conn.DomainSockListener != nil && conn.DomainSockName != "" {
+		conn.Infof(ctx, "domain socket already active (%s)\n", conn.DomainSockName)
+		return nil
+	}
 	client := conn.GetClient()
+	if client == nil {
+		return fmt.Errorf("cannot open domain socket for %q: ssh client is not connected", conn.GetName())
+	}
 	randStr, err := utilfn.RandomHexString(16) // 64-bits of randomness
 	if err != nil {
 		return fmt.Errorf("error generating random string: %w", err)
@@ -277,18 +289,31 @@ func (conn *SSHConn) GetConfigShellPath() string {
 func (conn *SSHConn) StartConnServer(ctx context.Context, afterUpdate bool) (bool, string, string, error) {
 	conn.Infof(ctx, "running StartConnServer...\n")
 	allowed := WithLockRtn(conn, func() bool {
-		return conn.Status == Status_Connecting
+		return conn.Status == Status_Connecting || conn.Status == Status_Connected
 	})
 	if !allowed {
 		return false, "", "", fmt.Errorf("cannot start conn server for %q when status is %q", conn.GetName(), conn.GetStatus())
 	}
 	client := conn.GetClient()
+	if client == nil {
+		return false, "", "", fmt.Errorf("cannot start conn server for %q: ssh client is not connected", conn.GetName())
+	}
+	conn.WithLock(func() {
+		// If we are restarting wsh while already connected, make sure there isn't an old controller session hanging around.
+		if conn.ConnController != nil {
+			conn.ConnController.Close()
+			conn.ConnController = nil
+		}
+	})
 	wshPath := conn.getWshPath()
 	rpcCtx := wshrpc.RpcContext{
 		ClientType: wshrpc.ClientType_ConnServer,
 		Conn:       conn.GetName(),
 	}
 	sockName := conn.GetDomainSocketName()
+	if sockName == "" {
+		return false, "", "", fmt.Errorf("cannot start conn server for %q: domain socket not initialized", conn.GetName())
+	}
 	jwtToken, err := wshutil.MakeClientJWTToken(rpcCtx, sockName)
 	if err != nil {
 		return false, "", "", fmt.Errorf("unable to create jwt token for conn controller: %w", err)
@@ -823,7 +848,7 @@ func getConnInternal(opts *remote.SSHOpts) *SSHConn {
 	defer globalLock.Unlock()
 	rtn := clientControllerMap[*opts]
 	if rtn == nil {
-		rtn = &SSHConn{Lock: &sync.Mutex{}, Status: Status_Init, WshEnabled: &atomic.Bool{}, Opts: opts, HasWaiter: &atomic.Bool{}}
+		rtn = &SSHConn{Lock: &sync.Mutex{}, Status: Status_Init, WshEnabled: &atomic.Bool{}, WshEnsuring: &atomic.Bool{}, Opts: opts, HasWaiter: &atomic.Bool{}}
 		clientControllerMap[*opts] = rtn
 	}
 	return rtn
@@ -851,6 +876,46 @@ func EnsureConnection(ctx context.Context, connName string) error {
 	connStatus := conn.DeriveConnStatus()
 	switch connStatus.Status {
 	case Status_Connected:
+		// If wsh is enabled for this connection, ensure the connserver route exists.
+		// This prevents "no route for \"conn:...\"" errors when using remote file browsing after a
+		// connserver restart/termination.
+		enableWsh, _ := conn.getConnWshSettings()
+		if enableWsh {
+			routeId := wshutil.MakeConnectionRouteId(conn.GetName())
+
+			fastCtx, cancelFn := context.WithTimeout(ctx, 75*time.Millisecond)
+			fastErr := wshutil.DefaultRouter.WaitForRegister(fastCtx, routeId)
+			cancelFn()
+			if fastErr != nil {
+				// Avoid a thundering herd when multiple blocks ensure concurrently.
+				if conn.WshEnsuring != nil && !conn.WshEnsuring.CompareAndSwap(false, true) {
+					waitCtx, cancelWait := context.WithTimeout(ctx, 5*time.Second)
+					defer cancelWait()
+					return wshutil.DefaultRouter.WaitForRegister(waitCtx, routeId)
+				}
+				if conn.WshEnsuring != nil {
+					defer conn.WshEnsuring.Store(false)
+				}
+
+				wshResult := conn.tryEnableWsh(ctx, conn.GetName())
+				conn.persistWshInstalled(ctx, wshResult)
+				if !wshResult.WshEnabled {
+					if wshResult.WshError != nil {
+						return wshResult.WshError
+					}
+					if wshResult.NoWshReason != "" {
+						return fmt.Errorf("wsh unavailable for %q: %s", conn.GetName(), wshResult.NoWshReason)
+					}
+					return fmt.Errorf("wsh unavailable for %q", conn.GetName())
+				}
+
+				waitCtx, cancelWait := context.WithTimeout(ctx, 5*time.Second)
+				defer cancelWait()
+				if err := wshutil.DefaultRouter.WaitForRegister(waitCtx, routeId); err != nil {
+					return fmt.Errorf("wsh route not available for %q: %w", conn.GetName(), err)
+				}
+			}
+		}
 		return nil
 	case Status_Connecting:
 		return conn.WaitForConnect(ctx)

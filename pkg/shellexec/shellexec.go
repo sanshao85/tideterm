@@ -150,6 +150,30 @@ func posixCwdExpr(cwd string) string {
 	return utilfn.ShellQuote(cwd, false, -1)
 }
 
+func posixCwdExprNoWshRemote(cwd string, sshUser string) string {
+	cwd = strings.TrimSpace(cwd)
+	if cwd == "" {
+		return ""
+	}
+	sshUser = strings.TrimSpace(sshUser)
+	if sshUser == "" {
+		return posixCwdExpr(cwd)
+	}
+	if cwd == "~" {
+		// Prefer ~user so we don't depend on $HOME being correct on the remote shell.
+		return "~" + sshUser
+	}
+	if cwd == "~/" {
+		return "~" + sshUser + "/"
+	}
+	if strings.HasPrefix(cwd, "~/") {
+		// Prefer ~user so we don't depend on $HOME being correct on the remote shell.
+		rest := cwd[1:] // includes leading "/"
+		return "~" + sshUser + rest
+	}
+	return posixCwdExpr(cwd)
+}
+
 func fishCwdExpr(cwd string) string {
 	cwd = strings.TrimSpace(cwd)
 	if cwd == "" {
@@ -456,7 +480,8 @@ func StartRemoteShellProcNoWsh(ctx context.Context, termSize waveobj.TermSize, c
 		return nil, err
 	}
 	if cmdOpts.Cwd != "" {
-		if cwdExpr := posixCwdExpr(cmdOpts.Cwd); cwdExpr != "" {
+		cwdExpr := posixCwdExprNoWshRemote(cmdOpts.Cwd, conn.Opts.SSHUser)
+		if cwdExpr != "" {
 			pipePty.WriteString("cd " + cwdExpr + "\n")
 		}
 	}
