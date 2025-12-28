@@ -95,13 +95,23 @@ jobs:
               shell: bash
 
             # Windows Code Signing Setup
+            - name: Check Windows code signing (Windows only)
+              if: matrix.platform == 'windows' && github.event_name != 'workflow_dispatch'
+              id: signing_check
+              run: |
+                  if [[ -n "${{ secrets.SM_API_KEY }}" && -n "${{ secrets.SM_HOST }}" && -n "${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}" && -n "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" && -n "${{ secrets.SM_CLIENT_CERT_PASSWORD }}" ]]; then
+                      echo "enabled=true" >> "$GITHUB_OUTPUT"
+                  else
+                      echo "enabled=false" >> "$GITHUB_OUTPUT"
+                  fi
+              shell: bash
             - name: Set up certificate (Windows only)
-              if: matrix.platform == 'windows' && github.event_name != 'workflow_dispatch' && secrets.SM_API_KEY != '' && secrets.SM_HOST != '' && secrets.SM_CODE_SIGNING_CERT_SHA1_HASH != '' && secrets.SM_CLIENT_CERT_FILE_B64 != '' && secrets.SM_CLIENT_CERT_PASSWORD != ''
+              if: matrix.platform == 'windows' && github.event_name != 'workflow_dispatch' && steps.signing_check.outputs.enabled == 'true'
               run: |
                   echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > /d/Certificate_pkcs12.p12
               shell: bash
             - name: Set signing variables (Windows only)
-              if: matrix.platform == 'windows' && github.event_name != 'workflow_dispatch' && secrets.SM_API_KEY != '' && secrets.SM_HOST != '' && secrets.SM_CODE_SIGNING_CERT_SHA1_HASH != '' && secrets.SM_CLIENT_CERT_FILE_B64 != '' && secrets.SM_CLIENT_CERT_PASSWORD != ''
+              if: matrix.platform == 'windows' && github.event_name != 'workflow_dispatch' && steps.signing_check.outputs.enabled == 'true'
               id: variables
               run: |
                   echo "SM_HOST=${{ secrets.SM_HOST }}" >> "$GITHUB_ENV"
@@ -115,7 +125,7 @@ jobs:
                   echo "C:\Program Files\DigiCert\DigiCert Keylocker Tools" >> $GITHUB_PATH
               shell: bash
             - name: Setup Keylocker KSP (Windows only)
-              if: matrix.platform == 'windows' && github.event_name != 'workflow_dispatch' && secrets.SM_API_KEY != '' && secrets.SM_HOST != '' && secrets.SM_CODE_SIGNING_CERT_SHA1_HASH != '' && secrets.SM_CLIENT_CERT_FILE_B64 != '' && secrets.SM_CLIENT_CERT_PASSWORD != ''
+              if: matrix.platform == 'windows' && github.event_name != 'workflow_dispatch' && steps.signing_check.outputs.enabled == 'true'
               run: |
                   curl -X GET  https://one.digicert.com/signingmanager/api-ui/v1/releases/Keylockertools-windows-x64.msi/download -H "x-api-key:%SM_API_KEY%" -o Keylockertools-windows-x64.msi
                   msiexec /i Keylockertools-windows-x64.msi /quiet /qn
