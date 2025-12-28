@@ -386,7 +386,7 @@ const Widgets = memo(() => {
         e.preventDefault();
         const menu: ContextMenuItem[] = [
             {
-                label: "Edit widgets.json",
+                label: t("workspace.menu.editWidgetsJson"),
                 click: () => {
                     fireAndForget(async () => {
                         const blockDef: BlockDef = {

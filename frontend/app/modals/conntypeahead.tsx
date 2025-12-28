@@ -139,22 +139,22 @@ function getReconnectItem(
     if (connSelected != "" || (connStatus.status != "disconnected" && connStatus.status != "error")) {
         return null;
     }
-    const reconnectSuggestionItem: SuggestionConnectionItem = {
-        status: "connected",
-        icon: "arrow-right-arrow-left",
-        iconColor: "var(--grey-text-color)",
-        label: `Reconnect to ${connStatus.connection}`,
-        value: "",
-        onSelect: async (_: string) => {
-            const prtn = RpcApi.ConnConnectCommand(
-                TabRpcClient,
-                { host: connStatus.connection, logblockid: blockId },
-                { timeout: 60000 }
-            );
-            prtn.catch((e) => console.log("error reconnecting", connStatus.connection, e));
-        },
-    };
-    return reconnectSuggestionItem;
+        const reconnectSuggestionItem: SuggestionConnectionItem = {
+            status: "connected",
+            icon: "arrow-right-arrow-left",
+            iconColor: "var(--grey-text-color)",
+            label: `Reconnect to ${connStatus.connection}`,
+            value: "",
+            onSelect: async (_: string) => {
+                const prtn = RpcApi.ConnConnectCommand(
+                    TabRpcClient,
+                    { host: connStatus.connection, logblockid: blockId },
+                    { timeout: 300000 }
+                );
+                prtn.catch((e) => console.log("error reconnecting", connStatus.connection, e));
+            },
+        };
+        return reconnectSuggestionItem;
 }
 
 function getLocalSuggestions(
@@ -414,7 +414,7 @@ const ChangeConnectionBlockModal = React.memo(
                     await RpcApi.ConnEnsureCommand(
                         TabRpcClient,
                         { connname: connName, logblockid: blockId },
-                        { timeout: 60000 }
+                        { timeout: 300000 }
                     );
                 } catch (e) {
                     console.log("error connecting", blockId, connName, e);

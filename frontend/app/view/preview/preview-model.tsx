@@ -207,8 +207,12 @@ export class PreviewModel implements ViewModel {
                     elemtype: "iconbutton",
                     icon: "folder-open",
                     longClick: (e: React.MouseEvent<any>) => {
+                        const lang = getAppLanguageFromSettings(globalStore.get(atoms.settingsAtom));
                         const menuItems: ContextMenuItem[] = BOOKMARKS.map((bookmark) => ({
-                            label: `Go to ${bookmark.label} (${bookmark.path})`,
+                            label: tCore(lang, "previewmenu.goToBookmark", {
+                                label: bookmark.label,
+                                path: bookmark.path,
+                            }),
                             click: () => this.goHistory(bookmark.path),
                         }));
                         ContextMenuModel.showContextMenu(menuItems, e);
@@ -345,6 +349,12 @@ export class PreviewModel implements ViewModel {
                         icon: "arrows-rotate",
                         click: () => this.refreshCallback?.(),
                     },
+                    {
+                        elemtype: "iconbutton",
+                        icon: "thumbtack",
+                        title: "Set as Window Title",
+                        click: () => this.setAsTabName(),
+                    },
                 ] as IconButtonDecl[];
             } else if (!isCeView && isMarkdownLike(mimeType)) {
                 return [
@@ -388,7 +398,7 @@ export class PreviewModel implements ViewModel {
         this.connection = atom<Promise<string>>(async (get) => {
             const connName = get(this.blockAtom)?.meta?.connection;
             try {
-                await RpcApi.ConnEnsureCommand(TabRpcClient, { connname: connName }, { timeout: 60000 });
+                await RpcApi.ConnEnsureCommand(TabRpcClient, { connname: connName }, { timeout: 300000 });
                 globalStore.set(this.connectionError, "");
             } catch (e) {
                 globalStore.set(this.connectionError, e as string);
@@ -592,6 +602,33 @@ export class PreviewModel implements ViewModel {
         globalStore.set(this.newFileContent, null);
     }
 
+    async setAsTabName() {
+        const fileInfo = await globalStore.get(this.statFile);
+        const conn = globalStore.get(this.connectionImmediate);
+        const uiContext = globalStore.get(atoms.uiContext);
+        const windowId = uiContext?.windowid;
+        if (!windowId) {
+            return;
+        }
+        // Build window title with full path
+        let windowTitle: string;
+        const fullPath = fileInfo?.path || fileInfo?.name;
+        if (!fullPath) {
+            return;
+        }
+        if (conn) {
+            // Remote: "user@host:port:/path/to/dir"
+            windowTitle = `${conn}:${fullPath}`;
+        } else {
+            // Local: "/path/to/dir"
+            windowTitle = fullPath;
+        }
+        await services.ObjectService.UpdateObjectMeta(WOS.makeORef("window", windowId), {
+            "window:titlemode": "fixed",
+            "window:fixedtitle": windowTitle,
+        });
+    }
+
     async goParentDirectory({ fileInfo = null }: { fileInfo?: FileInfo | null }) {
         // optional parameter needed for recursive case
         const defaultFileInfo = await globalStore.get(this.statFile);
@@ -704,12 +741,14 @@ export class PreviewModel implements ViewModel {
     }
 
     getSettingsMenuItems(): ContextMenuItem[] {
+        const lang = getAppLanguageFromSettings(globalStore.get(atoms.settingsAtom));
+        const t = (key: Parameters<typeof tCore>[1], vars?: Record<string, string | number>) => tCore(lang, key, vars);
         const defaultFontSize = globalStore.get(getSettingsKeyAtom("editor:fontsize")) ?? 12;
         const blockData = globalStore.get(this.blockAtom);
         const overrideFontSize = blockData?.meta?.["editor:fontsize"];
         const menuItems: ContextMenuItem[] = [];
         menuItems.push({
-            label: "Copy Full Path",
+            label: t("previewmenu.copyFullPath"),
             click: () =>
                 fireAndForget(async () => {
                     const filePath = await globalStore.get(this.statFilePath);
@@ -727,7 +766,7 @@ export class PreviewModel implements ViewModel {
                 }),
         });
         menuItems.push({
-            label: "Copy File Name",
+            label: t("filemenu.copyFileName"),
             click: () =>
                 fireAndForget(async () => {
                     const fileInfo = await globalStore.get(this.statFile);
@@ -754,7 +793,7 @@ export class PreviewModel implements ViewModel {
             }
         );
         fontSizeSubMenu.unshift({
-            label: "Default (" + defaultFontSize + "px)",
+            label: t("common.defaultWithValue", { value: `${defaultFontSize}px` }),
             type: "checkbox",
             checked: overrideFontSize == null,
             click: () => {
@@ -765,12 +804,11 @@ export class PreviewModel implements ViewModel {
             },
         });
         menuItems.push({
-            label: "Editor Font Size",
+            label: t("previewmenu.editorFontSize"),
             submenu: fontSizeSubMenu,
         });
         const finfo = jotaiLoadableValue(globalStore.get(this.loadableFileInfo), null);
-        const lang = getAppLanguageFromSettings(globalStore.get(atoms.settingsAtom));
-        addOpenMenuItems(menuItems, globalStore.get(this.connectionImmediate), finfo, (key, vars) => tCore(lang, key, vars));
+        addOpenMenuItems(menuItems, globalStore.get(this.connectionImmediate), finfo, (key, vars) => t(key, vars));
         const loadableSV = globalStore.get(this.loadableSpecializedView);
         const wordWrapAtom = getOverrideConfigAtom(this.blockId, "editor:wordwrap");
         const wordWrap = globalStore.get(wordWrapAtom) ?? false;
@@ -779,17 +817,17 @@ export class PreviewModel implements ViewModel {
                 if (globalStore.get(this.newFileContent) != null) {
                     menuItems.push({ type: "separator" });
                     menuItems.push({
-                        label: "Save File",
+                        label: t("previewmenu.saveFile"),
                         click: () => fireAndForget(this.handleFileSave.bind(this)),
                     });
                     menuItems.push({
-                        label: "Revert File",
+                        label: t("previewmenu.revertFile"),
                         click: () => fireAndForget(this.handleFileRevert.bind(this)),
                     });
                 }
                 menuItems.push({ type: "separator" });
                 menuItems.push({
-                    label: "Word Wrap",
+                    label: t("previewmenu.wordWrap"),
                     type: "checkbox",
                     checked: wordWrap,
                     click: () =>

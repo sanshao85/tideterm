@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { BlockNodeModel } from "@/app/block/blocktypes";
-import { getApi, globalStore, WOS } from "@/app/store/global";
+import { getAppLanguageFromSettings, t } from "@/app/i18n/i18n-core";
+import { atoms, getApi, globalStore, WOS } from "@/app/store/global";
 import type { TabModel } from "@/app/store/tab-model";
 import { waveEventSubscribe } from "@/app/store/wps";
 import { RpcApi } from "@/app/store/wshclientapi";
@@ -181,6 +182,8 @@ class TsunamiViewModel extends WebViewModel {
     }
 
     getSettingsMenuItems(): ContextMenuItem[] {
+        const lang = getAppLanguageFromSettings(globalStore.get(atoms.settingsAtom));
+        const tt = (key: Parameters<typeof t>[1], vars?: Record<string, string | number>) => t(lang, key, vars);
         const items = super.getSettingsMenuItems();
         // Filter out homepage and navigation-related menu items for tsunami view
         const filteredItems = items.filter((item) => {
@@ -188,8 +191,10 @@ class TsunamiViewModel extends WebViewModel {
             return (
                 !label.includes("homepage") &&
                 !label.includes("home page") &&
+                !label.includes("主页") &&
                 !label.includes("navigation") &&
-                !label.includes("nav")
+                !label.includes("nav") &&
+                !label.includes("导航")
             );
         });
 
@@ -201,15 +206,15 @@ class TsunamiViewModel extends WebViewModel {
         // Add tsunami-specific menu items at the beginning
         const tsunamiItems: ContextMenuItem[] = [
             {
-                label: "Stop WaveApp",
+                label: tt("tsunamimenu.stopWaveApp"),
                 click: () => this.stopController(),
             },
             {
-                label: "Restart WaveApp",
+                label: tt("tsunamimenu.restartWaveApp"),
                 click: () => this.restartController(),
             },
             {
-                label: "Restart WaveApp and Force Rebuild",
+                label: tt("tsunamimenu.restartWaveAppForceRebuild"),
                 click: () => this.restartAndForceRebuild(),
             },
             {
@@ -220,7 +225,7 @@ class TsunamiViewModel extends WebViewModel {
         if (showRemixOption) {
             tsunamiItems.push(
                 {
-                    label: "Remix WaveApp in Builder",
+                    label: tt("tsunamimenu.remixWaveAppInBuilder"),
                     click: () => this.remixInBuilder(),
                 },
                 {

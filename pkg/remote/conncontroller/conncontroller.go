@@ -379,6 +379,10 @@ func (conn *SSHConn) StartConnServer(ctx context.Context, afterUpdate bool) (boo
 		conn.ConnController = sshSession
 	})
 	// service the I/O
+	// Capture sshSession in a local variable to detect if this goroutine's session
+	// is still the current one when it terminates. This prevents race conditions
+	// where an old session's termination incorrectly marks a new session as failed.
+	thisSession := sshSession
 	go func() {
 		defer func() {
 			panichandler.PanicHandler("conncontroller:sshSession.Wait", recover())
@@ -386,16 +390,30 @@ func (conn *SSHConn) StartConnServer(ctx context.Context, afterUpdate bool) (boo
 		// wait for termination, clear the controller
 		var waitErr error
 		defer conn.WithLock(func() {
-			if conn.ConnController != nil {
+			// Only update state if this session is still the current controller.
+			// If conn.ConnController has been replaced by a new session, this old
+			// session's termination (e.g., due to Close() during reconnect) should
+			// not affect the new session's state.
+			if conn.ConnController == thisSession {
 				conn.WshEnabled.Store(false)
 				conn.NoWshReason = "connserver terminated"
 				if waitErr != nil {
-					conn.WshError = fmt.Sprintf("connserver terminated unexpectedly with error: %v", waitErr)
+					// Check for SIGKILL (exit code 137) which often indicates OOM killer
+					errStr := waitErr.Error()
+					if strings.Contains(errStr, "137") || strings.Contains(errStr, "SIGKILL") || strings.Contains(errStr, "KILL") {
+						conn.WshError = fmt.Sprintf("connserver terminated unexpectedly with error: %v (exit 137/SIGKILL often indicates OOM killer or resource limits on remote host - check 'dmesg' on server)", waitErr)
+						log.Printf("conn controller (%q) killed with SIGKILL/137 - possible OOM or resource limit on remote host", conn.GetName())
+					} else {
+						conn.WshError = fmt.Sprintf("connserver terminated unexpectedly with error: %v", waitErr)
+					}
 				}
+				conn.ConnController = nil
+			} else {
+				// Log when we skip state update due to session replacement
+				log.Printf("conn controller (%q) old session terminated (replaced by new session), skipping state update", conn.GetName())
 			}
-			conn.ConnController = nil
 		})
-		waitErr = sshSession.Wait()
+		waitErr = thisSession.Wait()
 		log.Printf("conn controller (%q) terminated: %v", conn.GetName(), waitErr)
 	}()
 	go func() {
@@ -447,6 +465,11 @@ func (conn *SSHConn) UpdateWsh(ctx context.Context, clientDisplayName string, re
 		return fmt.Errorf("cannot update wsh: ssh client is not connected")
 	}
 	err := remote.CpWshToRemote(ctx, client, remoteInfo.ClientOs, remoteInfo.ClientArch)
+	if err != nil && !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
+		conn.Infof(ctx, "WARN updating wsh failed, retrying once: %v\n", err)
+		time.Sleep(250 * time.Millisecond)
+		err = remote.CpWshToRemote(ctx, client, remoteInfo.ClientOs, remoteInfo.ClientArch)
+	}
 	if err != nil {
 		return fmt.Errorf("error installing wsh to remote: %w", err)
 	}
@@ -520,6 +543,11 @@ func (conn *SSHConn) InstallWsh(ctx context.Context, osArchStr string) error {
 	}
 	conn.Infof(ctx, "detected remote platform os:%s arch:%s\n", clientOs, clientArch)
 	err = remote.CpWshToRemote(ctx, client, clientOs, clientArch)
+	if err != nil && !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
+		conn.Infof(ctx, "WARN copying wsh binary to remote failed, retrying once: %v\n", err)
+		time.Sleep(250 * time.Millisecond)
+		err = remote.CpWshToRemote(ctx, client, clientOs, clientArch)
+	}
 	if err != nil {
 		conn.Infof(ctx, "ERROR copying wsh binary to remote: %v\n", err)
 		return fmt.Errorf("error copying wsh binary to remote: %w", err)
@@ -759,6 +787,11 @@ func (conn *SSHConn) persistWshInstalled(ctx context.Context, result WshCheckRes
 	})
 	connConfig, ok := conn.getConnectionConfig()
 	if ok && connConfig.ConnWshEnabled != nil {
+		return
+	}
+	// Don't persist `conn:wshenabled=false` due to transient install/start errors (timeouts, network issues, etc).
+	// Otherwise a single failed install can permanently disable wsh for this connection.
+	if !result.WshEnabled && result.WshError != nil {
 		return
 	}
 	meta := make(map[string]any)

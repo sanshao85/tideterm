@@ -470,6 +470,54 @@ func MakeDraftFromLocalCommand(w *wshutil.WshRpc, data wshrpc.CommandMakeDraftFr
 	return resp, err
 }
 
+// command "mcpdeleteserver", wshserver.McpDeleteServerCommand
+func McpDeleteServerCommand(w *wshutil.WshRpc, data string, opts *wshrpc.RpcOpts) error {
+	_, err := sendRpcRequestCallHelper[any](w, "mcpdeleteserver", data, opts)
+	return err
+}
+
+// command "mcpgetappstatus", wshserver.McpGetAppStatusCommand
+func McpGetAppStatusCommand(w *wshutil.WshRpc, opts *wshrpc.RpcOpts) (*wshrpc.McpAppStatusData, error) {
+	resp, err := sendRpcRequestCallHelper[*wshrpc.McpAppStatusData](w, "mcpgetappstatus", nil, opts)
+	return resp, err
+}
+
+// command "mcpgetserver", wshserver.McpGetServerCommand
+func McpGetServerCommand(w *wshutil.WshRpc, data string, opts *wshrpc.RpcOpts) (*wshrpc.McpServerData, error) {
+	resp, err := sendRpcRequestCallHelper[*wshrpc.McpServerData](w, "mcpgetserver", data, opts)
+	return resp, err
+}
+
+// command "mcpgetservers", wshserver.McpGetServersCommand
+func McpGetServersCommand(w *wshutil.WshRpc, opts *wshrpc.RpcOpts) (map[string]*wshrpc.McpServerData, error) {
+	resp, err := sendRpcRequestCallHelper[map[string]*wshrpc.McpServerData](w, "mcpgetservers", nil, opts)
+	return resp, err
+}
+
+// command "mcpimportfromapp", wshserver.McpImportFromAppCommand
+func McpImportFromAppCommand(w *wshutil.WshRpc, data wshrpc.CommandMcpImportData, opts *wshrpc.RpcOpts) (*wshrpc.McpImportResultData, error) {
+	resp, err := sendRpcRequestCallHelper[*wshrpc.McpImportResultData](w, "mcpimportfromapp", data, opts)
+	return resp, err
+}
+
+// command "mcpsyncall", wshserver.McpSyncAllCommand
+func McpSyncAllCommand(w *wshutil.WshRpc, opts *wshrpc.RpcOpts) error {
+	_, err := sendRpcRequestCallHelper[any](w, "mcpsyncall", nil, opts)
+	return err
+}
+
+// command "mcptoggleapp", wshserver.McpToggleAppCommand
+func McpToggleAppCommand(w *wshutil.WshRpc, data wshrpc.CommandMcpToggleAppData, opts *wshrpc.RpcOpts) error {
+	_, err := sendRpcRequestCallHelper[any](w, "mcptoggleapp", data, opts)
+	return err
+}
+
+// command "mcpupsertserver", wshserver.McpUpsertServerCommand
+func McpUpsertServerCommand(w *wshutil.WshRpc, data wshrpc.McpServerData, opts *wshrpc.RpcOpts) error {
+	_, err := sendRpcRequestCallHelper[any](w, "mcpupsertserver", data, opts)
+	return err
+}
+
 // command "message", wshserver.MessageCommand
 func MessageCommand(w *wshutil.WshRpc, data wshrpc.CommandMessageData, opts *wshrpc.RpcOpts) error {
 	_, err := sendRpcRequestCallHelper[any](w, "message", data, opts)

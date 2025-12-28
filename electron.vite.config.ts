@@ -81,6 +81,9 @@ export default defineConfig({
                 input: {
                     index: "emain/emain.ts",
                 },
+                output: {
+                    format: "cjs",
+                },
             },
             outDir: "dist/main",
         },

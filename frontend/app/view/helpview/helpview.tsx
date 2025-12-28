@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { BlockNodeModel } from "@/app/block/blocktypes";
+import { getAppLanguageFromSettings, t } from "@/app/i18n/i18n-core";
 import type { TabModel } from "@/app/store/tab-model";
-import { globalStore, WOS } from "@/app/store/global";
+import { atoms, globalStore, WOS } from "@/app/store/global";
 import { RpcApi } from "@/app/store/wshclientapi";
 import { TabRpcClient } from "@/app/store/wshrpcutil";
 import { WebView, WebViewModel } from "@/app/view/webview/webview";
@@ -68,6 +69,8 @@ class HelpViewModel extends WebViewModel {
     }
 
     getSettingsMenuItems(): ContextMenuItem[] {
+        const lang = getAppLanguageFromSettings(globalStore.get(atoms.settingsAtom));
+        const tt = (key: Parameters<typeof t>[1], vars?: Record<string, string | number>) => t(lang, key, vars);
         const zoomSubMenu: ContextMenuItem[] = [];
         let curZoom = 1;
         if (globalStore.get(this.domReady)) {
@@ -85,7 +88,7 @@ class HelpViewModel extends WebViewModel {
             };
         }
         zoomSubMenu.push({
-            label: "Reset",
+            label: tt("common.reset"),
             click: () => {
                 model.setZoomFactor(null);
             },
@@ -105,7 +108,9 @@ class HelpViewModel extends WebViewModel {
 
         return [
             {
-                label: this.webviewRef.current?.isDevToolsOpened() ? "Close DevTools" : "Open DevTools",
+                label: this.webviewRef.current?.isDevToolsOpened()
+                    ? tt("common.closeDevTools")
+                    : tt("common.openDevTools"),
                 click: async () => {
                     if (this.webviewRef.current) {
                         if (this.webviewRef.current.isDevToolsOpened()) {
@@ -117,7 +122,7 @@ class HelpViewModel extends WebViewModel {
                 },
             },
             {
-                label: "Set Zoom Factor",
+                label: tt("webviewmenu.setZoomFactor"),
                 submenu: zoomSubMenu,
             },
         ];

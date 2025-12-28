@@ -8,7 +8,7 @@ run-name: Build ${{ github.ref_name }}${{ github.event_name == 'workflow_dispatc
 on:
     push:
         tags:
-            - "v[0-9]+.[0-9]+.[0-9]+*"
+            - "v*"
     workflow_dispatch:
 env:
     GO_VERSION: "1.24"
@@ -98,12 +98,12 @@ jobs:
 
             # Windows Code Signing Setup
             - name: Set up certificate (Windows only)
-              if: matrix.platform == 'windows' && github.event_name != 'workflow_dispatch'
+              if: matrix.platform == 'windows' && github.event_name != 'workflow_dispatch' && secrets.SM_API_KEY != '' && secrets.SM_HOST != '' && secrets.SM_CODE_SIGNING_CERT_SHA1_HASH != '' && secrets.SM_CLIENT_CERT_FILE_B64 != '' && secrets.SM_CLIENT_CERT_PASSWORD != ''
               run: |
                   echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > /d/Certificate_pkcs12.p12
               shell: bash
             - name: Set signing variables (Windows only)
-              if: matrix.platform == 'windows' && github.event_name != 'workflow_dispatch'
+              if: matrix.platform == 'windows' && github.event_name != 'workflow_dispatch' && secrets.SM_API_KEY != '' && secrets.SM_HOST != '' && secrets.SM_CODE_SIGNING_CERT_SHA1_HASH != '' && secrets.SM_CLIENT_CERT_FILE_B64 != '' && secrets.SM_CLIENT_CERT_PASSWORD != ''
               id: variables
               run: |
                   echo "SM_HOST=${{ secrets.SM_HOST }}" >> "$GITHUB_ENV"
@@ -117,7 +117,7 @@ jobs:
                   echo "C:\Program Files\DigiCert\DigiCert Keylocker Tools" >> $GITHUB_PATH
               shell: bash
             - name: Setup Keylocker KSP (Windows only)
-              if: matrix.platform == 'windows' && github.event_name != 'workflow_dispatch'
+              if: matrix.platform == 'windows' && github.event_name != 'workflow_dispatch' && secrets.SM_API_KEY != '' && secrets.SM_HOST != '' && secrets.SM_CODE_SIGNING_CERT_SHA1_HASH != '' && secrets.SM_CLIENT_CERT_FILE_B64 != '' && secrets.SM_CLIENT_CERT_PASSWORD != ''
               run: |
                   curl -X GET  https://one.digicert.com/signingmanager/api-ui/v1/releases/Keylockertools-windows-x64.msi/download -H "x-api-key:%SM_API_KEY%" -o Keylockertools-windows-x64.msi
                   msiexec /i Keylockertools-windows-x64.msi /quiet /qn

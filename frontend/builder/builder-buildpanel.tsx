@@ -1,8 +1,10 @@
 // Copyright 2025, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+import { getAppLanguageFromSettings, t } from "@/app/i18n/i18n-core";
 import { WaveAIModel } from "@/app/aipanel/waveai-model";
 import { ContextMenuModel } from "@/app/store/contextmenu";
+import { atoms } from "@/app/store/global";
 import { globalStore } from "@/app/store/jotaiStore";
 import { BuilderAppPanelModel } from "@/builder/store/builder-apppanel-model";
 import { BuilderBuildPanelModel } from "@/builder/store/builder-buildpanel-model";
@@ -18,11 +20,13 @@ function handleBuildPanelContextMenu(e: React.MouseEvent, selectedText: string):
         return;
     }
 
+    const lang = getAppLanguageFromSettings(globalStore.get(atoms.settingsAtom));
+    const tt = (key: Parameters<typeof t>[1], vars?: Record<string, string | number>) => t(lang, key, vars);
     const menu: ContextMenuItem[] = [
         { role: "copy" },
         { type: "separator" },
         {
-            label: "Add to Context",
+            label: tt("buildermenu.addToContext"),
             click: () => {
                 const model = WaveAIModel.getInstance();
                 const formattedText = `from builder output:\n\`\`\`\n${selectedText}\n\`\`\``;

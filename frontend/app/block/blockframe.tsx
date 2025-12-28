@@ -5,6 +5,7 @@ import { BlockModel } from "@/app/block/block-model";
 import { blockViewToIcon, blockViewToName, ConnectionButton, getBlockHeaderIcon, Input } from "@/app/block/blockutil";
 import { Button } from "@/app/element/button";
 import { useDimensionsWithCallbackRef } from "@/app/hook/useDimensions";
+import { useT } from "@/app/i18n/i18n";
 import { ChangeConnectionBlockModal } from "@/app/modals/conntypeahead";
 import { ContextMenuModel } from "@/app/store/contextmenu";
 import {
@@ -38,19 +39,21 @@ import { CopyButton } from "../element/copybutton";
 import { BlockFrameProps } from "./blocktypes";
 
 const NumActiveConnColors = 8;
+type TFn = ReturnType<typeof useT>;
 
 function handleHeaderContextMenu(
     e: React.MouseEvent<HTMLDivElement>,
     blockData: Block,
     viewModel: ViewModel,
     magnified: boolean,
-    onMagnifyToggle: () => void
+    onMagnifyToggle: () => void,
+    t: TFn
 ) {
     e.preventDefault();
     e.stopPropagation();
     let menu: ContextMenuItem[] = [
         {
-            label: magnified ? "Un-Magnify Block" : "Magnify Block",
+            label: magnified ? t("blockmenu.unmagnifyBlock") : t("blockmenu.magnifyBlock"),
             click: () => {
                 onMagnifyToggle();
             },
@@ -68,7 +71,7 @@ function handleHeaderContextMenu(
         // },
         { type: "separator" },
         {
-            label: "Copy BlockId",
+            label: t("blockmenu.copyBlockId"),
             click: () => {
                 navigator.clipboard.writeText(blockData.oid);
             },
@@ -79,7 +82,7 @@ function handleHeaderContextMenu(
     menu.push(
         { type: "separator" },
         {
-            label: "Close Block",
+            label: t("blockmenu.closeBlock"),
             click: () => uxCloseBlock(blockData.oid),
         }
     );
@@ -179,6 +182,7 @@ const BlockFrame_Header = ({
     error,
 }: BlockFrameProps & { changeConnModalAtom: jotai.PrimitiveAtom<boolean>; error?: Error }) => {
     const [blockData] = WOS.useWaveObjectValue<Block>(WOS.makeORef("block", nodeModel.blockId));
+    const t = useT();
     let viewName = util.useAtomValueSafe(viewModel?.viewName) ?? blockViewToName(blockData?.meta?.view);
     const showBlockIds = jotai.useAtomValue(getSettingsKeyAtom("blockheader:showblockids"));
     let viewIconUnion = util.useAtomValueSafe(viewModel?.viewIcon) ?? blockViewToIcon(blockData?.meta?.view);
@@ -213,9 +217,9 @@ const BlockFrame_Header = ({
 
     const onContextMenu = React.useCallback(
         (e: React.MouseEvent<HTMLDivElement>) => {
-            handleHeaderContextMenu(e, blockData, viewModel, magnified, nodeModel.toggleMagnify);
+            handleHeaderContextMenu(e, blockData, viewModel, magnified, nodeModel.toggleMagnify, t);
         },
-        [magnified]
+        [blockData, viewModel, magnified, nodeModel.toggleMagnify, t]
     );
 
     const endIconsElem = computeEndIcons(viewModel, nodeModel, onContextMenu);
@@ -370,7 +374,7 @@ const ConnStatusOverlay = React.memo(
             const prtn = RpcApi.ConnConnectCommand(
                 TabRpcClient,
                 { host: connName, logblockid: nodeModel.blockId },
-                { timeout: 60000 }
+                { timeout: 300000 }
             );
             prtn.catch((e) => console.log("error reconnecting", connName, e));
         }, [connName]);
@@ -606,7 +610,7 @@ const BlockFrame_Default_Component = (props: BlockFrameProps) => {
             RpcApi.ConnEnsureCommand(
                 TabRpcClient,
                 { connname: connName, logblockid: nodeModel.blockId },
-                { timeout: 60000 }
+                { timeout: 300000 }
             ).catch((e) => {
                 console.log("error ensuring connection", nodeModel.blockId, connName, e);
             });

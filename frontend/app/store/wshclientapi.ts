@@ -387,6 +387,46 @@ class RpcApiType {
         return client.wshRpcCall("makedraftfromlocal", data, opts);
     }
 
+    // command "mcpdeleteserver" [call]
+    McpDeleteServerCommand(client: WshClient, data: string, opts?: RpcOpts): Promise<void> {
+        return client.wshRpcCall("mcpdeleteserver", data, opts);
+    }
+
+    // command "mcpgetappstatus" [call]
+    McpGetAppStatusCommand(client: WshClient, opts?: RpcOpts): Promise<McpAppStatusData> {
+        return client.wshRpcCall("mcpgetappstatus", null, opts);
+    }
+
+    // command "mcpgetserver" [call]
+    McpGetServerCommand(client: WshClient, data: string, opts?: RpcOpts): Promise<McpServerData> {
+        return client.wshRpcCall("mcpgetserver", data, opts);
+    }
+
+    // command "mcpgetservers" [call]
+    McpGetServersCommand(client: WshClient, opts?: RpcOpts): Promise<{[key: string]: McpServerData}> {
+        return client.wshRpcCall("mcpgetservers", null, opts);
+    }
+
+    // command "mcpimportfromapp" [call]
+    McpImportFromAppCommand(client: WshClient, data: CommandMcpImportData, opts?: RpcOpts): Promise<McpImportResultData> {
+        return client.wshRpcCall("mcpimportfromapp", data, opts);
+    }
+
+    // command "mcpsyncall" [call]
+    McpSyncAllCommand(client: WshClient, opts?: RpcOpts): Promise<void> {
+        return client.wshRpcCall("mcpsyncall", null, opts);
+    }
+
+    // command "mcptoggleapp" [call]
+    McpToggleAppCommand(client: WshClient, data: CommandMcpToggleAppData, opts?: RpcOpts): Promise<void> {
+        return client.wshRpcCall("mcptoggleapp", data, opts);
+    }
+
+    // command "mcpupsertserver" [call]
+    McpUpsertServerCommand(client: WshClient, data: McpServerData, opts?: RpcOpts): Promise<void> {
+        return client.wshRpcCall("mcpupsertserver", data, opts);
+    }
+
     // command "message" [call]
     MessageCommand(client: WshClient, data: CommandMessageData, opts?: RpcOpts): Promise<void> {
         return client.wshRpcCall("message", data, opts);

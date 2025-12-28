@@ -9,12 +9,13 @@ import { getSimpleControlShiftAtom } from "@/app/store/keymodel";
 import { ObjectService } from "@/app/store/services";
 import { RpcApi } from "@/app/store/wshclientapi";
 import { TabRpcClient } from "@/app/store/wshrpcutil";
+import { getAppLanguageFromSettings, t } from "@/app/i18n/i18n-core";
 import {
     BlockHeaderSuggestionControl,
     SuggestionControlNoData,
     SuggestionControlNoResults,
 } from "@/app/suggestion/suggestion";
-import { WOS, globalStore } from "@/store/global";
+import { WOS, atoms, globalStore } from "@/store/global";
 import { adaptFromReactOrNativeKeyEvent, checkKeyPressed } from "@/util/keyutil";
 import { fireAndForget, useAtomValueSafe } from "@/util/util";
 import clsx from "clsx";
@@ -587,6 +588,8 @@ export class WebViewModel implements ViewModel {
     }
 
     getSettingsMenuItems(): ContextMenuItem[] {
+        const lang = getAppLanguageFromSettings(globalStore.get(atoms.settingsAtom));
+        const tt = (key: Parameters<typeof t>[1], vars?: Record<string, string | number>) => t(lang, key, vars);
         const zoomSubMenu: ContextMenuItem[] = [];
         let curZoom = 1;
         if (globalStore.get(this.domReady)) {
@@ -604,7 +607,7 @@ export class WebViewModel implements ViewModel {
             };
         }
         zoomSubMenu.push({
-            label: "Reset",
+            label: tt("common.reset"),
             click: () => {
                 model.setZoomFactor(null);
             },
@@ -626,7 +629,7 @@ export class WebViewModel implements ViewModel {
         const curUserAgentType = globalStore.get(this.userAgentType) || "default";
         const userAgentSubMenu: ContextMenuItem[] = [
             {
-                label: "Default",
+                label: tt("webviewmenu.userAgentDefault"),
                 type: "checkbox",
                 click: () => {
                     fireAndForget(() => {
@@ -639,7 +642,7 @@ export class WebViewModel implements ViewModel {
                 checked: curUserAgentType === "default" || curUserAgentType === "",
             },
             {
-                label: "Mobile: iPhone",
+                label: tt("webviewmenu.userAgentMobileIphone"),
                 type: "checkbox",
                 click: () => {
                     fireAndForget(() => {
@@ -652,7 +655,7 @@ export class WebViewModel implements ViewModel {
                 checked: curUserAgentType === "mobile:iphone",
             },
             {
-                label: "Mobile: Android",
+                label: tt("webviewmenu.userAgentMobileAndroid"),
                 type: "checkbox",
                 click: () => {
                     fireAndForget(() => {
@@ -669,29 +672,29 @@ export class WebViewModel implements ViewModel {
         const isNavHidden = globalStore.get(this.hideNav);
         return [
             {
-                label: "Copy URL to Clipboard",
+                label: tt("webviewmenu.copyUrlToClipboard"),
                 click: () => this.copyUrlToClipboard(),
             },
             {
-                label: "Set Block Homepage",
+                label: tt("webviewmenu.setBlockHomepage"),
                 click: () => fireAndForget(() => this.setHomepageUrl(this.getUrl(), "block")),
             },
             {
-                label: "Set Default Homepage",
+                label: tt("webviewmenu.setDefaultHomepage"),
                 click: () => fireAndForget(() => this.setHomepageUrl(this.getUrl(), "global")),
             },
             {
                 type: "separator",
             },
             {
-                label: "User Agent Type",
+                label: tt("webviewmenu.userAgentType"),
                 submenu: userAgentSubMenu,
             },
             {
                 type: "separator",
             },
             {
-                label: isNavHidden ? "Un-Hide Navigation" : "Hide Navigation",
+                label: isNavHidden ? tt("webviewmenu.unhideNavigation") : tt("webviewmenu.hideNavigation"),
                 click: () =>
                     fireAndForget(() => {
                         return RpcApi.SetMetaCommand(TabRpcClient, {
@@ -701,11 +704,11 @@ export class WebViewModel implements ViewModel {
                     }),
             },
             {
-                label: "Set Zoom Factor",
+                label: tt("webviewmenu.setZoomFactor"),
                 submenu: zoomSubMenu,
             },
             {
-                label: this.webviewRef.current?.isDevToolsOpened() ? "Close DevTools" : "Open DevTools",
+                label: this.webviewRef.current?.isDevToolsOpened() ? tt("common.closeDevTools") : tt("common.openDevTools"),
                 click: () => {
                     if (this.webviewRef.current) {
                         if (this.webviewRef.current.isDevToolsOpened()) {
@@ -720,11 +723,11 @@ export class WebViewModel implements ViewModel {
                 type: "separator",
             },
             {
-                label: "Clear History",
+                label: tt("webviewmenu.clearHistory"),
                 click: () => this.clearHistory(),
             },
             {
-                label: "Clear Cookies and Storage (All Web Widgets)",
+                label: tt("webviewmenu.clearCookiesAndStorage"),
                 click: () => fireAndForget(() => this.clearCookiesAndStorage()),
             },
         ];

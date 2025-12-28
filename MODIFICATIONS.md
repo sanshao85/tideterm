@@ -31,9 +31,15 @@ TideTerm is **not affiliated with** and **not endorsed by** the upstream authors
   - Added window renaming (manual “fixed title”) with persistence
   - Automatic title mode based on the currently focused block context
   - Fixed a performance issue that could cause UI stalls and React “maximum update depth” errors
+- **MCP configuration management**
+  - Added a built-in MCP server manager UI
+  - Supports CRUD for MCP servers and app-specific enable/disable (Claude Code / Codex CLI / Gemini CLI)
+  - Supports import/sync workflows and basic app install-status checks
 - **Privacy / safety defaults**
   - Telemetry and auto-updater disabled by default
   - Cloud endpoints default to empty (no background calls unless explicitly configured)
+- **Build/packaging stability**
+  - Electron main bundle output switched to CommonJS to avoid a Vite ESM shim injection issue that could break bundling
 
 ## Compatibility Notes
 

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { BlockNodeModel } from "@/app/block/blocktypes";
+import { getAppLanguageFromSettings, t } from "@/app/i18n/i18n-core";
 import { appHandleKeyDown } from "@/app/store/keymodel";
 import type { TabModel } from "@/app/store/tab-model";
 import { waveEventSubscribe } from "@/app/store/wps";
@@ -664,6 +665,8 @@ export class TermViewModel implements ViewModel {
     }
 
     getSettingsMenuItems(): ContextMenuItem[] {
+        const lang = getAppLanguageFromSettings(globalStore.get(atoms.settingsAtom));
+        const tt = (key: Parameters<typeof t>[1], vars?: Record<string, string | number>) => t(lang, key, vars);
         const fullConfig = globalStore.get(atoms.fullConfigAtom);
         const termThemes = fullConfig?.termthemes ?? {};
         const termThemeKeys = Object.keys(termThemes);
@@ -687,14 +690,14 @@ export class TermViewModel implements ViewModel {
             };
         });
         submenu.unshift({
-            label: "Default",
+            label: tt("common.default"),
             type: "checkbox",
             checked: curThemeName == null,
             click: () => this.setTerminalTheme(null),
         });
         const transparencySubMenu: ContextMenuItem[] = [];
         transparencySubMenu.push({
-            label: "Default",
+            label: tt("common.default"),
             type: "checkbox",
             checked: transparencyMeta == null,
             click: () => {
@@ -705,7 +708,7 @@ export class TermViewModel implements ViewModel {
             },
         });
         transparencySubMenu.push({
-            label: "Transparent Background",
+            label: tt("termmenu.transparentBackground"),
             type: "checkbox",
             checked: transparencyMeta == 0.5,
             click: () => {
@@ -716,7 +719,7 @@ export class TermViewModel implements ViewModel {
             },
         });
         transparencySubMenu.push({
-            label: "No Transparency",
+            label: tt("termmenu.noTransparency"),
             type: "checkbox",
             checked: transparencyMeta == 0,
             click: () => {
@@ -743,7 +746,7 @@ export class TermViewModel implements ViewModel {
             }
         );
         fontSizeSubMenu.unshift({
-            label: "Default (" + defaultFontSize + "px)",
+            label: tt("common.defaultWithValue", { value: `${defaultFontSize}px` }),
             type: "checkbox",
             checked: overrideFontSize == null,
             click: () => {
@@ -754,23 +757,25 @@ export class TermViewModel implements ViewModel {
             },
         });
         fullMenu.push({
-            label: "Themes",
+            label: tt("termmenu.themes"),
             submenu: submenu,
         });
         fullMenu.push({
-            label: "Font Size",
+            label: tt("termmenu.fontSize"),
             submenu: fontSizeSubMenu,
         });
         fullMenu.push({
-            label: "Transparency",
+            label: tt("termmenu.transparency"),
             submenu: transparencySubMenu,
         });
         const allowBracketedPaste = blockData?.meta?.["term:allowbracketedpaste"];
         fullMenu.push({
-            label: "Allow Bracketed Paste Mode",
+            label: tt("termmenu.allowBracketedPasteMode"),
             submenu: [
                 {
-                    label: "Default (" + (defaultAllowBracketedPaste ? "On" : "Off") + ")",
+                    label: tt("common.defaultWithValue", {
+                        value: defaultAllowBracketedPaste ? tt("menu.on") : tt("menu.off"),
+                    }),
                     type: "checkbox",
                     checked: allowBracketedPaste == null,
                     click: () => {
@@ -781,7 +786,7 @@ export class TermViewModel implements ViewModel {
                     },
                 },
                 {
-                    label: "On",
+                    label: tt("menu.on"),
                     type: "checkbox",
                     checked: allowBracketedPaste === true,
                     click: () => {
@@ -792,7 +797,7 @@ export class TermViewModel implements ViewModel {
                     },
                 },
                 {
-                    label: "Off",
+                    label: tt("menu.off"),
                     type: "checkbox",
                     checked: allowBracketedPaste === false,
                     click: () => {
@@ -806,15 +811,15 @@ export class TermViewModel implements ViewModel {
         });
         fullMenu.push({ type: "separator" });
         fullMenu.push({
-            label: "Force Restart Controller",
+            label: tt("termmenu.forceRestartController"),
             click: this.forceRestartController.bind(this),
         });
         const isClearOnStart = blockData?.meta?.["cmd:clearonstart"];
         fullMenu.push({
-            label: "Clear Output On Restart",
+            label: tt("termmenu.clearOutputOnRestart"),
             submenu: [
                 {
-                    label: "On",
+                    label: tt("menu.on"),
                     type: "checkbox",
                     checked: isClearOnStart,
                     click: () => {
@@ -825,7 +830,7 @@ export class TermViewModel implements ViewModel {
                     },
                 },
                 {
-                    label: "Off",
+                    label: tt("menu.off"),
                     type: "checkbox",
                     checked: !isClearOnStart,
                     click: () => {
@@ -839,10 +844,10 @@ export class TermViewModel implements ViewModel {
         });
         const runOnStart = blockData?.meta?.["cmd:runonstart"];
         fullMenu.push({
-            label: "Run On Startup",
+            label: tt("termmenu.runOnStartup"),
             submenu: [
                 {
-                    label: "On",
+                    label: tt("menu.on"),
                     type: "checkbox",
                     checked: runOnStart,
                     click: () => {
@@ -853,7 +858,7 @@ export class TermViewModel implements ViewModel {
                     },
                 },
                 {
-                    label: "Off",
+                    label: tt("menu.off"),
                     type: "checkbox",
                     checked: !runOnStart,
                     click: () => {
@@ -868,7 +873,7 @@ export class TermViewModel implements ViewModel {
         if (blockData?.meta?.["term:vdomtoolbarblockid"]) {
             fullMenu.push({ type: "separator" });
             fullMenu.push({
-                label: "Close Toolbar",
+                label: tt("termmenu.closeToolbar"),
                 click: () => {
                     RpcApi.DeleteSubBlockCommand(TabRpcClient, { blockid: blockData.meta["term:vdomtoolbarblockid"] });
                 },
@@ -876,10 +881,10 @@ export class TermViewModel implements ViewModel {
         }
         const debugConn = blockData?.meta?.["term:conndebug"];
         fullMenu.push({
-            label: "Debug Connection",
+            label: tt("termmenu.debugConnection"),
             submenu: [
                 {
-                    label: "Off",
+                    label: tt("menu.off"),
                     type: "checkbox",
                     checked: !debugConn,
                     click: () => {
@@ -890,7 +895,7 @@ export class TermViewModel implements ViewModel {
                     },
                 },
                 {
-                    label: "Info",
+                    label: tt("termmenu.debugConnectionInfo"),
                     type: "checkbox",
                     checked: debugConn == "info",
                     click: () => {
@@ -901,7 +906,7 @@ export class TermViewModel implements ViewModel {
                     },
                 },
                 {
-                    label: "Verbose",
+                    label: tt("termmenu.debugConnectionVerbose"),
                     type: "checkbox",
                     checked: debugConn == "debug",
                     click: () => {

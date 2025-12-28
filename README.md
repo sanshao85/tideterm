@@ -19,6 +19,7 @@ This repository is a **fork of Wave Terminal** (Apache-2.0) by Command Line Inc.
 - Built-in editor for remote files
 - Command Blocks to isolate and monitor commands
 - `wsh` CLI to control the workspace and move files between local/remote
+- Built-in MCP server manager (import/sync for Claude Code, Codex CLI, Gemini CLI)
 - English + Simplified Chinese UI with instant switching (no restart)
 
 ## Install

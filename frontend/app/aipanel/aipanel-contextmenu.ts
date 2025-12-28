@@ -1,9 +1,10 @@
 // Copyright 2025, Command Line Inc.
 // SPDX-License-Identifier: Apache-2.0
 
+import { getAppLanguageFromSettings, t } from "@/app/i18n/i18n-core";
 import { waveAIHasSelection } from "@/app/aipanel/waveai-focus-utils";
 import { ContextMenuModel } from "@/app/store/contextmenu";
-import { isDev } from "@/app/store/global";
+import { atoms, isDev } from "@/app/store/global";
 import { globalStore } from "@/app/store/jotaiStore";
 import { RpcApi } from "@/app/store/wshclientapi";
 import { TabRpcClient } from "@/app/store/wshrpcutil";
@@ -14,6 +15,8 @@ export async function handleWaveAIContextMenu(e: React.MouseEvent, showCopy: boo
     e.stopPropagation();
 
     const model = WaveAIModel.getInstance();
+    const lang = getAppLanguageFromSettings(globalStore.get(atoms.settingsAtom));
+    const tt = (key: Parameters<typeof t>[1], vars?: Record<string, string | number>) => t(lang, key, vars);
     const menu: ContextMenuItem[] = [];
 
     if (showCopy) {
@@ -27,7 +30,7 @@ export async function handleWaveAIContextMenu(e: React.MouseEvent, showCopy: boo
     }
 
     menu.push({
-        label: "New Chat",
+        label: tt("aipanelmenu.newChat"),
         click: () => {
             model.clearChat();
         },
@@ -47,7 +50,7 @@ export async function handleWaveAIContextMenu(e: React.MouseEvent, showCopy: boo
     if (model.inBuilder) {
         maxTokensSubmenu.push(
             {
-                label: "24k",
+                label: tt("aipanelmenu.tokens.24k"),
                 type: "checkbox",
                 checked: currentMaxTokens === 24576,
                 click: () => {
@@ -58,7 +61,7 @@ export async function handleWaveAIContextMenu(e: React.MouseEvent, showCopy: boo
                 },
             },
             {
-                label: "64k (Pro)",
+                label: tt("aipanelmenu.tokens.64kPro"),
                 type: "checkbox",
                 checked: currentMaxTokens === 65536,
                 click: () => {
@@ -72,7 +75,7 @@ export async function handleWaveAIContextMenu(e: React.MouseEvent, showCopy: boo
     } else {
         if (isDev()) {
             maxTokensSubmenu.push({
-                label: "1k (Dev Testing)",
+                label: tt("aipanelmenu.tokens.1kDevTesting"),
                 type: "checkbox",
                 checked: currentMaxTokens === 1024,
                 click: () => {
@@ -85,7 +88,7 @@ export async function handleWaveAIContextMenu(e: React.MouseEvent, showCopy: boo
         }
         maxTokensSubmenu.push(
             {
-                label: "4k",
+                label: tt("aipanelmenu.tokens.4k"),
                 type: "checkbox",
                 checked: currentMaxTokens === 4096,
                 click: () => {
@@ -96,7 +99,7 @@ export async function handleWaveAIContextMenu(e: React.MouseEvent, showCopy: boo
                 },
             },
             {
-                label: "16k (Pro)",
+                label: tt("aipanelmenu.tokens.16kPro"),
                 type: "checkbox",
                 checked: currentMaxTokens === 16384,
                 click: () => {
@@ -107,7 +110,7 @@ export async function handleWaveAIContextMenu(e: React.MouseEvent, showCopy: boo
                 },
             },
             {
-                label: "64k (Pro)",
+                label: tt("aipanelmenu.tokens.64kPro"),
                 type: "checkbox",
                 checked: currentMaxTokens === 65536,
                 click: () => {
@@ -121,14 +124,14 @@ export async function handleWaveAIContextMenu(e: React.MouseEvent, showCopy: boo
     }
 
     menu.push({
-        label: "Max Output Tokens",
+        label: tt("aipanelmenu.maxOutputTokens"),
         submenu: maxTokensSubmenu,
     });
 
     menu.push({ type: "separator" });
 
     menu.push({
-        label: "Configure Modes",
+        label: tt("aipanelmenu.configureModes"),
         click: () => {
             RpcApi.RecordTEventCommand(
                 TabRpcClient,
@@ -148,7 +151,7 @@ export async function handleWaveAIContextMenu(e: React.MouseEvent, showCopy: boo
         menu.push({ type: "separator" });
 
         menu.push({
-            label: "Hide TideTerm AI",
+            label: tt("aipanelmenu.hideTideTermAI"),
             click: () => {
                 model.closeWaveAIPanel();
             },

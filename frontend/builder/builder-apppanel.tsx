@@ -6,6 +6,7 @@ import { ContextMenuModel } from "@/app/store/contextmenu";
 import { modalsModel } from "@/app/store/modalmodel";
 import { RpcApi } from "@/app/store/wshclientapi";
 import { TabRpcClient } from "@/app/store/wshrpcutil";
+import { useT } from "@/app/i18n/i18n";
 import { BuilderAppPanelModel, type TabType } from "@/builder/store/builder-apppanel-model";
 import { BuilderFocusManager } from "@/builder/store/builder-focusmanager";
 import { BuilderCodeTab } from "@/builder/tabs/builder-codetab";
@@ -193,6 +194,7 @@ PublishAppModal.displayName = "PublishAppModal";
 const BuilderAppPanel = memo(() => {
     const model = BuilderAppPanelModel.getInstance();
     const focusElemRef = useRef<HTMLInputElement>(null);
+    const t = useT();
     const activeTab = useAtomValue(model.activeTab);
     const focusType = useAtomValue(BuilderFocusManager.getInstance().focusType);
     const isAppFocused = focusType === "app";
@@ -261,20 +263,20 @@ const BuilderAppPanel = memo(() => {
         (e: React.MouseEvent) => {
             const menu: ContextMenuItem[] = [
                 {
-                    label: "Publish App",
+                    label: t("buildermenu.publishApp"),
                     click: handlePublishClick,
                 },
                 {
                     type: "separator",
                 },
                 {
-                    label: "Switch App",
+                    label: t("buildermenu.switchApp"),
                     click: handleSwitchAppClick,
                 },
             ];
             ContextMenuModel.showContextMenu(menu, e);
         },
-        [handleSwitchAppClick, handlePublishClick]
+        [handleSwitchAppClick, handlePublishClick, t]
     );
 
     return (

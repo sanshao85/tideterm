@@ -534,6 +534,21 @@ export class TermWrap {
     lastPasteData: string = "";
     lastPasteTime: number = 0;
 
+    // Output buffering for remote connections
+    // Batches rapid output updates to reduce flickering from split ANSI sequences
+    private outputBuffer: Uint8Array[] = [];
+    private outputFlushRafId: number | null = null;
+    private outputBatchStartTs: number | null = null;
+    private outputBufferedBytes: number = 0;
+    private outputBufferHasNewline: boolean = false;
+    private outputBufferHasEscape: boolean = false;
+    private outputBufferHasCarriageReturn: boolean = false;
+
+    // For remote SSH, allow a slightly larger coalescing window so split control sequences
+    // (e.g. erase + redraw) land in the same render frame and don't visibly flicker.
+    private readonly outputFlushMinDelayRemoteMs: number = 32;
+    private readonly outputFlushMaxBufferedBytes: number = 256 * 1024;
+
     private handleNativeDragOver = (e: DragEvent) => {
         const dt = e.dataTransfer;
         if (!dt || !dataTransferHasFiles(dt)) {
@@ -760,6 +775,17 @@ export class TermWrap {
     }
 
     dispose() {
+        // Clear output buffer scheduler
+        if (this.outputFlushRafId != null) {
+            window.cancelAnimationFrame(this.outputFlushRafId);
+            this.outputFlushRafId = null;
+        }
+        this.outputBuffer = [];
+        this.outputBatchStartTs = null;
+        this.outputBufferedBytes = 0;
+        this.outputBufferHasNewline = false;
+        this.outputBufferHasEscape = false;
+        this.outputBufferHasCarriageReturn = false;
         this.promptMarkers.forEach((marker) => {
             try {
                 marker.dispose();
@@ -829,12 +855,34 @@ export class TermWrap {
 
     handleNewFileSubjectData(msg: WSFileEventData) {
         if (msg.fileop == "truncate") {
+            // Clear any pending buffered output
+            this.flushOutputBuffer();
             this.terminal.clear();
             this.heldData = [];
         } else if (msg.fileop == "append") {
             const decodedData = base64ToArray(msg.data64);
             if (this.loaded) {
-                this.doTerminalWrite(decodedData, null);
+                // Buffer the data and schedule a flush
+                this.outputBuffer.push(decodedData);
+                this.outputBufferedBytes += decodedData.byteLength;
+                if (this.outputBatchStartTs == null) {
+                    this.outputBatchStartTs = performance.now();
+                }
+                // Track quick heuristics to decide how much to coalesce.
+                for (let i = 0; i < decodedData.length; i++) {
+                    const b = decodedData[i];
+                    if (b === 0x0a) {
+                        this.outputBufferHasNewline = true;
+                    } else if (b === 0x1b) {
+                        this.outputBufferHasEscape = true;
+                    } else if (b === 0x0d) {
+                        this.outputBufferHasCarriageReturn = true;
+                    }
+                    if (this.outputBufferHasNewline && this.outputBufferHasEscape && this.outputBufferHasCarriageReturn) {
+                        break;
+                    }
+                }
+                this.scheduleOutputFlush();
             } else {
                 this.heldData.push(decodedData);
             }
@@ -842,6 +890,75 @@ export class TermWrap {
             console.log("bad fileop for terminal", msg);
             return;
         }
+    }
+
+    private scheduleOutputFlush() {
+        if (this.outputFlushRafId != null) {
+            return; // Already scheduled
+        }
+        if (this.outputBatchStartTs == null) {
+            this.outputBatchStartTs = performance.now();
+        }
+        const tick = () => {
+            this.outputFlushRafId = null;
+            if (this.outputBuffer.length === 0) {
+                this.outputBatchStartTs = null;
+                return;
+            }
+
+            // Only apply the larger coalescing window for non-local connections and for output
+            // that looks like a cursor-up/erase/redraw cycle (escape sequences or CR without newline).
+            const isRemote = !this.isLocalConnection();
+            const minDelay =
+                isRemote && (this.outputBufferHasEscape || this.outputBufferHasCarriageReturn) && !this.outputBufferHasNewline
+                    ? this.outputFlushMinDelayRemoteMs
+                    : 0;
+            const now = performance.now();
+            const age = this.outputBatchStartTs == null ? minDelay : now - this.outputBatchStartTs;
+            const shouldFlushNow = age >= minDelay || this.outputBufferedBytes >= this.outputFlushMaxBufferedBytes;
+            if (!shouldFlushNow) {
+                this.outputFlushRafId = window.requestAnimationFrame(tick);
+                return;
+            }
+            this.flushOutputBuffer();
+        };
+        this.outputFlushRafId = window.requestAnimationFrame(tick);
+    }
+
+    private flushOutputBuffer() {
+        if (this.outputFlushRafId != null) {
+            window.cancelAnimationFrame(this.outputFlushRafId);
+            this.outputFlushRafId = null;
+        }
+        if (this.outputBuffer.length === 0) {
+            this.outputBatchStartTs = null;
+            this.outputBufferedBytes = 0;
+            this.outputBufferHasNewline = false;
+            this.outputBufferHasEscape = false;
+            this.outputBufferHasCarriageReturn = false;
+            return;
+        }
+        // Merge all buffered data into a single write.
+        // Avoid copying when we only have a single chunk.
+        let merged: Uint8Array;
+        if (this.outputBuffer.length === 1) {
+            merged = this.outputBuffer[0];
+        } else {
+            const totalLength = this.outputBufferedBytes;
+            merged = new Uint8Array(totalLength);
+            let offset = 0;
+            for (const arr of this.outputBuffer) {
+                merged.set(arr, offset);
+                offset += arr.length;
+            }
+        }
+        this.outputBuffer = [];
+        this.outputBatchStartTs = null;
+        this.outputBufferedBytes = 0;
+        this.outputBufferHasNewline = false;
+        this.outputBufferHasEscape = false;
+        this.outputBufferHasCarriageReturn = false;
+        this.doTerminalWrite(merged, null);
     }
 
     doTerminalWrite(data: string | Uint8Array, setPtyOffset?: number): Promise<void> {

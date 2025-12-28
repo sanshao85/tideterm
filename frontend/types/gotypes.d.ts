@@ -376,6 +376,18 @@ declare global {
         draftappid: string;
     };
 
+    // wshrpc.CommandMcpImportData
+    type CommandMcpImportData = {
+        app: string;
+    };
+
+    // wshrpc.CommandMcpToggleAppData
+    type CommandMcpToggleAppData = {
+        serverid: string;
+        app: string;
+        enabled: boolean;
+    };
+
     // wshrpc.CommandMessageData
     type CommandMessageData = {
         oref: ORef;
@@ -808,6 +820,49 @@ declare global {
     type LeafOrderEntry = {
         nodeid: string;
         blockid: string;
+    };
+
+    // wshrpc.McpAppStatusData
+    type McpAppStatusData = {
+        claude: boolean;
+        codex: boolean;
+        gemini: boolean;
+    };
+
+    // wshrpc.McpAppsData
+    type McpAppsData = {
+        claude: boolean;
+        codex: boolean;
+        gemini: boolean;
+    };
+
+    // wshrpc.McpImportResultData
+    type McpImportResultData = {
+        imported: number;
+        errors?: string[];
+    };
+
+    // wshrpc.McpServerData
+    type McpServerData = {
+        id: string;
+        name: string;
+        server: McpServerSpecData;
+        apps: McpAppsData;
+        description?: string;
+        homepage?: string;
+        docs?: string;
+        tags?: string[];
+    };
+
+    // wshrpc.McpServerSpecData
+    type McpServerSpecData = {
+        type?: string;
+        command?: string;
+        args?: string[];
+        env?: {[key: string]: string};
+        cwd?: string;
+        url?: string;
+        headers?: {[key: string]: string};
     };
 
     // waveobj.MetaTSType

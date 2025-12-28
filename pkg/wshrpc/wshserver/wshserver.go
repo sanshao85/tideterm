@@ -29,6 +29,7 @@ import (
 	"github.com/sanshao85/tideterm/pkg/filebackup"
 	"github.com/sanshao85/tideterm/pkg/filestore"
 	"github.com/sanshao85/tideterm/pkg/genconn"
+	"github.com/sanshao85/tideterm/pkg/mcpconfig"
 	"github.com/sanshao85/tideterm/pkg/panichandler"
 	"github.com/sanshao85/tideterm/pkg/remote"
 	"github.com/sanshao85/tideterm/pkg/remote/awsconn"
@@ -1443,4 +1444,146 @@ func (ws *WshServer) GetSecretsLinuxStorageBackendCommand(ctx context.Context) (
 		return "", fmt.Errorf("error getting linux storage backend: %w", err)
 	}
 	return backend, nil
+}
+
+// ============================================================================
+// MCP (Model Context Protocol) Commands
+// ============================================================================
+
+// Helper function to convert mcpconfig.McpServer to wshrpc.McpServerData
+func mcpServerToData(server *mcpconfig.McpServer) *wshrpc.McpServerData {
+	if server == nil {
+		return nil
+	}
+	return &wshrpc.McpServerData{
+		ID:          server.ID,
+		Name:        server.Name,
+		Description: server.Description,
+		Homepage:    server.Homepage,
+		Docs:        server.Docs,
+		Tags:        server.Tags,
+		Server: wshrpc.McpServerSpecData{
+			Type:    string(server.Server.Type),
+			Command: server.Server.Command,
+			Args:    server.Server.Args,
+			Env:     server.Server.Env,
+			Cwd:     server.Server.Cwd,
+			URL:     server.Server.URL,
+			Headers: server.Server.Headers,
+		},
+		Apps: wshrpc.McpAppsData{
+			Claude: server.Apps.Claude,
+			Codex:  server.Apps.Codex,
+			Gemini: server.Apps.Gemini,
+		},
+	}
+}
+
+// Helper function to convert wshrpc.McpServerData to mcpconfig.McpServer
+func dataToMcpServer(data wshrpc.McpServerData) *mcpconfig.McpServer {
+	return &mcpconfig.McpServer{
+		ID:          data.ID,
+		Name:        data.Name,
+		Description: data.Description,
+		Homepage:    data.Homepage,
+		Docs:        data.Docs,
+		Tags:        data.Tags,
+		Server: mcpconfig.McpServerSpec{
+			Type:    mcpconfig.TransportType(data.Server.Type),
+			Command: data.Server.Command,
+			Args:    data.Server.Args,
+			Env:     data.Server.Env,
+			Cwd:     data.Server.Cwd,
+			URL:     data.Server.URL,
+			Headers: data.Server.Headers,
+		},
+		Apps: mcpconfig.McpApps{
+			Claude: data.Apps.Claude,
+			Codex:  data.Apps.Codex,
+			Gemini: data.Apps.Gemini,
+		},
+	}
+}
+
+func (ws *WshServer) McpGetServersCommand(ctx context.Context) (map[string]*wshrpc.McpServerData, error) {
+	servers, err := mcpconfig.GetAllServers()
+	if err != nil {
+		return nil, fmt.Errorf("error getting MCP servers: %w", err)
+	}
+
+	result := make(map[string]*wshrpc.McpServerData)
+	for id, server := range servers {
+		result[id] = mcpServerToData(server)
+	}
+	return result, nil
+}
+
+func (ws *WshServer) McpGetServerCommand(ctx context.Context, serverId string) (*wshrpc.McpServerData, error) {
+	server, err := mcpconfig.GetServer(serverId)
+	if err != nil {
+		return nil, fmt.Errorf("error getting MCP server: %w", err)
+	}
+	if server == nil {
+		return nil, fmt.Errorf("MCP server not found: %s", serverId)
+	}
+	return mcpServerToData(server), nil
+}
+
+func (ws *WshServer) McpUpsertServerCommand(ctx context.Context, data wshrpc.McpServerData) error {
+	server := dataToMcpServer(data)
+	if err := mcpconfig.UpsertServer(server); err != nil {
+		return fmt.Errorf("error upserting MCP server: %w", err)
+	}
+	return nil
+}
+
+func (ws *WshServer) McpDeleteServerCommand(ctx context.Context, serverId string) error {
+	if err := mcpconfig.DeleteServer(serverId); err != nil {
+		return fmt.Errorf("error deleting MCP server: %w", err)
+	}
+	return nil
+}
+
+func (ws *WshServer) McpToggleAppCommand(ctx context.Context, data wshrpc.CommandMcpToggleAppData) error {
+	app := mcpconfig.AppType(data.App)
+	if err := mcpconfig.ToggleApp(data.ServerId, app, data.Enabled); err != nil {
+		return fmt.Errorf("error toggling MCP app: %w", err)
+	}
+	return nil
+}
+
+func (ws *WshServer) McpSyncAllCommand(ctx context.Context) error {
+	if err := mcpconfig.SyncAllEnabled(); err != nil {
+		return fmt.Errorf("error syncing MCP servers: %w", err)
+	}
+	return nil
+}
+
+func (ws *WshServer) McpImportFromAppCommand(ctx context.Context, data wshrpc.CommandMcpImportData) (*wshrpc.McpImportResultData, error) {
+	var result *mcpconfig.ImportResult
+	var err error
+
+	if data.App == "" {
+		result, err = mcpconfig.ImportFromAllApps()
+	} else {
+		result, err = mcpconfig.ImportFromApp(mcpconfig.AppType(data.App))
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("error importing MCP servers: %w", err)
+	}
+
+	return &wshrpc.McpImportResultData{
+		Imported: result.Imported,
+		Errors:   result.Errors,
+	}, nil
+}
+
+func (ws *WshServer) McpGetAppStatusCommand(ctx context.Context) (*wshrpc.McpAppStatusData, error) {
+	status := mcpconfig.GetAppStatus()
+	return &wshrpc.McpAppStatusData{
+		Claude: status[mcpconfig.AppClaude],
+		Codex:  status[mcpconfig.AppCodex],
+		Gemini: status[mcpconfig.AppGemini],
+	}, nil
 }

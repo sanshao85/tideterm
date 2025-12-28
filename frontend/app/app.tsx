@@ -3,6 +3,7 @@
 
 import { ClientModel } from "@/app/store/client-model";
 import { GlobalModel } from "@/app/store/global-model";
+import { getAppLanguageFromSettings, t as tCore } from "@/app/i18n/i18n-core";
 import { getTabModelByTabId, TabModelContext } from "@/app/store/tab-model";
 import { Workspace } from "@/app/workspace/workspace";
 import { ContextMenuModel } from "@/store/contextmenu";
@@ -98,20 +99,22 @@ async function handleContextMenu(e: React.MouseEvent<HTMLDivElement>) {
     if (!canPaste && !canCopy && !canCut && !clipboardURL) {
         return;
     }
+    const lang = getAppLanguageFromSettings(globalStore.get(atoms.settingsAtom));
+    const t = (key: Parameters<typeof tCore>[1], vars?: Record<string, string | number>) => tCore(lang, key, vars);
     let menu: ContextMenuItem[] = [];
     if (canCut) {
-        menu.push({ label: "Cut", role: "cut" });
+        menu.push({ label: t("menu.cut"), role: "cut" });
     }
     if (canCopy) {
-        menu.push({ label: "Copy", role: "copy" });
+        menu.push({ label: t("menu.copy"), role: "copy" });
     }
     if (canPaste) {
-        menu.push({ label: "Paste", role: "paste" });
+        menu.push({ label: t("menu.paste"), role: "paste" });
     }
     if (clipboardURL) {
         menu.push({ type: "separator" });
         menu.push({
-            label: "Open Clipboard URL (" + clipboardURL.hostname + ")",
+            label: t("contextmenu.openClipboardUrl", { host: clipboardURL.hostname }),
             click: () => {
                 createBlock({
                     meta: {

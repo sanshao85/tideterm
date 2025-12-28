@@ -12,7 +12,7 @@
         "appId": "io.github.sanshao85.tideterm"
     },
     "private": true,
-    "main": "./dist/main/index.js",
+    "main": "./dist/main/index.cjs",
     "type": "module",
     "browserslist": [
         "Chrome >= 128"

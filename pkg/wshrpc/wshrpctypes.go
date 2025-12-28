@@ -188,6 +188,16 @@ const (
 	Command_GetSecretsNames               = "getsecretsnames"
 	Command_SetSecrets                    = "setsecrets"
 	Command_GetSecretsLinuxStorageBackend = "getsecretslinuxstoragebackend"
+
+	// MCP (Model Context Protocol) commands
+	Command_McpGetServers    = "mcpgetservers"
+	Command_McpGetServer     = "mcpgetserver"
+	Command_McpUpsertServer  = "mcpupsertserver"
+	Command_McpDeleteServer  = "mcpdeleteserver"
+	Command_McpToggleApp     = "mcptoggleapp"
+	Command_McpSyncAll       = "mcpsyncall"
+	Command_McpImportFromApp = "mcpimportfromapp"
+	Command_McpGetAppStatus  = "mcpgetappstatus"
 )
 
 type RespOrErrorUnion[T any] struct {
@@ -311,6 +321,16 @@ type WshRpcInterface interface {
 	GetSecretsNamesCommand(ctx context.Context) ([]string, error)
 	SetSecretsCommand(ctx context.Context, secrets map[string]*string) error
 	GetSecretsLinuxStorageBackendCommand(ctx context.Context) (string, error)
+
+	// MCP (Model Context Protocol) management
+	McpGetServersCommand(ctx context.Context) (map[string]*McpServerData, error)
+	McpGetServerCommand(ctx context.Context, serverId string) (*McpServerData, error)
+	McpUpsertServerCommand(ctx context.Context, server McpServerData) error
+	McpDeleteServerCommand(ctx context.Context, serverId string) error
+	McpToggleAppCommand(ctx context.Context, data CommandMcpToggleAppData) error
+	McpSyncAllCommand(ctx context.Context) error
+	McpImportFromAppCommand(ctx context.Context, data CommandMcpImportData) (*McpImportResultData, error)
+	McpGetAppStatusCommand(ctx context.Context) (*McpAppStatusData, error)
 
 	WorkspaceListCommand(ctx context.Context) ([]WorkspaceInfoData, error)
 	GetUpdateChannelCommand(ctx context.Context) (string, error)
@@ -1131,3 +1151,54 @@ type CommandElectronDecryptRtnData struct {
 	PlainText      string `json:"plaintext"`
 	StorageBackend string `json:"storagebackend"` // only returned for linux
 }
+
+// MCP types
+
+type McpServerData struct {
+	ID          string            `json:"id"`
+	Name        string            `json:"name"`
+	Server      McpServerSpecData `json:"server"`
+	Apps        McpAppsData       `json:"apps"`
+	Description string            `json:"description,omitempty"`
+	Homepage    string            `json:"homepage,omitempty"`
+	Docs        string            `json:"docs,omitempty"`
+	Tags        []string          `json:"tags,omitempty"`
+}
+
+type McpServerSpecData struct {
+	Type    string            `json:"type,omitempty"`
+	Command string            `json:"command,omitempty"`
+	Args    []string          `json:"args,omitempty"`
+	Env     map[string]string `json:"env,omitempty"`
+	Cwd     string            `json:"cwd,omitempty"`
+	URL     string            `json:"url,omitempty"`
+	Headers map[string]string `json:"headers,omitempty"`
+}
+
+type McpAppsData struct {
+	Claude bool `json:"claude"`
+	Codex  bool `json:"codex"`
+	Gemini bool `json:"gemini"`
+}
+
+type CommandMcpToggleAppData struct {
+	ServerId string `json:"serverid"`
+	App      string `json:"app"`
+	Enabled  bool   `json:"enabled"`
+}
+
+type CommandMcpImportData struct {
+	App string `json:"app"` // "claude", "codex", "gemini", or empty for all
+}
+
+type McpImportResultData struct {
+	Imported int      `json:"imported"`
+	Errors   []string `json:"errors,omitempty"`
+}
+
+type McpAppStatusData struct {
+	Claude bool `json:"claude"`
+	Codex  bool `json:"codex"`
+	Gemini bool `json:"gemini"`
+}
+

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { formatFileSize } from "@/app/aipanel/ai-utils";
+import { useT } from "@/app/i18n/i18n";
 import { Modal } from "@/app/modals/modal";
 import { ContextMenuModel } from "@/app/store/contextmenu";
 import { modalsModel } from "@/app/store/modalmodel";
@@ -177,6 +178,7 @@ DeleteFileModal.displayName = "DeleteFileModal";
 
 const BuilderFilesTab = memo(() => {
     const builderAppId = useAtomValue(atoms.builderAppId);
+    const t = useT();
     const [files, setFiles] = useState<FileEntry[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -284,7 +286,7 @@ const BuilderFilesTab = memo(() => {
     const handleContextMenu = (e: React.MouseEvent, fileName: string) => {
         const menu: ContextMenuItem[] = [
             {
-                label: "Rename File",
+                label: t("buildermenu.renameFile"),
                 click: () => {
                     modalsModel.pushModal("RenameFileModal", { appId: builderAppId, fileName, onSuccess: loadFiles });
                 },
@@ -293,7 +295,7 @@ const BuilderFilesTab = memo(() => {
                 type: "separator",
             },
             {
-                label: "Delete File",
+                label: t("buildermenu.deleteFile"),
                 click: () => {
                     modalsModel.pushModal("DeleteFileModal", { appId: builderAppId, fileName, onSuccess: loadFiles });
                 },

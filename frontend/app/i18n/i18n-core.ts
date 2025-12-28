@@ -26,11 +26,17 @@ const en = {
     "common.adding": "Adding...",
     "common.cancel": "Cancel",
     "common.close": "Close",
+    "common.default": "Default",
+    "common.defaultWithValue": "Default ({value})",
     "common.delete": "Delete",
     "common.deleting": "Deleting...",
+    "common.edit": "Edit",
     "common.loading": "Loading...",
+    "common.reset": "Reset",
     "common.save": "Save",
     "common.saving": "Saving...",
+    "common.openDevTools": "Open DevTools",
+    "common.closeDevTools": "Close DevTools",
 
     // Settings
     "settings.language": "Language",
@@ -63,6 +69,90 @@ const en = {
     "filemenu.downloadFile": "Download File",
     "filemenu.openPreviewInNewBlock": "Open Preview in New Block",
     "filemenu.openTerminalInNewBlock": "Open Terminal in New Block",
+
+    // App context menu
+    "contextmenu.openClipboardUrl": "Open Clipboard URL ({host})",
+
+    // Block header context menu
+    "blockmenu.magnifyBlock": "Magnify Block",
+    "blockmenu.unmagnifyBlock": "Un-Magnify Block",
+    "blockmenu.copyBlockId": "Copy BlockId",
+    "blockmenu.closeBlock": "Close Block",
+
+    // Tab context menu
+    "tabmenu.pinTab": "Pin Tab",
+    "tabmenu.unpinTab": "Unpin Tab",
+    "tabmenu.renameTab": "Rename Tab",
+    "tabmenu.copyTabId": "Copy TabId",
+    "tabmenu.backgrounds": "Backgrounds",
+    "tabmenu.closeTab": "Close Tab",
+
+    // Terminal settings menu
+    "termmenu.themes": "Themes",
+    "termmenu.fontSize": "Font Size",
+    "termmenu.transparency": "Transparency",
+    "termmenu.transparentBackground": "Transparent Background",
+    "termmenu.noTransparency": "No Transparency",
+    "termmenu.allowBracketedPasteMode": "Allow Bracketed Paste Mode",
+    "termmenu.forceRestartController": "Force Restart Controller",
+    "termmenu.clearOutputOnRestart": "Clear Output On Restart",
+    "termmenu.runOnStartup": "Run On Startup",
+    "termmenu.closeToolbar": "Close Toolbar",
+    "termmenu.debugConnection": "Debug Connection",
+    "termmenu.debugConnectionInfo": "Info",
+    "termmenu.debugConnectionVerbose": "Verbose",
+
+    // Web view settings menu
+    "webviewmenu.copyUrlToClipboard": "Copy URL to Clipboard",
+    "webviewmenu.setBlockHomepage": "Set Block Homepage",
+    "webviewmenu.setDefaultHomepage": "Set Default Homepage",
+    "webviewmenu.userAgentType": "User Agent Type",
+    "webviewmenu.userAgentDefault": "Default",
+    "webviewmenu.userAgentMobileIphone": "Mobile: iPhone",
+    "webviewmenu.userAgentMobileAndroid": "Mobile: Android",
+    "webviewmenu.hideNavigation": "Hide Navigation",
+    "webviewmenu.unhideNavigation": "Un-Hide Navigation",
+    "webviewmenu.setZoomFactor": "Set Zoom Factor",
+    "webviewmenu.clearHistory": "Clear History",
+    "webviewmenu.clearCookiesAndStorage": "Clear Cookies and Storage (All Web Widgets)",
+
+    // Preview settings menu
+    "previewmenu.goToBookmark": "Go to {label} ({path})",
+    "previewmenu.copyFullPath": "Copy Full Path",
+    "previewmenu.editorFontSize": "Editor Font Size",
+    "previewmenu.saveFile": "Save File",
+    "previewmenu.revertFile": "Revert File",
+    "previewmenu.wordWrap": "Word Wrap",
+
+    // Sysinfo settings menu
+    "sysinfomenu.plotType": "Plot Type",
+
+    // Tsunami settings menu
+    "tsunamimenu.stopWaveApp": "Stop WaveApp",
+    "tsunamimenu.restartWaveApp": "Restart WaveApp",
+    "tsunamimenu.restartWaveAppForceRebuild": "Restart WaveApp and Force Rebuild",
+    "tsunamimenu.remixWaveAppInBuilder": "Remix WaveApp in Builder",
+
+    // WaveAI (AI panel) context menu
+    "aipanelmenu.newChat": "New Chat",
+    "aipanelmenu.maxOutputTokens": "Max Output Tokens",
+    "aipanelmenu.configureModes": "Configure Modes",
+    "aipanelmenu.hideTideTermAI": "Hide TideTerm AI",
+    "aipanelmenu.tokens.1kDevTesting": "1k (Dev Testing)",
+    "aipanelmenu.tokens.4k": "4k",
+    "aipanelmenu.tokens.16kPro": "16k (Pro)",
+    "aipanelmenu.tokens.24k": "24k",
+    "aipanelmenu.tokens.64kPro": "64k (Pro)",
+
+    // Workspace widgets context menu
+    "workspace.menu.editWidgetsJson": "Edit widgets.json",
+
+    // Builder context menu
+    "buildermenu.addToContext": "Add to Context",
+    "buildermenu.publishApp": "Publish App",
+    "buildermenu.switchApp": "Switch App",
+    "buildermenu.renameFile": "Rename File",
+    "buildermenu.deleteFile": "Delete File",
 
     // WaveConfig
     "waveconfig.configFiles": "Config Files",
@@ -104,6 +194,40 @@ const en = {
     "secrets.showSecret": "Show Secret",
     "secrets.loadingSecrets": "Loading secrets...",
     "secrets.deleteThisSecret": "Delete this secret",
+
+    // MCP Servers
+    "waveconfig.file.mcpServers": "MCP Servers",
+    "waveconfig.mcpServers.description": "Manage MCP servers for AI tools",
+    "mcp.noServers": "No MCP Servers",
+    "mcp.addToGetStarted": "Add an MCP server or import from installed AI applications",
+    "mcp.addServer": "Add Server",
+    "mcp.editServer": "Edit Server",
+    "mcp.importFromApps": "Import from Apps",
+    "mcp.loading": "Loading MCP configuration...",
+    "mcp.serverCount": "{count} server(s)",
+    "mcp.syncAll": "Sync All",
+    "mcp.syncAll.tooltip": "Sync all servers to their enabled apps",
+    "mcp.import": "Import",
+    "mcp.importSuccess": "Successfully imported {count} server(s)",
+    "mcp.importNoServers": "No new servers to import",
+    "mcp.syncSuccess": "All servers synced successfully",
+    "mcp.deleteConfirm": "Are you sure you want to delete this server?",
+    "mcp.serverId": "Server ID",
+    "mcp.serverId.help": "Unique identifier for this server (e.g., my-mcp-server)",
+    "mcp.serverName": "Display Name",
+    "mcp.transportType": "Transport Type",
+    "mcp.command": "Command",
+    "mcp.args": "Arguments",
+    "mcp.args.help": "Space-separated arguments for the command",
+    "mcp.env": "Environment Variables",
+    "mcp.env.help": "One variable per line in KEY=value format",
+    "mcp.url": "URL",
+    "mcp.description": "Description",
+    "mcp.description.placeholder": "Brief description of this server",
+    "mcp.enabledApps": "Enabled Apps",
+    "mcp.enabledApps.help": "Select which apps should use this MCP server",
+    "mcp.installedApps": "Installed Apps",
+    "mcp.warning": "Important: Please clear all existing MCP servers in the AI apps first, then configure them here. Otherwise synchronization may fail.",
 
     // App menu (Electron)
     "menu.workspace": "Workspace",
@@ -158,11 +282,17 @@ const zhCN: Record<I18nKey, string> = {
     "common.adding": "正在添加…",
     "common.cancel": "取消",
     "common.close": "关闭",
+    "common.default": "默认",
+    "common.defaultWithValue": "默认（{value}）",
     "common.delete": "删除",
     "common.deleting": "正在删除…",
+    "common.edit": "编辑",
     "common.loading": "加载中…",
+    "common.reset": "重置",
     "common.save": "保存",
     "common.saving": "正在保存…",
+    "common.openDevTools": "打开开发者工具",
+    "common.closeDevTools": "关闭开发者工具",
 
     // Settings
     "settings.language": "语言",
@@ -195,6 +325,90 @@ const zhCN: Record<I18nKey, string> = {
     "filemenu.downloadFile": "下载文件",
     "filemenu.openPreviewInNewBlock": "在新块中打开预览",
     "filemenu.openTerminalInNewBlock": "在新块中打开终端",
+
+    // App context menu
+    "contextmenu.openClipboardUrl": "打开剪贴板 URL（{host}）",
+
+    // Block header context menu
+    "blockmenu.magnifyBlock": "放大块",
+    "blockmenu.unmagnifyBlock": "取消放大块",
+    "blockmenu.copyBlockId": "复制 BlockId",
+    "blockmenu.closeBlock": "关闭块",
+
+    // Tab context menu
+    "tabmenu.pinTab": "固定标签页",
+    "tabmenu.unpinTab": "取消固定标签页",
+    "tabmenu.renameTab": "重命名标签页",
+    "tabmenu.copyTabId": "复制 TabId",
+    "tabmenu.backgrounds": "背景",
+    "tabmenu.closeTab": "关闭标签页",
+
+    // Terminal settings menu
+    "termmenu.themes": "主题",
+    "termmenu.fontSize": "字体大小",
+    "termmenu.transparency": "透明度",
+    "termmenu.transparentBackground": "透明背景",
+    "termmenu.noTransparency": "无透明",
+    "termmenu.allowBracketedPasteMode": "允许括号粘贴模式",
+    "termmenu.forceRestartController": "强制重启控制器",
+    "termmenu.clearOutputOnRestart": "重启时清空输出",
+    "termmenu.runOnStartup": "启动时运行",
+    "termmenu.closeToolbar": "关闭工具栏",
+    "termmenu.debugConnection": "连接调试",
+    "termmenu.debugConnectionInfo": "信息",
+    "termmenu.debugConnectionVerbose": "详细",
+
+    // Web view settings menu
+    "webviewmenu.copyUrlToClipboard": "复制 URL 到剪贴板",
+    "webviewmenu.setBlockHomepage": "设置块主页",
+    "webviewmenu.setDefaultHomepage": "设置默认主页",
+    "webviewmenu.userAgentType": "User Agent 类型",
+    "webviewmenu.userAgentDefault": "默认",
+    "webviewmenu.userAgentMobileIphone": "移动端：iPhone",
+    "webviewmenu.userAgentMobileAndroid": "移动端：Android",
+    "webviewmenu.hideNavigation": "隐藏导航",
+    "webviewmenu.unhideNavigation": "显示导航",
+    "webviewmenu.setZoomFactor": "设置缩放比例",
+    "webviewmenu.clearHistory": "清除历史记录",
+    "webviewmenu.clearCookiesAndStorage": "清除 Cookie 和存储（所有 Web 小组件）",
+
+    // Preview settings menu
+    "previewmenu.goToBookmark": "前往 {label}（{path}）",
+    "previewmenu.copyFullPath": "复制完整路径",
+    "previewmenu.editorFontSize": "编辑器字体大小",
+    "previewmenu.saveFile": "保存文件",
+    "previewmenu.revertFile": "还原文件",
+    "previewmenu.wordWrap": "自动换行",
+
+    // Sysinfo settings menu
+    "sysinfomenu.plotType": "图表类型",
+
+    // Tsunami settings menu
+    "tsunamimenu.stopWaveApp": "停止 WaveApp",
+    "tsunamimenu.restartWaveApp": "重启 WaveApp",
+    "tsunamimenu.restartWaveAppForceRebuild": "重启 WaveApp 并强制重建",
+    "tsunamimenu.remixWaveAppInBuilder": "在 Builder 中 Remix WaveApp",
+
+    // WaveAI (AI panel) context menu
+    "aipanelmenu.newChat": "新建对话",
+    "aipanelmenu.maxOutputTokens": "最大输出 Token",
+    "aipanelmenu.configureModes": "配置模式",
+    "aipanelmenu.hideTideTermAI": "隐藏 TideTerm AI",
+    "aipanelmenu.tokens.1kDevTesting": "1k（开发测试）",
+    "aipanelmenu.tokens.4k": "4k",
+    "aipanelmenu.tokens.16kPro": "16k（Pro）",
+    "aipanelmenu.tokens.24k": "24k",
+    "aipanelmenu.tokens.64kPro": "64k（Pro）",
+
+    // Workspace widgets context menu
+    "workspace.menu.editWidgetsJson": "编辑 widgets.json",
+
+    // Builder context menu
+    "buildermenu.addToContext": "添加到上下文",
+    "buildermenu.publishApp": "发布应用",
+    "buildermenu.switchApp": "切换应用",
+    "buildermenu.renameFile": "重命名文件",
+    "buildermenu.deleteFile": "删除文件",
 
     // WaveConfig
     "waveconfig.configFiles": "配置文件",
@@ -234,6 +448,40 @@ const zhCN: Record<I18nKey, string> = {
     "secrets.showSecret": "显示密钥",
     "secrets.loadingSecrets": "正在加载密钥…",
     "secrets.deleteThisSecret": "删除此密钥",
+
+    // MCP Servers
+    "waveconfig.file.mcpServers": "MCP 服务器",
+    "waveconfig.mcpServers.description": "管理 AI 工具的 MCP 服务器",
+    "mcp.noServers": "暂无 MCP 服务器",
+    "mcp.addToGetStarted": "添加 MCP 服务器或从已安装的 AI 应用导入",
+    "mcp.addServer": "添加服务器",
+    "mcp.editServer": "编辑服务器",
+    "mcp.importFromApps": "从应用导入",
+    "mcp.loading": "正在加载 MCP 配置…",
+    "mcp.serverCount": "{count} 个服务器",
+    "mcp.syncAll": "同步全部",
+    "mcp.syncAll.tooltip": "将所有服务器同步到启用的应用",
+    "mcp.import": "导入",
+    "mcp.importSuccess": "成功导入 {count} 个服务器",
+    "mcp.importNoServers": "没有新服务器可导入",
+    "mcp.syncSuccess": "所有服务器同步成功",
+    "mcp.deleteConfirm": "确定要删除此服务器吗？",
+    "mcp.serverId": "服务器 ID",
+    "mcp.serverId.help": "此服务器的唯一标识符（例如：my-mcp-server）",
+    "mcp.serverName": "显示名称",
+    "mcp.transportType": "传输类型",
+    "mcp.command": "命令",
+    "mcp.args": "参数",
+    "mcp.args.help": "命令参数，用空格分隔",
+    "mcp.env": "环境变量",
+    "mcp.env.help": "每行一个变量，格式为 KEY=value",
+    "mcp.url": "URL",
+    "mcp.description": "描述",
+    "mcp.description.placeholder": "此服务器的简要描述",
+    "mcp.enabledApps": "启用的应用",
+    "mcp.enabledApps.help": "选择哪些应用应使用此 MCP 服务器",
+    "mcp.installedApps": "已安装的应用",
+    "mcp.warning": "重要提示：请先清空各 AI 应用中已有的 MCP 服务器配置，然后在此处进行设置，否则同步可能会失败。",
 
     // App menu (Electron)
     "menu.workspace": "工作区",

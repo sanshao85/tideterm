@@ -8,6 +8,7 @@ import { globalStore } from "@/app/store/jotaiStore";
 import { RpcApi } from "@/app/store/wshclientapi";
 import { TabRpcClient } from "@/app/store/wshrpcutil";
 import type { I18nKey } from "@/app/i18n/i18n-core";
+import { McpContent } from "@/app/view/waveconfig/mcpcontent";
 import { SecretsContent } from "@/app/view/waveconfig/secretscontent";
 import { SettingsContent } from "@/app/view/waveconfig/settingscontent";
 import { WaveConfigView } from "@/app/view/waveconfig/waveconfig";
@@ -126,6 +127,14 @@ const configFiles: ConfigFile[] = [
         isSecrets: true,
         hasJsonView: false,
         visualComponent: SecretsContent,
+    },
+    {
+        name: "MCP Servers",
+        nameKey: "waveconfig.file.mcpServers",
+        path: "mcp",
+        descriptionKey: "waveconfig.mcpServers.description",
+        hasJsonView: false,
+        visualComponent: McpContent,
     },
 ];
 

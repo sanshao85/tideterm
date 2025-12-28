@@ -3,6 +3,7 @@
 
 import type { BlockNodeModel } from "@/app/block/blocktypes";
 import type { TabModel } from "@/app/store/tab-model";
+import { getAppLanguageFromSettings, t } from "@/app/i18n/i18n-core";
 import { getConnStatusAtom, globalStore, WOS } from "@/store/global";
 import * as util from "@/util/util";
 import * as Plot from "@observablehq/plot";
@@ -275,6 +276,7 @@ class SysinfoViewModel implements ViewModel {
     }
 
     getSettingsMenuItems(): ContextMenuItem[] {
+        const lang = getAppLanguageFromSettings(globalStore.get(atoms.settingsAtom));
         const fullConfig = globalStore.get(atoms.fullConfigAtom);
         const termThemes = fullConfig?.termthemes ?? {};
         const termThemeKeys = Object.keys(termThemes);
@@ -307,7 +309,7 @@ class SysinfoViewModel implements ViewModel {
         }
 
         fullMenu.push({
-            label: "Plot Type",
+            label: t(lang, "sysinfomenu.plotType"),
             submenu: submenu,
         });
         fullMenu.push({ type: "separator" });
