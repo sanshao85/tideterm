@@ -1,7 +1,8 @@
 {
     "name": "tideterm",
     "author": {
-        "name": "sanshao85"
+        "name": "sanshao85",
+        "email": "935771598@qq.com"
     },
     "productName": "TideTerm",
     "description": "Open-Source AI-Native Terminal Built for Seamless Workflows",
