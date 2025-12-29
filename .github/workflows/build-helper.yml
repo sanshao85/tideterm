@@ -19,6 +19,7 @@ jobs:
         outputs:
             version: ${{ steps.set-version.outputs.TIDETERM_VERSION }}
         strategy:
+            fail-fast: false
             matrix:
                 include:
                     - platform: "darwin"
@@ -94,6 +95,24 @@ jobs:
               run: echo "TIDETERM_VERSION=$(task version)" >> "$GITHUB_OUTPUT"
               shell: bash
 
+            # macOS code signing / notarization (optional)
+            - name: Check macOS signing (Darwin only)
+              if: matrix.platform == 'darwin'
+              id: mac_signing_check
+              run: |
+                  if [[ -n "${{ secrets.PROD_MACOS_CERTIFICATE_2 }}" && -n "${{ secrets.PROD_MACOS_CERTIFICATE_PWD_2 }}" ]]; then
+                      echo "signing=true" >> "$GITHUB_OUTPUT"
+                  else
+                      echo "signing=false" >> "$GITHUB_OUTPUT"
+                  fi
+
+                  if [[ -n "${{ secrets.PROD_MACOS_NOTARIZATION_APPLE_ID_2 }}" && -n "${{ secrets.PROD_MACOS_NOTARIZATION_PWD_2 }}" && -n "${{ secrets.PROD_MACOS_NOTARIZATION_TEAM_ID_2 }}" ]]; then
+                      echo "notarize=true" >> "$GITHUB_OUTPUT"
+                  else
+                      echo "notarize=false" >> "$GITHUB_OUTPUT"
+                  fi
+              shell: bash
+
             # Windows Code Signing Setup
             - name: Check Windows code signing (Windows only)
               if: matrix.platform == 'windows' && github.event_name != 'workflow_dispatch'
@@ -142,8 +161,8 @@ jobs:
                   SNAPCRAFT_BUILD_ENVIRONMENT: host
             # Retry Darwin build in case of notarization failures
             - uses: nick-fields/retry@v3
-              name: Build (Darwin)
-              if: matrix.platform == 'darwin'
+              name: Build (Darwin, unsigned)
+              if: matrix.platform == 'darwin' && steps.mac_signing_check.outputs.signing != 'true'
               with:
                   command: task package
                   timeout_minutes: 120
@@ -151,19 +170,32 @@ jobs:
                   max_attempts: 3
               env:
                   USE_SYSTEM_FPM: true # Ensure that the installed version of FPM is used rather than the bundled one.
-                  CSC_LINK: ${{ matrix.platform == 'darwin' && secrets.PROD_MACOS_CERTIFICATE_2}}
-                  CSC_KEY_PASSWORD: ${{ matrix.platform == 'darwin' && secrets.PROD_MACOS_CERTIFICATE_PWD_2 }}
-                  APPLE_ID: ${{ matrix.platform == 'darwin' && secrets.PROD_MACOS_NOTARIZATION_APPLE_ID_2 }}
-                  APPLE_APP_SPECIFIC_PASSWORD: ${{ matrix.platform == 'darwin' && secrets.PROD_MACOS_NOTARIZATION_PWD_2 }}
-                  APPLE_TEAM_ID: ${{ matrix.platform == 'darwin' && secrets.PROD_MACOS_NOTARIZATION_TEAM_ID_2 }}
+                  CSC_IDENTITY_AUTO_DISCOVERY: false
+                  STATIC_DOCSITE_PATH: ${{env.STATIC_DOCSITE_PATH}}
+
+            - uses: nick-fields/retry@v3
+              name: Build (Darwin, signed)
+              if: matrix.platform == 'darwin' && steps.mac_signing_check.outputs.signing == 'true'
+              with:
+                  command: task package
+                  timeout_minutes: 120
+                  retry_on: error
+                  max_attempts: 3
+              env:
+                  USE_SYSTEM_FPM: true # Ensure that the installed version of FPM is used rather than the bundled one.
+                  CSC_LINK: ${{ secrets.PROD_MACOS_CERTIFICATE_2 }}
+                  CSC_KEY_PASSWORD: ${{ secrets.PROD_MACOS_CERTIFICATE_PWD_2 }}
+                  APPLE_ID: ${{ steps.mac_signing_check.outputs.notarize == 'true' && secrets.PROD_MACOS_NOTARIZATION_APPLE_ID_2 || '' }}
+                  APPLE_APP_SPECIFIC_PASSWORD: ${{ steps.mac_signing_check.outputs.notarize == 'true' && secrets.PROD_MACOS_NOTARIZATION_PWD_2 || '' }}
+                  APPLE_TEAM_ID: ${{ steps.mac_signing_check.outputs.notarize == 'true' && secrets.PROD_MACOS_NOTARIZATION_TEAM_ID_2 || '' }}
                   STATIC_DOCSITE_PATH: ${{env.STATIC_DOCSITE_PATH}}
             - name: Build (Windows)
               if: matrix.platform == 'windows'
               run: task package
               env:
                   USE_SYSTEM_FPM: true # Ensure that the installed version of FPM is used rather than the bundled one.
-                  CSC_LINK: ${{ steps.variables.outputs.SM_CLIENT_CERT_FILE }}
-                  CSC_KEY_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
+                  CSC_LINK: ${{ steps.signing_check.outputs.enabled == 'true' && steps.variables.outputs.SM_CLIENT_CERT_FILE || '' }}
+                  CSC_KEY_PASSWORD: ${{ steps.signing_check.outputs.enabled == 'true' && secrets.SM_CLIENT_CERT_PASSWORD || '' }}
                   STATIC_DOCSITE_PATH: ${{env.STATIC_DOCSITE_PATH}}
               shell: powershell # electron-builder's Windows code signing package has some compatibility issues with pwsh, so we need to use Windows Powershell
 
