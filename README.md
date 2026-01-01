@@ -26,6 +26,9 @@ This repository is a **fork of Wave Terminal** (Apache-2.0) by Command Line Inc.
 
 - Releases: https://github.com/sanshao85/tideterm/releases
 
+- - 苹果系统如果遇到，文件损坏，请执行以下命令：
+ sudo xattr -dr com.apple.quarantine "/Applications/TideTerm.app"
+
 ## Build from source
 
 See `BUILD.md`.
