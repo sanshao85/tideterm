@@ -20,6 +20,9 @@ TideTerm 是一款现代化终端应用，在传统终端的基础上，提供�
 
 - Releases（下载构建包）：`https://github.com/sanshao85/tideterm/releases`
 
+- 苹果系统如果遇到，文件损坏，请执行以下命令：
+ sudo xattr -dr com.apple.quarantine "/Applications/TideTerm.app"
+
 ## 从源码构建
 
 请参考 `BUILD.md`。
