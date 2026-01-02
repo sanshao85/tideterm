@@ -122,6 +122,9 @@
         "term:macoptionismeta": {
           "type": "boolean"
         },
+        "term:remotetmuxresume": {
+          "type": "boolean"
+        },
         "editor:minimapenabled": {
           "type": "boolean"
         },

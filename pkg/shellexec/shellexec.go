@@ -28,6 +28,7 @@ import (
 	"github.com/sanshao85/tideterm/pkg/util/utilfn"
 	"github.com/sanshao85/tideterm/pkg/wavebase"
 	"github.com/sanshao85/tideterm/pkg/waveobj"
+	"github.com/sanshao85/tideterm/pkg/wconfig"
 	"github.com/sanshao85/tideterm/pkg/wshrpc"
 	"github.com/sanshao85/tideterm/pkg/wshrpc/wshclient"
 	"github.com/sanshao85/tideterm/pkg/wshutil"
@@ -261,6 +262,160 @@ func prependHomeResetInitScriptToSwapToken(shellType string, swapToken *shelluti
 	swapToken.ScriptText = initScript + swapToken.ScriptText
 }
 
+func isChineseAppLanguage() bool {
+	lang := strings.TrimSpace(wconfig.GetWatcher().GetFullConfig().Settings.AppLanguage)
+	if lang == "" {
+		return false
+	}
+	return strings.HasPrefix(strings.ToLower(lang), "zh")
+}
+
+func tmuxSessionNameForBlockId(blockId string) string {
+	blockId = strings.TrimSpace(blockId)
+	if blockId == "" {
+		return ""
+	}
+	// Keep only safe chars for tmux session names.
+	var b strings.Builder
+	b.Grow(len(blockId))
+	for _, r := range blockId {
+		switch {
+		case r >= 'a' && r <= 'z':
+			b.WriteRune(r)
+		case r >= 'A' && r <= 'Z':
+			b.WriteRune(r)
+		case r >= '0' && r <= '9':
+			b.WriteRune(r)
+		case r == '-' || r == '_':
+			// drop "-" to keep names short; "_" is kept as-is
+			if r == '_' {
+				b.WriteRune(r)
+			}
+		}
+	}
+	cleaned := b.String()
+	if cleaned == "" {
+		return ""
+	}
+	return "tideterm-" + cleaned
+}
+
+func tmuxNotInstalledMessageLines(zh bool) []string {
+	if zh {
+		return []string{
+			"提示：此主机未安装 tmux，因此无法启用 TideTerm 远程终端“断线续连”。",
+			"安装 tmux 后，电脑休眠/网络中断导致断线时，重连可继续之前的终端会话（适合 codex/claude 等交互程序）。",
+			"安装示例：Ubuntu/Debian: sudo apt-get install -y tmux",
+			"安装示例：CentOS/RHEL: sudo yum install -y tmux（或 sudo dnf install -y tmux）",
+			"安装后重开该终端块即可生效。",
+		}
+	}
+	return []string{
+		"Tip: tmux is not installed on this host, so TideTerm cannot enable remote terminal resume.",
+		"Install tmux to keep interactive sessions running across reconnects (sleep/network drop), e.g. codex/claude.",
+		"Install (Ubuntu/Debian): sudo apt-get install -y tmux",
+		"Install (CentOS/RHEL): sudo yum install -y tmux (or sudo dnf install -y tmux)",
+		"After installing, reopen this terminal block.",
+	}
+}
+
+func makeTmuxAutoResumeShellCommand(sessionName string, zh bool) string {
+	// Use sh so this works even if the user's login shell is fish/zsh/etc.
+	msgLines := tmuxNotInstalledMessageLines(zh)
+	var printfArgs strings.Builder
+	for _, line := range msgLines {
+		printfArgs.WriteString(" \"")
+		printfArgs.WriteString(escapeForPosixDoubleQuotes(line))
+		printfArgs.WriteString("\"")
+	}
+	return fmt.Sprintf(
+		"sh -lc 'if [ -n \"${TMUX-}\" ] || [ -n \"${STY-}\" ]; then exit 0; fi; "+
+			// Ensure HOME matches the passwd entry (some environments override HOME to /tmp, etc.).
+			"if command -v id >/dev/null 2>&1; then "+
+			"  _tideterm_user=\"$(id -un 2>/dev/null)\" || _tideterm_user=\"\"; "+
+			"  if [ -n \"$_tideterm_user\" ]; then "+
+			"    _tideterm_home=\"$(eval echo ~${_tideterm_user} 2>/dev/null)\" || _tideterm_home=\"\"; "+
+			"    if [ -n \"$_tideterm_home\" ] && [ \"$_tideterm_home\" != \"$HOME\" ]; then export HOME=\"$_tideterm_home\"; fi; "+
+			"  fi; "+
+			"  unset _tideterm_user _tideterm_home; "+
+			"fi; "+
+			"if command -v tmux >/dev/null 2>&1; then "+
+			"  unset TIDETERM_SWAPTOKEN 2>/dev/null || true; "+
+			"  _tideterm_wsh_path=\"$(command -v wsh 2>/dev/null)\" || _tideterm_wsh_path=\"\"; "+
+			"  _tideterm_wsh_dir=\"\"; "+
+			"  if [ -n \"$_tideterm_wsh_path\" ]; then _tideterm_wsh_dir=\"$(dirname \"$_tideterm_wsh_path\" 2>/dev/null)\"; fi; "+
+			"  _tideterm_tmux_cmd=\"\"; "+
+			"  if [ -n \"$_tideterm_wsh_dir\" ]; then _tideterm_tmux_cmd=\"$_tideterm_wsh_dir/tideterm-shell\"; fi; "+
+			"  if [ -z \"$_tideterm_tmux_cmd\" ]; then _tideterm_tmux_cmd=\"$HOME/%s/bin/tideterm-shell\"; fi; "+
+			"  tmux set-option -g allow-passthrough on >/dev/null 2>&1 || true; "+
+			"  if [ -x \"$_tideterm_tmux_cmd\" ]; then "+
+			"    if tmux has-session -t %s >/dev/null 2>&1; then "+
+			"      tmux set-option -t %s default-command \"$_tideterm_tmux_cmd\" >/dev/null 2>&1 || true; "+
+			"      exec tmux attach -t %s; "+
+			"    else "+
+			"      tmux new-session -d -s %s -c \"$PWD\" \"$_tideterm_tmux_cmd\" || exit 0; "+
+			"      tmux set-option -t %s default-command \"$_tideterm_tmux_cmd\" >/dev/null 2>&1 || true; "+
+			"      exec tmux attach -t %s; "+
+			"    fi; "+
+			"  else "+
+			"    exec tmux new-session -A -s %s; "+
+			"  fi; "+
+			"else printf \"%%s\\\\n\"%s; fi'\n",
+		wavebase.RemoteWaveHomeDirName,
+		sessionName,
+		sessionName,
+		sessionName,
+		sessionName,
+		sessionName,
+		sessionName,
+		sessionName,
+		printfArgs.String(),
+	)
+}
+
+func shouldAutoResumeWithTmux(cmdStr string, cmdOpts CommandOptsType) bool {
+	if cmdStr != "" {
+		return false
+	}
+	if !cmdOpts.Interactive {
+		return false
+	}
+	enabled := wconfig.DefaultBoolPtr(wconfig.GetWatcher().GetFullConfig().Settings.TermRemoteTmuxResume, true)
+	return enabled
+}
+
+func getSwapTokenBlockId(cmdOpts CommandOptsType) string {
+	if cmdOpts.SwapToken == nil || cmdOpts.SwapToken.Env == nil {
+		return ""
+	}
+	return cmdOpts.SwapToken.Env["TIDETERM_BLOCKID"]
+}
+
+func maybeAddTmuxAutoResumeToSwapToken(cmdStr string, cmdOpts CommandOptsType) {
+	if !shouldAutoResumeWithTmux(cmdStr, cmdOpts) {
+		return
+	}
+	if cmdOpts.SwapToken == nil {
+		return
+	}
+	sessionName := tmuxSessionNameForBlockId(getSwapTokenBlockId(cmdOpts))
+	if sessionName == "" {
+		return
+	}
+	cmdOpts.SwapToken.ScriptText = makeTmuxAutoResumeShellCommand(sessionName, isChineseAppLanguage()) + cmdOpts.SwapToken.ScriptText
+}
+
+func maybeWriteTmuxAutoResumeToPty(cmdStr string, cmdOpts CommandOptsType, pty pty.Pty) {
+	if !shouldAutoResumeWithTmux(cmdStr, cmdOpts) {
+		return
+	}
+	sessionName := tmuxSessionNameForBlockId(getSwapTokenBlockId(cmdOpts))
+	if sessionName == "" {
+		return
+	}
+	_, _ = pty.Write([]byte(makeTmuxAutoResumeShellCommand(sessionName, isChineseAppLanguage())))
+}
+
 type PipePty struct {
 	remoteStdinWrite *os.File
 	remoteStdoutRead *os.File
@@ -318,6 +473,7 @@ func StartWslShellProcNoWsh(ctx context.Context, termSize waveobj.TermSize, cmdS
 			cmdPty.Write([]byte("cd " + cwdExpr + "\n"))
 		}
 	}
+	maybeWriteTmuxAutoResumeToPty(cmdStr, cmdOpts, cmdPty)
 	cmdWrap := MakeCmdWrap(ecmd, cmdPty)
 	return &ShellProc{Cmd: cmdWrap, ConnName: conn.GetName(), CloseOnce: &sync.Once{}, DoneCh: make(chan any)}, nil
 }
@@ -419,6 +575,7 @@ func StartWslShellProc(ctx context.Context, termSize waveobj.TermSize, cmdStr st
 		conn.Debugf(ctx, "adding JWT token to environment\n")
 		cmdCombined = fmt.Sprintf(`%s=%s %s`, wavebase.WaveJwtTokenVarName, jwtToken, cmdCombined)
 	}
+	maybeAddTmuxAutoResumeToSwapToken(cmdStr, cmdOpts)
 	prependCwdInitScriptToSwapToken(shellType, cmdOpts.Cwd, cmdOpts.SwapToken)
 	prependHomeResetInitScriptToSwapToken(shellType, cmdOpts.SwapToken)
 	log.Printf("full combined command: %s", cmdCombined)
@@ -485,6 +642,7 @@ func StartRemoteShellProcNoWsh(ctx context.Context, termSize waveobj.TermSize, c
 			pipePty.WriteString("cd " + cwdExpr + "\n")
 		}
 	}
+	maybeWriteTmuxAutoResumeToPty(cmdStr, cmdOpts, pipePty)
 	return &ShellProc{Cmd: sessionWrap, ConnName: conn.GetName(), CloseOnce: &sync.Once{}, DoneCh: make(chan any)}, nil
 }
 
@@ -606,6 +764,7 @@ func StartRemoteShellProc(ctx context.Context, logCtx context.Context, termSize 
 		conn.Debugf(logCtx, "adding JWT token to environment\n")
 		cmdCombined = fmt.Sprintf(`%s=%s %s`, wavebase.WaveJwtTokenVarName, jwtToken, cmdCombined)
 	}
+	maybeAddTmuxAutoResumeToSwapToken(cmdStr, cmdOpts)
 	prependCwdInitScriptToSwapToken(shellType, cmdOpts.Cwd, cmdOpts.SwapToken)
 	prependHomeResetInitScriptToSwapToken(shellType, cmdOpts.SwapToken)
 	shellutil.AddTokenSwapEntry(cmdOpts.SwapToken)

@@ -25,6 +25,7 @@
     "window:savelastwindow": true,
     "telemetry:enabled": false,
     "term:copyonselect": true,
+    "term:remotetmuxresume": true,
     "waveai:showcloudmodes": false,
     "waveai:defaultmode": "waveai@balanced"
 }

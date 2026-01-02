@@ -352,9 +352,15 @@ func GetLocalWshBinaryPath(version string, goos string, goarch string) (string, 
 // absWshBinDir must be an absolute, expanded path (no ~ or $HOME, etc.)
 // it will be hard-quoted appropriately for the shell
 func InitRcFiles(waveHome string, absWshBinDir string) error {
+	// Ensure the bin dir exists so we can install helper scripts alongside wsh.
+	err := wavebase.TryMkdirs(absWshBinDir, 0755, "wsh bin directory")
+	if err != nil {
+		return err
+	}
+
 	// ensure directories exist
 	zshDir := filepath.Join(waveHome, ZshIntegrationDir)
-	err := wavebase.CacheEnsureDir(zshDir, ZshIntegrationDir, 0755, ZshIntegrationDir)
+	err = wavebase.CacheEnsureDir(zshDir, ZshIntegrationDir, 0755, ZshIntegrationDir)
 	if err != nil {
 		return err
 	}
@@ -418,6 +424,50 @@ func InitRcFiles(waveHome string, absWshBinDir string) error {
 	err = utilfn.WriteTemplateToFile(filepath.Join(pwshDir, "tidetermpwsh.ps1"), PwshStartup_wavepwsh, params)
 	if err != nil {
 		return fmt.Errorf("error writing pwsh-integration tidetermpwsh.ps1: %v", err)
+	}
+
+	// A small helper used by remote tmux sessions to start an integrated shell. This avoids having to
+	// encode complex quoting in tmux's default-command.
+	wrapperPath := filepath.Join(absWshBinDir, "tideterm-shell")
+	bashRcPath := HardQuote(filepath.Join(waveHome, BashIntegrationDir, ".bashrc"))
+	zshZdotDir := HardQuote(filepath.Join(waveHome, ZshIntegrationDir))
+	fishCmd := "source " + HardQuoteFish(filepath.Join(waveHome, FishIntegrationDir, "tideterm.fish"))
+	pwshProfilePath := HardQuote(filepath.Join(waveHome, PwshIntegrationDir, "tidetermpwsh.ps1"))
+	wrapperScript := fmt.Sprintf(`#!/bin/sh
+set -eu
+
+unset TIDETERM_SWAPTOKEN 2>/dev/null || true
+
+shell_path="${SHELL:-/bin/bash}"
+shell_base="$(basename "$shell_path")"
+
+case "$shell_base" in
+  *zsh*)
+    export ZDOTDIR=%s
+    exec "$shell_path" -i
+    ;;
+  *bash*)
+    exec "$shell_path" --rcfile %s
+    ;;
+  *fish*)
+    fish_cmd=%s
+    exec "$shell_path" -C "$fish_cmd"
+    ;;
+  *pwsh*|*powershell*)
+    exec "$shell_path" -ExecutionPolicy Bypass -NoExit -File %s
+    ;;
+  *)
+    exec "$shell_path"
+    ;;
+esac
+`, zshZdotDir, bashRcPath, HardQuote(fishCmd), pwshProfilePath)
+	err = os.WriteFile(wrapperPath, []byte(wrapperScript), 0755)
+	if err != nil {
+		return fmt.Errorf("error writing tmux shell wrapper %q: %v", wrapperPath, err)
+	}
+	err = os.Chmod(wrapperPath, 0755)
+	if err != nil {
+		return fmt.Errorf("error chmod tmux shell wrapper %q: %v", wrapperPath, err)
 	}
 
 	return nil

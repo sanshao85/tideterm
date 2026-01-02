@@ -11,6 +11,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -139,8 +140,15 @@ func GetWaveAppElectronExecPath() string {
 }
 
 func GetHomeDir() string {
+	// Prefer the passwd entry when available. In some environments HOME can be overridden
+	// (e.g. to /tmp), which breaks "~" expansion and remote install locations.
+	if runtime.GOOS != "windows" {
+		if u, err := user.Current(); err == nil && u != nil && u.HomeDir != "" {
+			return u.HomeDir
+		}
+	}
 	homeVar, err := os.UserHomeDir()
-	if err != nil {
+	if err != nil || homeVar == "" {
 		return "/"
 	}
 	return homeVar

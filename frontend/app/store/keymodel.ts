@@ -353,11 +353,20 @@ function getDefaultNewBlockDef(): BlockDef {
         const blockAtom = WOS.getWaveObjectAtom<Block>(WOS.makeORef("block", focusedNode.data?.blockId));
         const blockData = globalStore.get(blockAtom);
         if (blockData?.meta?.view == "term") {
-            if (blockData?.meta?.["cmd:cwd"] != null) {
-                termBlockDef.meta["cmd:cwd"] = blockData.meta["cmd:cwd"];
+            const activeSessionId = blockData?.meta?.["term:activesessionid"];
+            const sessionBlockId = typeof activeSessionId === "string" && activeSessionId ? activeSessionId : blockData?.oid;
+            if (sessionBlockId) {
+                const sessionAtom = WOS.getWaveObjectAtom<Block>(WOS.makeORef("block", sessionBlockId));
+                const sessionBlock = globalStore.get(sessionAtom);
+                if (sessionBlock?.meta?.["cmd:cwd"] != null) {
+                    termBlockDef.meta["cmd:cwd"] = sessionBlock.meta["cmd:cwd"];
+                }
+                if (sessionBlock?.meta?.connection != null) {
+                    termBlockDef.meta.connection = sessionBlock.meta.connection;
+                }
             }
         }
-        if (blockData?.meta?.connection != null) {
+        if (termBlockDef.meta.connection == null && blockData?.meta?.connection != null) {
             termBlockDef.meta.connection = blockData.meta.connection;
         }
     }

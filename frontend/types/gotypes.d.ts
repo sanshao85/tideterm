@@ -958,6 +958,12 @@ declare global {
         "term:shiftenternewline"?: boolean;
         "term:macoptionismeta"?: boolean;
         "term:conndebug"?: string;
+        "term:issession"?: boolean;
+        "term:parentblockid"?: string;
+        "term:sessionids"?: string[];
+        "term:activesessionid"?: string;
+        "term:sessionlistopen"?: boolean;
+        "term:sessionlistwidth"?: number;
         "web:zoom"?: number;
         "web:hidenav"?: boolean;
         "web:partition"?: string;
@@ -1144,6 +1150,7 @@ declare global {
         "term:allowbracketedpaste"?: boolean;
         "term:shiftenternewline"?: boolean;
         "term:macoptionismeta"?: boolean;
+        "term:remotetmuxresume"?: boolean;
         "editor:minimapenabled"?: boolean;
         "editor:stickyscrollenabled"?: boolean;
         "editor:wordwrap"?: boolean;

@@ -38,6 +38,13 @@ import { getBlockingCommand } from "./shellblocking";
 import { computeTheme, DefaultTermTheme } from "./termutil";
 import { TermWrap } from "./termwrap";
 
+const TermMultiSessionKey_IsSession = "term:issession";
+const TermMultiSessionKey_ParentBlockId = "term:parentblockid";
+const TermMultiSessionKey_SessionIds = "term:sessionids";
+const TermMultiSessionKey_ActiveSessionId = "term:activesessionid";
+const TermMultiSessionKey_SessionListOpen = "term:sessionlistopen";
+const TermMultiSessionKey_SessionListWidth = "term:sessionlistwidth";
+
 export class TermViewModel implements ViewModel {
     viewType: string;
     nodeModel: BlockNodeModel;
@@ -263,6 +270,40 @@ export class TermViewModel implements ViewModel {
             const connStatus = get(this.connStatus);
             const isCmd = get(this.isCmdController);
             const rtn: IconButtonDecl[] = [];
+            const isSession = !!blockData?.meta?.[TermMultiSessionKey_IsSession];
+            const termMode = get(this.termMode);
+
+            const lang = getAppLanguageFromSettings(get(atoms.settingsAtom));
+            const tt = (key: Parameters<typeof t>[1], vars?: Record<string, string | number>) => t(lang, key, vars);
+
+            if (!isCmd && !isSession && termMode !== "vdom") {
+                const sessionIds = this.getTermSessionIds(blockData);
+                const activeSessionId = this.getActiveTermSessionId(blockData);
+                const listOpen = this.getTermSessionListOpen(blockData);
+                const hasMultiple = sessionIds.length > 1;
+
+                const addSessionDecl: IconButtonDecl = {
+                    elemtype: "iconbutton",
+                    icon: "circle-plus",
+                    title: tt("term.sessions.new"),
+                    click: () => {
+                        void this.createNewTerminalSession();
+                    },
+                };
+                rtn.push(addSessionDecl);
+
+                const showListTitle = listOpen ? tt("term.sessions.hideList") : tt("term.sessions.showList");
+                const showListDecl: IconButtonDecl = {
+                    elemtype: "iconbutton",
+                    icon: "list",
+                    title: showListTitle,
+                    disabled: !hasMultiple && activeSessionId === this.blockId && !listOpen,
+                    click: () => {
+                        void this.setTermSessionListOpen(!listOpen);
+                    },
+                };
+                rtn.push(showListDecl);
+            }
 
             const isAIPanelOpen = get(WorkspaceLayoutModel.getInstance().panelVisibleAtom);
             if (isAIPanelOpen) {
@@ -919,6 +960,172 @@ export class TermViewModel implements ViewModel {
             ],
         });
         return fullMenu;
+    }
+
+    private getTermSessionIds(blockData: Block | null): string[] {
+        const raw = blockData?.meta?.[TermMultiSessionKey_SessionIds];
+        if (!Array.isArray(raw)) {
+            return [this.blockId];
+        }
+        const extraIds = raw.filter((v) => typeof v === "string" && v && v !== this.blockId) as string[];
+        return [this.blockId, ...extraIds];
+    }
+
+    private getActiveTermSessionId(blockData: Block | null): string {
+        const raw = blockData?.meta?.[TermMultiSessionKey_ActiveSessionId];
+        if (typeof raw === "string" && raw) {
+            return raw;
+        }
+        return this.blockId;
+    }
+
+    private getTermSessionListOpen(blockData: Block | null): boolean {
+        const raw = blockData?.meta?.[TermMultiSessionKey_SessionListOpen];
+        if (typeof raw === "boolean") {
+            return raw;
+        }
+        const sessionIds = this.getTermSessionIds(blockData);
+        const activeSessionId = this.getActiveTermSessionId(blockData);
+        return sessionIds.length > 1 || activeSessionId !== this.blockId;
+    }
+
+    private getTermSessionListWidth(blockData: Block | null): number {
+        const raw = blockData?.meta?.[TermMultiSessionKey_SessionListWidth];
+        if (typeof raw === "number" && isFinite(raw) && raw > 0) {
+            return raw;
+        }
+        return 260;
+    }
+
+    async setActiveTermSessionId(sessionId: string) {
+        if (!sessionId) {
+            sessionId = this.blockId;
+        }
+        await services.ObjectService.UpdateObjectMeta(WOS.makeORef("block", this.blockId), {
+            [TermMultiSessionKey_ActiveSessionId]: sessionId,
+        });
+    }
+
+    async setTermSessionListOpen(open: boolean) {
+        await services.ObjectService.UpdateObjectMeta(WOS.makeORef("block", this.blockId), {
+            [TermMultiSessionKey_SessionListOpen]: open,
+        });
+    }
+
+    async setTermSessionListWidth(width: number) {
+        const parentBlockData = globalStore.get(this.blockAtom);
+        const current = this.getTermSessionListWidth(parentBlockData);
+        const next = boundNumber(width, 160, 900);
+        if (Math.round(current) === Math.round(next)) {
+            return;
+        }
+        await services.ObjectService.UpdateObjectMeta(WOS.makeORef("block", this.blockId), {
+            [TermMultiSessionKey_SessionListWidth]: Math.round(next),
+        });
+    }
+
+    async createNewTerminalSession() {
+        const parentBlockData = globalStore.get(this.blockAtom);
+        const activeSessionId = this.getActiveTermSessionId(parentBlockData);
+
+        let connName: string = parentBlockData?.meta?.connection ?? "local";
+        let cwd: string = parentBlockData?.meta?.["cmd:cwd"] ?? null;
+
+        if (activeSessionId && activeSessionId !== this.blockId) {
+            const activeBlockAtom = WOS.getWaveObjectAtom<Block>(WOS.makeORef("block", activeSessionId));
+            const activeBlockData = globalStore.get(activeBlockAtom);
+            if (activeBlockData?.meta?.connection) {
+                connName = activeBlockData.meta.connection;
+            }
+            if (activeBlockData?.meta?.["cmd:cwd"]) {
+                cwd = activeBlockData.meta["cmd:cwd"];
+            }
+        }
+
+        const tabId = globalStore.get(atoms.staticTabId);
+        const oref = await RpcApi.CreateSubBlockCommand(TabRpcClient, {
+            parentblockid: this.blockId,
+            blockdef: {
+                meta: {
+                    view: "term",
+                    controller: "shell",
+                    connection: connName,
+                    ...(cwd ? { "cmd:cwd": cwd } : {}),
+                    [TermMultiSessionKey_IsSession]: true,
+                    [TermMultiSessionKey_ParentBlockId]: this.blockId,
+                },
+            },
+        });
+        const [, newSessionId] = WOS.splitORef(oref);
+
+        const existingSessionIds = parentBlockData?.meta?.[TermMultiSessionKey_SessionIds];
+        const nextSessionIds = Array.isArray(existingSessionIds)
+            ? (existingSessionIds.filter((v) => typeof v === "string" && v) as string[])
+            : [];
+        nextSessionIds.push(newSessionId);
+
+        await RpcApi.SetMetaCommand(TabRpcClient, {
+            oref: WOS.makeORef("block", this.blockId),
+            meta: {
+                [TermMultiSessionKey_SessionIds]: nextSessionIds,
+                [TermMultiSessionKey_ActiveSessionId]: newSessionId,
+                [TermMultiSessionKey_SessionListOpen]: true,
+            },
+        });
+
+        // Ensure the controller starts quickly.
+        RpcApi.ControllerResyncCommand(TabRpcClient, {
+            tabid: tabId,
+            blockid: newSessionId,
+            forcerestart: false,
+        }).catch(() => {});
+    }
+
+    async killTerminalSession(sessionId: string) {
+        if (!sessionId) {
+            sessionId = this.blockId;
+        }
+        if (sessionId === this.blockId) {
+            const parentBlockData = globalStore.get(this.blockAtom);
+            const activeSessionId = this.getActiveTermSessionId(parentBlockData);
+            const existingSessionIds = this.getTermSessionIds(parentBlockData).filter((id) => id !== this.blockId);
+            const nextActive = activeSessionId === this.blockId && existingSessionIds.length > 0 ? existingSessionIds[existingSessionIds.length - 1] : activeSessionId;
+
+            if (nextActive && nextActive !== activeSessionId) {
+                await this.setActiveTermSessionId(nextActive);
+            }
+            await RpcApi.ControllerStopCommand(TabRpcClient, this.blockId);
+            return;
+        }
+
+        const parentBlockData = globalStore.get(this.blockAtom);
+        const activeSessionId = this.getActiveTermSessionId(parentBlockData);
+
+        await RpcApi.DeleteSubBlockCommand(TabRpcClient, { blockid: sessionId });
+
+        const existingSessionIds = parentBlockData?.meta?.[TermMultiSessionKey_SessionIds];
+        const nextSessionIds = Array.isArray(existingSessionIds)
+            ? (existingSessionIds.filter((v) => typeof v === "string" && v && v !== sessionId) as string[])
+            : [];
+
+        const nextActive =
+            activeSessionId === sessionId
+                ? nextSessionIds.length > 0
+                    ? nextSessionIds[nextSessionIds.length - 1]
+                    : this.blockId
+                : activeSessionId;
+
+        const nextListOpen =
+            nextSessionIds.length > 0 ? this.getTermSessionListOpen(parentBlockData) : false;
+
+        await RpcApi.SetMetaCommand(TabRpcClient, {
+            oref: WOS.makeORef("block", this.blockId),
+            meta: {
+                [TermMultiSessionKey_SessionIds]: nextSessionIds,
+                [TermMultiSessionKey_ActiveSessionId]: nextActive,
+                [TermMultiSessionKey_SessionListOpen]: nextListOpen,
+            },
+        });
     }
 }
 

@@ -48,6 +48,7 @@ const (
 	ConfigKey_TermAllowBracketedPaste        = "term:allowbracketedpaste"
 	ConfigKey_TermShiftEnterNewline          = "term:shiftenternewline"
 	ConfigKey_TermMacOptionIsMeta            = "term:macoptionismeta"
+	ConfigKey_TermRemoteTmuxResume           = "term:remotetmuxresume"
 
 	ConfigKey_EditorMinimapEnabled           = "editor:minimapenabled"
 	ConfigKey_EditorStickyScrollEnabled      = "editor:stickyscrollenabled"

@@ -91,10 +91,26 @@ func GetClientPlatformFromOsArchStr(ctx context.Context, osArchStr string) (stri
 }
 
 var installTemplateRawDefault = strings.TrimSpace(`
-mkdir -p {{.installDir}} || exit 1;
-cat > {{.tempPath}} || exit 1;
-mv {{.tempPath}} {{.installPath}} || exit 1;
-chmod a+x {{.installPath}} || exit 1;
+_tideterm_user="$(id -un 2>/dev/null || true)";
+_tideterm_home="";
+if [ -n "$_tideterm_user" ]; then
+  if command -v getent >/dev/null 2>&1; then
+    _tideterm_home="$(getent passwd "$_tideterm_user" | cut -d: -f6 2>/dev/null || true)";
+  fi;
+  if [ -z "$_tideterm_home" ]; then
+    _tideterm_home="$(eval echo ~$_tideterm_user 2>/dev/null || true)";
+  fi;
+fi;
+if [ -z "$_tideterm_home" ]; then _tideterm_home="$HOME"; fi;
+
+install_dir="$_tideterm_home/{{.waveHomeDirName}}/bin";
+install_path="$install_dir/wsh";
+temp_path="$install_path.temp";
+
+mkdir -p "$install_dir" || exit 1;
+cat > "$temp_path" || exit 1;
+mv "$temp_path" "$install_path" || exit 1;
+chmod a+x "$install_path" || exit 1;
 `)
 var installTemplate = template.Must(template.New("wsh-install-template").Parse(installTemplateRawDefault))
 
@@ -113,9 +129,7 @@ func CpWshToRemote(ctx context.Context, client *ssh.Client, clientOs string, cli
 	}
 	defer input.Close()
 	installWords := map[string]string{
-		"installDir":  filepath.ToSlash(filepath.Dir(wavebase.RemoteFullWshBinPath)),
-		"tempPath":    wavebase.RemoteFullWshBinPath + ".temp",
-		"installPath": wavebase.RemoteFullWshBinPath,
+		"waveHomeDirName": wavebase.RemoteWaveHomeDirName,
 	}
 	var installCmd bytes.Buffer
 	if err := installTemplate.Execute(&installCmd, installWords); err != nil {

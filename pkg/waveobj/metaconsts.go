@@ -116,6 +116,12 @@ const (
 	MetaKey_TermShiftEnterNewline            = "term:shiftenternewline"
 	MetaKey_TermMacOptionIsMeta              = "term:macoptionismeta"
 	MetaKey_TermConnDebug                    = "term:conndebug"
+	MetaKey_TermIsSession                    = "term:issession"
+	MetaKey_TermParentBlockId                = "term:parentblockid"
+	MetaKey_TermSessionIds                   = "term:sessionids"
+	MetaKey_TermActiveSessionId              = "term:activesessionid"
+	MetaKey_TermSessionListOpen              = "term:sessionlistopen"
+	MetaKey_TermSessionListWidth             = "term:sessionlistwidth"
 
 	MetaKey_WebZoom                          = "web:zoom"
 	MetaKey_WebHideNav                       = "web:hidenav"

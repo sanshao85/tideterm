@@ -9,6 +9,7 @@ import { Workspace } from "@/app/workspace/workspace";
 import { ContextMenuModel } from "@/store/contextmenu";
 import { atoms, createBlock, getSettingsPrefixAtom, globalStore, isDev, removeFlashError } from "@/store/global";
 import { appHandleKeyDown, keyboardMouseDownHandler } from "@/store/keymodel";
+import * as WOS from "@/store/wos";
 import { getElemAsStr } from "@/util/focusutil";
 import * as keyutil from "@/util/keyutil";
 import { PLATFORM } from "@/util/platformutil";
@@ -92,11 +93,29 @@ async function getClipboardURL(): Promise<URL> {
 
 async function handleContextMenu(e: React.MouseEvent<HTMLDivElement>) {
     e.preventDefault();
+    const target = e.target as HTMLElement | null;
+    const blockElem = target?.closest?.("[data-blockid]") as HTMLElement | null;
+    const blockId = blockElem?.getAttribute("data-blockid");
+    const blockAtom = blockId ? WOS.getWaveObjectAtom<Block>(WOS.makeORef("block", blockId)) : null;
+    const blockData = blockAtom ? globalStore.get(blockAtom) : null;
+    const isTermBlock = blockData?.meta?.view === "term";
+    let termCwd = isTermBlock ? (blockData?.meta?.["cmd:cwd"] as string) : null;
+    let termConnection = isTermBlock ? (blockData?.meta?.connection as string) : null;
+    if (isTermBlock && blockId) {
+        const activeSessionId = blockData?.meta?.["term:activesessionid"] as string;
+        if (activeSessionId && activeSessionId !== blockId) {
+            const activeBlockAtom = WOS.getWaveObjectAtom<Block>(WOS.makeORef("block", activeSessionId));
+            const activeBlockData = globalStore.get(activeBlockAtom);
+            termCwd = (activeBlockData?.meta?.["cmd:cwd"] as string) ?? termCwd;
+            termConnection = (activeBlockData?.meta?.connection as string) ?? termConnection;
+        }
+    }
+
     const canPaste = canEnablePaste();
     const canCopy = canEnableCopy();
     const canCut = canEnableCut();
     const clipboardURL = await getClipboardURL();
-    if (!canPaste && !canCopy && !canCut && !clipboardURL) {
+    if (!canPaste && !canCopy && !canCut && !clipboardURL && util.isBlank(termCwd)) {
         return;
     }
     const lang = getAppLanguageFromSettings(globalStore.get(atoms.settingsAtom));
@@ -111,8 +130,27 @@ async function handleContextMenu(e: React.MouseEvent<HTMLDivElement>) {
     if (canPaste) {
         menu.push({ label: t("menu.paste"), role: "paste" });
     }
+    if (!util.isBlank(termCwd)) {
+        if (menu.length > 0) {
+            menu.push({ type: "separator" });
+        }
+        menu.push({
+                    label: t("contextmenu.openCurrentDirectoryInNewBlock"),
+                    click: () => {
+                        createBlock({
+                            meta: {
+                                view: "preview",
+                                file: termCwd,
+                                connection: termConnection,
+                            },
+                        });
+                    },
+                });
+    }
     if (clipboardURL) {
-        menu.push({ type: "separator" });
+        if (menu.length > 0) {
+            menu.push({ type: "separator" });
+        }
         menu.push({
             label: t("contextmenu.openClipboardUrl", { host: clipboardURL.hostname }),
             click: () => {

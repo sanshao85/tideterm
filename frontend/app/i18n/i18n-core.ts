@@ -43,6 +43,10 @@ const en = {
     "settings.language.description": "Changes take effect immediately.",
     "settings.language.english": "English",
     "settings.language.chinese": "中文",
+    "settings.remoteTmuxResume": "Remote Terminal Resume",
+    "settings.remoteTmuxResume.description":
+        "When enabled, TideTerm will use tmux on remote terminals (SSH/WSL) when available so sessions can resume after reconnects. If tmux is not installed, TideTerm will fall back to a normal shell and show an install hint.",
+    "settings.remoteTmuxResume.toggle": "Auto-resume remote terminals with tmux (recommended)",
 
     // Workspace / widgets
     "workspace.localWaveApps": "Local Apps",
@@ -72,6 +76,7 @@ const en = {
 
     // App context menu
     "contextmenu.openClipboardUrl": "Open Clipboard URL ({host})",
+    "contextmenu.openCurrentDirectoryInNewBlock": "Open Current Directory in New Block",
 
     // Block header context menu
     "blockmenu.magnifyBlock": "Magnify Block",
@@ -101,6 +106,15 @@ const en = {
     "termmenu.debugConnection": "Debug Connection",
     "termmenu.debugConnectionInfo": "Info",
     "termmenu.debugConnectionVerbose": "Verbose",
+
+    // Terminal sessions (multi-term within one block)
+    "term.sessions.new": "New Terminal",
+    "term.sessions.showList": "Show Terminal List",
+    "term.sessions.hideList": "Hide Terminal List",
+    "term.sessions.listTitle": "Terminals",
+    "term.sessions.kill": "Kill Terminal",
+    "term.sessions.closeBlock": "Close Terminal Block",
+    "term.sessions.terminalWithIndex": "Terminal {index}",
 
     // Web view settings menu
     "webviewmenu.copyUrlToClipboard": "Copy URL to Clipboard",
@@ -299,6 +313,10 @@ const zhCN: Record<I18nKey, string> = {
     "settings.language.description": "切换后立即生效，无需重启。",
     "settings.language.english": "English",
     "settings.language.chinese": "中文",
+    "settings.remoteTmuxResume": "远程终端续连",
+    "settings.remoteTmuxResume.description":
+        "启用后，远程终端（SSH/WSL）在检测到 tmux 时会自动进入 tmux，会话可在断线重连后继续（如电脑休眠/网络中断）。若未安装 tmux，则正常打开普通 shell，并提示可选安装。",
+    "settings.remoteTmuxResume.toggle": "使用 tmux 自动续连远程终端（推荐）",
 
     // Workspace / widgets
     "workspace.localWaveApps": "本地应用",
@@ -328,6 +346,7 @@ const zhCN: Record<I18nKey, string> = {
 
     // App context menu
     "contextmenu.openClipboardUrl": "打开剪贴板 URL（{host}）",
+    "contextmenu.openCurrentDirectoryInNewBlock": "在新块中打开当前目录",
 
     // Block header context menu
     "blockmenu.magnifyBlock": "放大块",
@@ -357,6 +376,15 @@ const zhCN: Record<I18nKey, string> = {
     "termmenu.debugConnection": "连接调试",
     "termmenu.debugConnectionInfo": "信息",
     "termmenu.debugConnectionVerbose": "详细",
+
+    // Terminal sessions（一个终端块内多个终端）
+    "term.sessions.new": "新建终端",
+    "term.sessions.showList": "显示终端列表",
+    "term.sessions.hideList": "隐藏终端列表",
+    "term.sessions.listTitle": "终端",
+    "term.sessions.kill": "结束终端",
+    "term.sessions.closeBlock": "关闭终端块",
+    "term.sessions.terminalWithIndex": "终端 {index}",
 
     // Web view settings menu
     "webviewmenu.copyUrlToClipboard": "复制 URL 到剪贴板",

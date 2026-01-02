@@ -3,12 +3,13 @@
 
 import { Block, SubBlock } from "@/app/block/block";
 import { Search, useSearch } from "@/app/element/search";
+import { useT } from "@/app/i18n/i18n";
 import { useTabModel } from "@/app/store/tab-model";
 import { waveEventSubscribe } from "@/app/store/wps";
 import { RpcApi } from "@/app/store/wshclientapi";
 import { TabRpcClient } from "@/app/store/wshrpcutil";
 import type { TermViewModel } from "@/app/view/term/term-model";
-import { atoms, getOverrideConfigAtom, getSettingsPrefixAtom, globalStore, WOS } from "@/store/global";
+import { atoms, getBlockComponentModel, getOverrideConfigAtom, getSettingsPrefixAtom, globalStore, WOS } from "@/store/global";
 import { fireAndForget, useAtomValueSafe } from "@/util/util";
 import { computeBgStyleFromMeta } from "@/util/waveutil";
 import { ISearchOptions } from "@xterm/addon-search";
@@ -29,6 +30,12 @@ interface TerminalViewProps {
     blockId: string;
     model: TermViewModel;
 }
+
+const TermMultiSessionKey_IsSession = "term:issession";
+const TermMultiSessionKey_SessionIds = "term:sessionids";
+const TermMultiSessionKey_ActiveSessionId = "term:activesessionid";
+const TermMultiSessionKey_SessionListOpen = "term:sessionlistopen";
+const TermMultiSessionKey_SessionListWidth = "term:sessionlistwidth";
 
 function parseDraggedFileUri(uri: string): { connection: string | null; path: string } | null {
     if (!uri) {
@@ -58,6 +65,30 @@ function parseDraggedFileUri(uri: string): { connection: string | null; path: st
     return { connection: null, path: uri };
 }
 
+function getExtraSessionIds(blockData: Block | null, selfBlockId: string): string[] {
+    const raw = blockData?.meta?.[TermMultiSessionKey_SessionIds];
+    if (!Array.isArray(raw)) {
+        return [];
+    }
+    return raw.filter((v) => typeof v === "string" && v && v !== selfBlockId) as string[];
+}
+
+function getActiveSessionId(blockData: Block | null, selfBlockId: string): string {
+    const raw = blockData?.meta?.[TermMultiSessionKey_ActiveSessionId];
+    if (typeof raw === "string" && raw) {
+        return raw;
+    }
+    return selfBlockId;
+}
+
+function getSessionListOpen(blockData: Block | null, hasMultipleSessions: boolean, isNonMainActive: boolean): boolean {
+    const raw = blockData?.meta?.[TermMultiSessionKey_SessionListOpen];
+    if (typeof raw === "boolean") {
+        return raw;
+    }
+    return hasMultipleSessions || isNonMainActive;
+}
+
 const TermResyncHandler = React.memo(({ blockId, model }: TerminalViewProps) => {
     const connStatus = jotai.useAtomValue(model.connStatus);
     const [lastConnStatus, setLastConnStatus] = React.useState<ConnStatus>(connStatus);
@@ -79,6 +110,77 @@ const TermResyncHandler = React.memo(({ blockId, model }: TerminalViewProps) => 
 
     return null;
 });
+
+const TermSessionListItem = React.memo(
+    ({
+        sessionId,
+        index,
+        isActive,
+        onSelect,
+        onKill,
+    }: {
+        sessionId: string;
+        index: number;
+        isActive: boolean;
+        onSelect: () => void;
+        onKill: () => void;
+    }) => {
+        const t = useT();
+        const [sessionBlock] = WOS.useWaveObjectValue<Block>(WOS.makeORef("block", sessionId));
+        const [shellType, setShellType] = React.useState<string | null>(null);
+
+        React.useEffect(() => {
+            let cancelled = false;
+            fireAndForget(async () => {
+                const rtInfo = await RpcApi.GetRTInfoCommand(TabRpcClient, { oref: WOS.makeORef("block", sessionId) });
+                if (cancelled) return;
+                setShellType((rtInfo?.["shell:type"] as string) || null);
+            });
+            return () => {
+                cancelled = true;
+            };
+        }, [sessionId, isActive]);
+
+        const cwd = (sessionBlock?.meta?.["cmd:cwd"] as string) ?? "";
+        const conn = sessionBlock?.meta?.connection ?? "local";
+        const title = shellType || t("term.sessions.terminalWithIndex", { index: index + 1 });
+
+        return (
+            <div
+                className={clsx("term-session-item", { active: isActive })}
+                onClick={onSelect}
+                title={cwd ? `${title}\n${cwd}` : title}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        onSelect();
+                    }
+                }}
+            >
+                <div className="term-session-item-top">
+                    <div className="term-session-item-title ellipsis">
+                        {title}
+                        {conn !== "local" ? <span className="term-session-item-conn"> · {conn}</span> : null}
+                    </div>
+                    <button
+                        className="term-session-item-kill"
+                        title={t("term.sessions.kill")}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onKill();
+                        }}
+                    >
+                        <i className="fa fa-solid fa-xmark" />
+                    </button>
+                </div>
+                <div className="term-session-item-subtitle ellipsis">{cwd || "\u00A0"}</div>
+            </div>
+        );
+    }
+);
 
 const TermVDomToolbarNode = ({ vdomBlockId, blockId, model }: TerminalViewProps & { vdomBlockId: string }) => {
     React.useEffect(() => {
@@ -182,7 +284,7 @@ const TermToolbarVDomNode = ({ blockId, model }: TerminalViewProps) => {
     );
 };
 
-const TerminalView = ({ blockId, model }: ViewComponentProps<TermViewModel>) => {
+const SingleTerminalView = ({ blockId, model }: ViewComponentProps<TermViewModel>) => {
     const viewRef = React.useRef<HTMLDivElement>(null);
     const connectElemRef = React.useRef<HTMLDivElement>(null);
     const [blockData] = WOS.useWaveObjectValue<Block>(WOS.makeORef("block", blockId));
@@ -454,6 +556,179 @@ const TerminalView = ({ blockId, model }: ViewComponentProps<TermViewModel>) => 
                 />
             </div>
             <Search {...searchProps} />
+        </div>
+    );
+};
+
+const TerminalView = ({ blockId, model }: ViewComponentProps<TermViewModel>) => {
+    const t = useT();
+    const [blockData] = WOS.useWaveObjectValue<Block>(WOS.makeORef("block", blockId));
+    const isSession = !!blockData?.meta?.[TermMultiSessionKey_IsSession];
+    if (isSession) {
+        return <SingleTerminalView blockId={blockId} model={model} />;
+    }
+
+    const extraSessionIds = React.useMemo(() => getExtraSessionIds(blockData, blockId), [blockData, blockId]);
+    const activeSessionId = React.useMemo(() => getActiveSessionId(blockData, blockId), [blockData, blockId]);
+    const hasMultiple = extraSessionIds.length > 0;
+    const isNonMainActive = activeSessionId !== blockId;
+    const listOpen = getSessionListOpen(blockData, hasMultiple, isNonMainActive);
+    const shouldRenderMulti = listOpen || isNonMainActive;
+    const rootRef = React.useRef<HTMLDivElement>(null);
+    const savedSidebarWidth = React.useMemo(() => {
+        const raw = blockData?.meta?.[TermMultiSessionKey_SessionListWidth];
+        if (typeof raw === "number" && isFinite(raw) && raw > 0) {
+            return raw;
+        }
+        return 260;
+    }, [blockData]);
+    const [sidebarWidth, setSidebarWidth] = React.useState(savedSidebarWidth);
+    const sidebarWidthRef = React.useRef(sidebarWidth);
+    const [isDraggingSidebar, setIsDraggingSidebar] = React.useState(false);
+
+    React.useEffect(() => {
+        sidebarWidthRef.current = sidebarWidth;
+    }, [sidebarWidth]);
+
+    React.useEffect(() => {
+        if (!isDraggingSidebar) {
+            setSidebarWidth(savedSidebarWidth);
+        }
+    }, [savedSidebarWidth, isDraggingSidebar]);
+
+    const startSidebarResize = React.useCallback(
+        (e: React.PointerEvent<HTMLDivElement>) => {
+            if (!listOpen) {
+                return;
+            }
+            e.preventDefault();
+            e.stopPropagation();
+            setIsDraggingSidebar(true);
+
+            const minSidebarWidth = 180;
+            const maxSidebarWidth = 900;
+            const minMainWidth = 240;
+
+            const startX = e.clientX;
+            const startWidth = sidebarWidthRef.current;
+            const rootWidth = rootRef.current?.getBoundingClientRect().width ?? null;
+
+            const clampWidth = (width: number): number => {
+                const maxFromRoot =
+                    rootWidth != null ? Math.max(minSidebarWidth, Math.floor(rootWidth - minMainWidth)) : maxSidebarWidth;
+                const maxWidth = Math.min(maxSidebarWidth, maxFromRoot);
+                return Math.max(minSidebarWidth, Math.min(maxWidth, Math.round(width)));
+            };
+
+            const prevCursor = document.body.style.cursor;
+            const prevUserSelect = document.body.style.userSelect;
+            document.body.style.cursor = "col-resize";
+            document.body.style.userSelect = "none";
+
+            const onMove = (ev: PointerEvent) => {
+                const dx = ev.clientX - startX;
+                const nextWidth = clampWidth(startWidth - dx);
+                sidebarWidthRef.current = nextWidth;
+                setSidebarWidth(nextWidth);
+            };
+            const onUp = () => {
+                window.removeEventListener("pointermove", onMove);
+                window.removeEventListener("pointerup", onUp, true);
+                window.removeEventListener("pointercancel", onUp, true);
+                document.body.style.cursor = prevCursor;
+                document.body.style.userSelect = prevUserSelect;
+                setIsDraggingSidebar(false);
+                void model.setTermSessionListWidth(sidebarWidthRef.current);
+            };
+
+            window.addEventListener("pointermove", onMove);
+            window.addEventListener("pointerup", onUp, true);
+            window.addEventListener("pointercancel", onUp, true);
+        },
+        [listOpen, model]
+    );
+
+    React.useEffect(() => {
+        if (!shouldRenderMulti) {
+            return;
+        }
+        const t = setTimeout(() => {
+            if (activeSessionId === blockId) {
+                model.giveFocus();
+                return;
+            }
+            const bcm = getBlockComponentModel(activeSessionId);
+            const vm = bcm?.viewModel as TermViewModel | undefined;
+            vm?.giveFocus?.();
+        }, 30);
+        return () => clearTimeout(t);
+    }, [activeSessionId, shouldRenderMulti, blockId]);
+
+    if (!shouldRenderMulti) {
+        return <SingleTerminalView blockId={blockId} model={model} />;
+    }
+
+    const sessionIds = [blockId, ...extraSessionIds];
+    const termBg = computeBgStyleFromMeta(blockData?.meta);
+
+    return (
+        <div className="term-multi-root" ref={rootRef}>
+            {termBg && <div className="absolute inset-0 z-0 pointer-events-none" style={termBg} />}
+            <div className="term-multi-main">
+                <div className={clsx("term-multi-session", { active: activeSessionId === blockId })}>
+                    <SingleTerminalView blockId={blockId} model={model} />
+                </div>
+                {extraSessionIds.map((sessionId) => {
+                    const isFocusedAtom = jotai.atom((get) => {
+                        return get(model.nodeModel.isFocused) && activeSessionId === sessionId;
+                    });
+                    const sessionNodeModel = {
+                        blockId: sessionId,
+                        isFocused: isFocusedAtom,
+                        focusNode: () => model.nodeModel.focusNode(),
+                        onClose: () => {
+                            void model.killTerminalSession(sessionId);
+                        },
+                    };
+                    return (
+                        <div key={sessionId} className={clsx("term-multi-session", { active: activeSessionId === sessionId })}>
+                            <SubBlock nodeModel={sessionNodeModel} />
+                        </div>
+                    );
+                })}
+            </div>
+            {listOpen ? (
+                <div
+                    className={clsx("term-multi-resizer", { dragging: isDraggingSidebar })}
+                    onPointerDown={startSidebarResize}
+                    role="separator"
+                    aria-orientation="vertical"
+                    aria-label={t("term.sessions.listTitle")}
+                />
+            ) : null}
+            {listOpen ? (
+                <div className="term-multi-sidebar" style={{ width: `${sidebarWidth}px` }}>
+                    <div className="term-multi-sidebar-header">{t("term.sessions.listTitle")}</div>
+                    <div className="term-multi-sidebar-list">
+                        {sessionIds.map((sessionId, idx) => {
+                            return (
+                                <TermSessionListItem
+                                    key={sessionId}
+                                    sessionId={sessionId}
+                                    index={idx}
+                                    isActive={activeSessionId === sessionId}
+                                    onSelect={() => {
+                                        void model.setActiveTermSessionId(sessionId);
+                                    }}
+                                    onKill={() => {
+                                        void model.killTerminalSession(sessionId);
+                                    }}
+                                />
+                            );
+                        })}
+                    </div>
+                </div>
+            ) : null}
         </div>
     );
 };

@@ -120,6 +120,12 @@ type MetaTSType struct {
 	TermShiftEnterNewline   *bool    `json:"term:shiftenternewline,omitempty"`
 	TermMacOptionIsMeta     *bool    `json:"term:macoptionismeta,omitempty"`
 	TermConnDebug           string   `json:"term:conndebug,omitempty"` // null, info, debug
+	TermIsSession           bool     `json:"term:issession,omitempty"`
+	TermParentBlockId       string   `json:"term:parentblockid,omitempty"`
+	TermSessionIds          []string `json:"term:sessionids,omitempty"`
+	TermActiveSessionId     string   `json:"term:activesessionid,omitempty"`
+	TermSessionListOpen     *bool    `json:"term:sessionlistopen,omitempty"`
+	TermSessionListWidth    *int     `json:"term:sessionlistwidth,omitempty"`
 
 	WebZoom          float64 `json:"web:zoom,omitempty"`
 	WebHideNav       *bool   `json:"web:hidenav,omitempty"`

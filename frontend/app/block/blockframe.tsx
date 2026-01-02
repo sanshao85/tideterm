@@ -370,14 +370,32 @@ const ConnStatusOverlay = React.memo(
             }
         }, [width, connStatus, setShowError]);
 
-        const handleTryReconnect = React.useCallback(() => {
-            const prtn = RpcApi.ConnConnectCommand(
-                TabRpcClient,
-                { host: connName, logblockid: nodeModel.blockId },
-                { timeout: 300000 }
-            );
-            prtn.catch((e) => console.log("error reconnecting", connName, e));
-        }, [connName]);
+        const handleTryReconnect = React.useCallback(async () => {
+            try {
+                await RpcApi.ConnConnectCommand(
+                    TabRpcClient,
+                    { host: connName, logblockid: nodeModel.blockId },
+                    { timeout: 300000 }
+                );
+            } catch (e) {
+                console.log("error reconnecting", connName, e);
+                return;
+            }
+
+            // If this is a terminal block, force a controller restart after reconnect so the PTY
+            // is recreated (and tmux-based resume can reattach immediately).
+            if (blockData?.meta?.view === "term") {
+                try {
+                    await RpcApi.ControllerResyncCommand(TabRpcClient, {
+                        tabid: globalStore.get(atoms.staticTabId),
+                        blockid: nodeModel.blockId,
+                        forcerestart: true,
+                    });
+                } catch (e) {
+                    console.log("error controller resync after reconnect", nodeModel.blockId, e);
+                }
+            }
+        }, [connName, nodeModel.blockId, blockData?.meta?.view]);
 
         const handleDisableWsh = React.useCallback(async () => {
             // using unknown is a hack. we need proper types for the

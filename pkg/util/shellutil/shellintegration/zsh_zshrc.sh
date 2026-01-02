@@ -1,8 +1,10 @@
 # add wsh to path, source dynamic script from wsh token
 TIDETERM_WSHBINDIR={{.WSHBINDIR}}
 export PATH="$TIDETERM_WSHBINDIR:$PATH"
-source <(wsh token "$TIDETERM_SWAPTOKEN" zsh 2>/dev/null)
-unset TIDETERM_SWAPTOKEN
+if [ -n "${TIDETERM_SWAPTOKEN-}" ]; then
+  source <(wsh token "$TIDETERM_SWAPTOKEN" zsh 2>/dev/null)
+  unset TIDETERM_SWAPTOKEN
+fi
 
 # Source the original zshrc only if ZDOTDIR has not been changed
 if [ "$ZDOTDIR" = "$TIDETERM_ZDOTDIR" ]; then
@@ -27,7 +29,21 @@ typeset -g _TIDETERM_SI_FIRSTPRECMD=1
 
 # shell integration
 _waveterm_si_blocked() {
-  [[ -n "$TMUX" || -n "$STY" || "$TERM" == tmux* || "$TERM" == screen* ]]
+  [[ -n "$STY" || ( "$TERM" == screen* && -z "${TMUX-}" ) ]]
+}
+
+_waveterm_si_in_tmux() {
+  [[ -n "$TMUX" || "$TERM" == tmux* ]]
+}
+
+_waveterm_si_write() {
+  if _waveterm_si_in_tmux; then
+    printf '\033Ptmux;\033'
+    printf "$@"
+    printf '\033\\'
+  else
+    printf "$@"
+  fi
 }
 
 _waveterm_si_urlencode() {
@@ -51,7 +67,7 @@ _waveterm_si_urlencode() {
 _waveterm_si_osc7() {
   _waveterm_si_blocked && return
   local encoded_pwd=$(_waveterm_si_urlencode "$PWD")
-  printf '\033]7;file://localhost%s\007' "$encoded_pwd"  # OSC 7 - current directory
+  _waveterm_si_write '\033]7;file://localhost%s\007' "$encoded_pwd"  # OSC 7 - current directory
 }
 
 _waveterm_si_precmd() {
@@ -59,14 +75,14 @@ _waveterm_si_precmd() {
   _waveterm_si_blocked && return
   # D;status for previous command (skip before first prompt)
   if (( !_TIDETERM_SI_FIRSTPRECMD )); then
-    printf '\033]16162;D;{"exitcode":%d}\007' $_waveterm_si_status
+    _waveterm_si_write '\033]16162;D;{"exitcode":%d}\007' $_waveterm_si_status
   else
     local uname_info=$(uname -smr 2>/dev/null)
-    printf '\033]16162;M;{"shell":"zsh","shellversion":"%s","uname":"%s","integration":true}\007' "$ZSH_VERSION" "$uname_info"
+    _waveterm_si_write '\033]16162;M;{"shell":"zsh","shellversion":"%s","uname":"%s","integration":true}\007' "$ZSH_VERSION" "$uname_info"
     # OSC 7 only sent on first prompt - chpwd hook handles directory changes
     _waveterm_si_osc7
   fi
-  printf '\033]16162;A\007'
+  _waveterm_si_write '\033]16162;A\007'
   _TIDETERM_SI_FIRSTPRECMD=0
 }
 
@@ -80,9 +96,9 @@ _waveterm_si_preexec() {
   local cmd64
   cmd64=$(printf '%s' "$cmd" | base64 2>/dev/null | tr -d '\n\r')
   if [ -n "$cmd64" ]; then
-    printf '\033]16162;C;{"cmd64":"%s"}\007' "$cmd64"
+    _waveterm_si_write '\033]16162;C;{"cmd64":"%s"}\007' "$cmd64"
   else
-    printf '\033]16162;C\007'
+    _waveterm_si_write '\033]16162;C\007'
   fi
 }
 
@@ -99,9 +115,9 @@ _waveterm_si_inputempty() {
   if (( current_empty != TIDETERM_SI_INPUTEMPTY )); then
     TIDETERM_SI_INPUTEMPTY=$current_empty
     if (( current_empty )); then
-      printf '\033]16162;I;{"inputempty":true}\007'
+      _waveterm_si_write '\033]16162;I;{"inputempty":true}\007'
     else
-      printf '\033]16162;I;{"inputempty":false}\007'
+      _waveterm_si_write '\033]16162;I;{"inputempty":false}\007'
     fi
   fi
 }

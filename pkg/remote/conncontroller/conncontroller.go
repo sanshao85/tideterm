@@ -74,8 +74,18 @@ type SSHConn struct {
 
 var ConnServerCmdTemplate = strings.TrimSpace(
 	strings.Join([]string{
-		"%s version 2> /dev/null || (echo -n \"not-installed \"; uname -sm; exit 0);",
-		"exec %s connserver",
+		"wsh_path=%s;",
+		// Ensure HOME matches the passwd entry (some environments override HOME to /tmp, etc.).
+		"if command -v id >/dev/null 2>&1; then " +
+			"  _tideterm_user=\"$(id -un 2>/dev/null)\" || _tideterm_user=\"\"; " +
+			"  if [ -n \"$_tideterm_user\" ]; then " +
+			"    _tideterm_home=\"$(eval echo ~${_tideterm_user} 2>/dev/null)\" || _tideterm_home=\"\"; " +
+			"    if [ -n \"$_tideterm_home\" ] && [ \"$_tideterm_home\" != \"$HOME\" ]; then export HOME=\"$_tideterm_home\"; fi; " +
+			"  fi; " +
+			"  unset _tideterm_user _tideterm_home; " +
+			"fi;",
+		"eval \"$wsh_path version 2> /dev/null\" || (echo -n \"not-installed \"; uname -sm; exit 0);",
+		"eval \"exec $wsh_path connserver\"",
 	}, "\n"))
 
 func IsLocalConnName(connName string) bool {
@@ -330,7 +340,7 @@ func (conn *SSHConn) StartConnServer(ctx context.Context, afterUpdate bool) (boo
 	if err != nil {
 		return false, "", "", fmt.Errorf("unable to get stdin pipe: %w", err)
 	}
-	cmdStr := fmt.Sprintf(ConnServerCmdTemplate, wshPath, wshPath)
+	cmdStr := fmt.Sprintf(ConnServerCmdTemplate, shellutil.HardQuote(wshPath))
 	log.Printf("starting conn controller: %q\n", cmdStr)
 	shWrappedCmdStr := fmt.Sprintf("sh -c %s", shellutil.HardQuote(cmdStr))
 	blocklogger.Debugf(ctx, "[conndebug] wrapped command:\n%s\n", shWrappedCmdStr)
