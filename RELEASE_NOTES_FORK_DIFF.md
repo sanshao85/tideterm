@@ -6,8 +6,8 @@
 
 - 上游项目：`wavetermdev/waveterm`
 - 上游基线提交：`90011a7ede0931046f4c0843e9af027dcea8eefe`（2025-12-22）
-- 当前 fork 版本参考：`v0.13.1-tideterm.1`（HEAD `d442b036`）
-- 说明日期：2026-02-12
+- 当前 fork 版本参考：`v0.13.1-tideterm.3`（main 分支最新提交）
+- 说明日期：2026-02-23
 
 ## 2) 本 Fork 的主要新增功能
 
@@ -158,4 +158,3 @@ This fork adds multi-session terminal blocks, built-in API Proxy (WaveProxy), MC
 - Added MCP server manager with import/sync for Claude Code / Codex CLI / Gemini CLI
 - Improved SSH/WSL remote robustness and standardized helper path to `~/.tideterm`
 - Changed defaults: telemetry off, auto-update off, remote tmux resume on
-
