@@ -542,6 +542,90 @@ func PathCommand(w *wshutil.WshRpc, data wshrpc.PathCommandData, opts *wshrpc.Rp
 	return resp, err
 }
 
+// command "proxychannelcreate", wshserver.ProxyChannelCreateCommand
+func ProxyChannelCreateCommand(w *wshutil.WshRpc, data wshrpc.CommandProxyChannelCreateData, opts *wshrpc.RpcOpts) error {
+	_, err := sendRpcRequestCallHelper[any](w, "proxychannelcreate", data, opts)
+	return err
+}
+
+// command "proxychanneldelete", wshserver.ProxyChannelDeleteCommand
+func ProxyChannelDeleteCommand(w *wshutil.WshRpc, data wshrpc.CommandProxyChannelDeleteData, opts *wshrpc.RpcOpts) error {
+	_, err := sendRpcRequestCallHelper[any](w, "proxychanneldelete", data, opts)
+	return err
+}
+
+// command "proxychannellist", wshserver.ProxyChannelListCommand
+func ProxyChannelListCommand(w *wshutil.WshRpc, data wshrpc.CommandProxyChannelListData, opts *wshrpc.RpcOpts) (*wshrpc.CommandProxyChannelListRtnData, error) {
+	resp, err := sendRpcRequestCallHelper[*wshrpc.CommandProxyChannelListRtnData](w, "proxychannellist", data, opts)
+	return resp, err
+}
+
+// command "proxychannelping", wshserver.ProxyChannelPingCommand
+func ProxyChannelPingCommand(w *wshutil.WshRpc, data wshrpc.CommandProxyChannelPingData, opts *wshrpc.RpcOpts) (*wshrpc.CommandProxyChannelPingRtnData, error) {
+	resp, err := sendRpcRequestCallHelper[*wshrpc.CommandProxyChannelPingRtnData](w, "proxychannelping", data, opts)
+	return resp, err
+}
+
+// command "proxychannelupdate", wshserver.ProxyChannelUpdateCommand
+func ProxyChannelUpdateCommand(w *wshutil.WshRpc, data wshrpc.CommandProxyChannelUpdateData, opts *wshrpc.RpcOpts) error {
+	_, err := sendRpcRequestCallHelper[any](w, "proxychannelupdate", data, opts)
+	return err
+}
+
+// command "proxyglobalstats", wshserver.ProxyGlobalStatsCommand
+func ProxyGlobalStatsCommand(w *wshutil.WshRpc, opts *wshrpc.RpcOpts) (*wshrpc.ProxyGlobalStats, error) {
+	resp, err := sendRpcRequestCallHelper[*wshrpc.ProxyGlobalStats](w, "proxyglobalstats", nil, opts)
+	return resp, err
+}
+
+// command "proxyhistoryclear", wshserver.ProxyHistoryClearCommand
+func ProxyHistoryClearCommand(w *wshutil.WshRpc, opts *wshrpc.RpcOpts) error {
+	_, err := sendRpcRequestCallHelper[any](w, "proxyhistoryclear", nil, opts)
+	return err
+}
+
+// command "proxymetrics", wshserver.ProxyMetricsCommand
+func ProxyMetricsCommand(w *wshutil.WshRpc, data wshrpc.CommandProxyMetricsData, opts *wshrpc.RpcOpts) ([]*wshrpc.ProxyChannelMetrics, error) {
+	resp, err := sendRpcRequestCallHelper[[]*wshrpc.ProxyChannelMetrics](w, "proxymetrics", data, opts)
+	return resp, err
+}
+
+// command "proxyrequesthistory", wshserver.ProxyRequestHistoryCommand
+func ProxyRequestHistoryCommand(w *wshutil.WshRpc, data wshrpc.CommandProxyRequestHistoryData, opts *wshrpc.RpcOpts) (*wshrpc.CommandProxyRequestHistoryRtnData, error) {
+	resp, err := sendRpcRequestCallHelper[*wshrpc.CommandProxyRequestHistoryRtnData](w, "proxyrequesthistory", data, opts)
+	return resp, err
+}
+
+// command "proxyschedulerreset", wshserver.ProxySchedulerResetCommand
+func ProxySchedulerResetCommand(w *wshutil.WshRpc, data string, opts *wshrpc.RpcOpts) error {
+	_, err := sendRpcRequestCallHelper[any](w, "proxyschedulerreset", data, opts)
+	return err
+}
+
+// command "proxysetport", wshserver.ProxySetPortCommand
+func ProxySetPortCommand(w *wshutil.WshRpc, data wshrpc.CommandProxySetPortData, opts *wshrpc.RpcOpts) error {
+	_, err := sendRpcRequestCallHelper[any](w, "proxysetport", data, opts)
+	return err
+}
+
+// command "proxystart", wshserver.ProxyStartCommand
+func ProxyStartCommand(w *wshutil.WshRpc, opts *wshrpc.RpcOpts) error {
+	_, err := sendRpcRequestCallHelper[any](w, "proxystart", nil, opts)
+	return err
+}
+
+// command "proxystatus", wshserver.ProxyStatusCommand
+func ProxyStatusCommand(w *wshutil.WshRpc, opts *wshrpc.RpcOpts) (*wshrpc.ProxyStatusData, error) {
+	resp, err := sendRpcRequestCallHelper[*wshrpc.ProxyStatusData](w, "proxystatus", nil, opts)
+	return resp, err
+}
+
+// command "proxystop", wshserver.ProxyStopCommand
+func ProxyStopCommand(w *wshutil.WshRpc, opts *wshrpc.RpcOpts) error {
+	_, err := sendRpcRequestCallHelper[any](w, "proxystop", nil, opts)
+	return err
+}
+
 // command "publishapp", wshserver.PublishAppCommand
 func PublishAppCommand(w *wshutil.WshRpc, data wshrpc.CommandPublishAppData, opts *wshrpc.RpcOpts) (*wshrpc.CommandPublishAppRtnData, error) {
 	resp, err := sendRpcRequestCallHelper[*wshrpc.CommandPublishAppRtnData](w, "publishapp", data, opts)
@@ -754,6 +838,24 @@ func TermGetScrollbackLinesCommand(w *wshutil.WshRpc, data wshrpc.CommandTermGet
 // command "test", wshserver.TestCommand
 func TestCommand(w *wshutil.WshRpc, data string, opts *wshrpc.RpcOpts) error {
 	_, err := sendRpcRequestCallHelper[any](w, "test", data, opts)
+	return err
+}
+
+// command "tmuxkillsession", wshserver.TmuxKillSessionCommand
+func TmuxKillSessionCommand(w *wshutil.WshRpc, data wshrpc.CommandTmuxKillSessionData, opts *wshrpc.RpcOpts) error {
+	_, err := sendRpcRequestCallHelper[any](w, "tmuxkillsession", data, opts)
+	return err
+}
+
+// command "tmuxlistsessions", wshserver.TmuxListSessionsCommand
+func TmuxListSessionsCommand(w *wshutil.WshRpc, data wshrpc.CommandTmuxListSessionsData, opts *wshrpc.RpcOpts) (*wshrpc.CommandTmuxListSessionsRtnData, error) {
+	resp, err := sendRpcRequestCallHelper[*wshrpc.CommandTmuxListSessionsRtnData](w, "tmuxlistsessions", data, opts)
+	return resp, err
+}
+
+// command "tmuxsetsessionalias", wshserver.TmuxSetSessionAliasCommand
+func TmuxSetSessionAliasCommand(w *wshutil.WshRpc, data wshrpc.CommandTmuxSetSessionAliasData, opts *wshrpc.RpcOpts) error {
+	_, err := sendRpcRequestCallHelper[any](w, "tmuxsetsessionalias", data, opts)
 	return err
 }
 

@@ -1,0 +1,59 @@
+---
+sidebar_position: 3.15
+id: "api-proxy"
+title: "API Proxy (WaveProxy)"
+---
+
+# API Proxy (WaveProxy)
+
+TideTerm includes a built-in AI API proxy (WaveProxy) that lets you route multiple AI clients through one local or remote endpoint. It provides channel-based routing, failover, and observability.
+
+## Open the Proxy Block
+
+- Create a new block and choose **API Proxy**.
+- The proxy runs on the current connection (local or remote), just like other blocks.
+
+## What You Can Do
+
+- Start/stop the proxy and set the listening port (default: `3000`).
+- Configure channels for different API types:
+  - `messages` (Anthropic-style messages endpoint)
+  - `responses` (OpenAI Responses-style clients)
+  - `gemini` (Google Gemini `/v1beta` endpoints)
+- Add multiple API keys per channel with priorities and enable/disable status.
+- Ping channels, view metrics, and browse recent request history.
+- Sync local channel configuration to a remote connection.
+- Minimize the proxy to the dock for a per-connection status indicator.
+
+## Endpoints and Clients
+
+WaveProxy exposes the following endpoints:
+
+- `/v1/messages` (Anthropic Messages clients)
+- `/v1/responses` and `/responses` (OpenAI Responses clients, including Codex CLI)
+- `/v1beta/models/*` (Gemini clients)
+
+Point your client base URL to the proxy host/port (for example `http://127.0.0.1:3000`). The client will call the appropriate endpoint based on its API type.
+
+## Config File Location
+
+Proxy configuration is persisted in a JSON file:
+
+- `~/.config/tideterm/waveproxy.json`
+
+This respects `TIDETERM_CONFIG_HOME` when set.
+
+## Optional Access Key
+
+You can protect the proxy by setting `accessKey` in `waveproxy.json`. When enabled, clients must send the access key using either:
+
+- `x-api-key: <key>`
+- `Authorization: Bearer <key>`
+
+## CLI (Optional)
+
+The proxy can also be started from the command line:
+
+```bash
+wsh proxy --port 3000
+```

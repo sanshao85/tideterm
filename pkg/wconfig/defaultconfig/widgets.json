@@ -50,5 +50,16 @@
                 "view": "sysinfo"
             }
         }
+    },
+    "defwidget@proxy": {
+        "display:order": 0,
+        "icon": "server",
+        "label": "proxy",
+        "description": "AI API Proxy Management",
+        "blockdef": {
+            "meta": {
+                "view": "proxy"
+            }
+        }
     }
 }

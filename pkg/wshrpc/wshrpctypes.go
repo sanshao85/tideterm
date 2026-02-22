@@ -18,6 +18,7 @@ import (
 	"github.com/sanshao85/tideterm/pkg/util/iochan/iochantypes"
 	"github.com/sanshao85/tideterm/pkg/vdom"
 	"github.com/sanshao85/tideterm/pkg/waveobj"
+	"github.com/sanshao85/tideterm/pkg/waveproxy/config"
 	"github.com/sanshao85/tideterm/pkg/wconfig"
 	"github.com/sanshao85/tideterm/pkg/wps"
 )
@@ -158,6 +159,9 @@ const (
 	Command_SetRTInfo = "setrtinfo"
 
 	Command_TermGetScrollbackLines = "termgetscrollbacklines"
+	Command_TmuxListSessions       = "tmuxlistsessions"
+	Command_TmuxKillSession        = "tmuxkillsession"
+	Command_TmuxSetSessionAlias    = "tmuxsetsessionalias"
 
 	// builder
 	Command_ListAllApps            = "listallapps"
@@ -198,6 +202,22 @@ const (
 	Command_McpSyncAll       = "mcpsyncall"
 	Command_McpImportFromApp = "mcpimportfromapp"
 	Command_McpGetAppStatus  = "mcpgetappstatus"
+
+	// Proxy commands
+	Command_ProxyStart          = "proxystart"
+	Command_ProxyStop           = "proxystop"
+	Command_ProxyStatus         = "proxystatus"
+	Command_ProxySetPort        = "proxysetport"
+	Command_ProxyChannelList    = "proxychannellist"
+	Command_ProxyChannelCreate  = "proxychannelcreate"
+	Command_ProxyChannelUpdate  = "proxychannelupdate"
+	Command_ProxyChannelDelete  = "proxychanneldelete"
+	Command_ProxyChannelPing    = "proxychannelping"
+	Command_ProxyMetrics        = "proxymetrics"
+	Command_ProxyGlobalStats    = "proxyglobalstats"
+	Command_ProxySchedulerReset = "proxyschedulerreset"
+	Command_ProxyRequestHistory = "proxyrequesthistory"
+	Command_ProxyHistoryClear   = "proxyhistoryclear"
 )
 
 type RespOrErrorUnion[T any] struct {
@@ -357,6 +377,9 @@ type WshRpcInterface interface {
 
 	// terminal
 	TermGetScrollbackLinesCommand(ctx context.Context, data CommandTermGetScrollbackLinesData) (*CommandTermGetScrollbackLinesRtnData, error)
+	TmuxListSessionsCommand(ctx context.Context, data CommandTmuxListSessionsData) (*CommandTmuxListSessionsRtnData, error)
+	TmuxKillSessionCommand(ctx context.Context, data CommandTmuxKillSessionData) error
+	TmuxSetSessionAliasCommand(ctx context.Context, data CommandTmuxSetSessionAliasData) error
 
 	// builder
 	ListAllAppsCommand(ctx context.Context) ([]AppInfo, error)
@@ -381,6 +404,22 @@ type WshRpcInterface interface {
 	// proc
 	VDomRenderCommand(ctx context.Context, data vdom.VDomFrontendUpdate) chan RespOrErrorUnion[*vdom.VDomBackendUpdate]
 	VDomUrlRequestCommand(ctx context.Context, data VDomUrlRequestData) chan RespOrErrorUnion[VDomUrlRequestResponse]
+
+	// proxy
+	ProxyStartCommand(ctx context.Context) error
+	ProxyStopCommand(ctx context.Context) error
+	ProxyStatusCommand(ctx context.Context) (*ProxyStatusData, error)
+	ProxySetPortCommand(ctx context.Context, data CommandProxySetPortData) error
+	ProxyChannelListCommand(ctx context.Context, data CommandProxyChannelListData) (*CommandProxyChannelListRtnData, error)
+	ProxyChannelCreateCommand(ctx context.Context, data CommandProxyChannelCreateData) error
+	ProxyChannelUpdateCommand(ctx context.Context, data CommandProxyChannelUpdateData) error
+	ProxyChannelDeleteCommand(ctx context.Context, data CommandProxyChannelDeleteData) error
+	ProxyChannelPingCommand(ctx context.Context, data CommandProxyChannelPingData) (*CommandProxyChannelPingRtnData, error)
+	ProxyMetricsCommand(ctx context.Context, data CommandProxyMetricsData) ([]*ProxyChannelMetrics, error)
+	ProxyGlobalStatsCommand(ctx context.Context) (*ProxyGlobalStats, error)
+	ProxySchedulerResetCommand(ctx context.Context, channelId string) error
+	ProxyRequestHistoryCommand(ctx context.Context, data CommandProxyRequestHistoryData) (*CommandProxyRequestHistoryRtnData, error)
+	ProxyHistoryClearCommand(ctx context.Context) error
 }
 
 // for frontend
@@ -994,6 +1033,36 @@ type CommandTermGetScrollbackLinesRtnData struct {
 	LastUpdated int64    `json:"lastupdated"`
 }
 
+type CommandTmuxListSessionsData struct {
+	ConnName   string `json:"connname"`
+	LogBlockId string `json:"logblockid,omitempty"`
+}
+
+type TmuxSessionInfo struct {
+	Name     string `json:"name"`
+	Alias    string `json:"alias,omitempty"`
+	Windows  int    `json:"windows"`
+	Attached int    `json:"attached"`
+	Activity int64  `json:"activity"`
+}
+
+type CommandTmuxListSessionsRtnData struct {
+	Sessions []TmuxSessionInfo `json:"sessions"`
+}
+
+type CommandTmuxKillSessionData struct {
+	ConnName    string `json:"connname"`
+	SessionName string `json:"sessionname"`
+	LogBlockId  string `json:"logblockid,omitempty"`
+}
+
+type CommandTmuxSetSessionAliasData struct {
+	ConnName    string `json:"connname"`
+	SessionName string `json:"sessionname"`
+	Alias       string `json:"alias,omitempty"`
+	LogBlockId  string `json:"logblockid,omitempty"`
+}
+
 // builder
 type AppInfo struct {
 	AppId    string       `json:"appid"`
@@ -1202,3 +1271,120 @@ type McpAppStatusData struct {
 	Gemini bool `json:"gemini"`
 }
 
+// Proxy types
+
+type ProxyStatusData struct {
+	Running      bool   `json:"running"`
+	Port         int    `json:"port"`
+	StartedAt    string `json:"startedAt,omitempty"`
+	Uptime       string `json:"uptime,omitempty"`
+	Version      string `json:"version"`
+	ChannelCount int    `json:"channelCount"`
+}
+
+type CommandProxySetPortData struct {
+	Port int `json:"port"`
+}
+
+type ProxyChannel struct {
+	ID             string            `json:"id"`
+	Name           string            `json:"name"`
+	ServiceType    string            `json:"serviceType"` // claude, openai, gemini
+	BaseUrl        string            `json:"baseUrl"`
+	BaseUrls       []string          `json:"baseUrls,omitempty"`
+	ApiKeys        []config.APIKey   `json:"apiKeys"`
+	AuthType       string            `json:"authType,omitempty"` // x-api-key, bearer, both
+	Priority       int               `json:"priority"`
+	Status         string            `json:"status"` // active, suspended, disabled
+	PromotionUntil string            `json:"promotionUntil,omitempty"`
+	ModelMapping   map[string]string `json:"modelMapping,omitempty"`
+	LowQuality     bool              `json:"lowQuality,omitempty"`
+	Description    string            `json:"description,omitempty"`
+}
+
+type CommandProxyChannelListData struct {
+	ChannelType string `json:"channelType"` // messages, responses, gemini
+}
+
+type CommandProxyChannelListRtnData struct {
+	Channels []*ProxyChannel `json:"channels"`
+}
+
+type CommandProxyChannelCreateData struct {
+	ChannelType string        `json:"channelType"`
+	Channel     *ProxyChannel `json:"channel"`
+}
+
+type CommandProxyChannelUpdateData struct {
+	ChannelType string        `json:"channelType"`
+	Index       int           `json:"index"`
+	Channel     *ProxyChannel `json:"channel"`
+}
+
+type CommandProxyChannelDeleteData struct {
+	ChannelType string `json:"channelType"`
+	Index       int    `json:"index"`
+}
+
+type CommandProxyChannelPingData struct {
+	ChannelType string `json:"channelType"`
+	Index       int    `json:"index"`
+}
+
+type CommandProxyChannelPingRtnData struct {
+	Success   bool   `json:"success"`
+	LatencyMs int64  `json:"latencyMs"`
+	Error     string `json:"error,omitempty"`
+}
+
+type CommandProxyMetricsData struct {
+	ChannelID string `json:"channelId,omitempty"` // empty for all channels
+}
+
+type ProxyChannelMetrics struct {
+	ChannelID           string  `json:"channelId"`
+	RequestCount        int64   `json:"requestCount"`
+	SuccessCount        int64   `json:"successCount"`
+	FailureCount        int64   `json:"failureCount"`
+	SuccessRate         float64 `json:"successRate"`
+	ConsecutiveFailures int64   `json:"consecutiveFailures"`
+	CircuitBroken       bool    `json:"circuitBroken"`
+	InputTokens         int64   `json:"inputTokens"`
+	OutputTokens        int64   `json:"outputTokens"`
+	CacheHitRate        float64 `json:"cacheHitRate"`
+	AvgLatencyMs        float64 `json:"avgLatencyMs"`
+}
+
+type ProxyGlobalStats struct {
+	TotalRequests int64   `json:"totalRequests"`
+	SuccessCount  int64   `json:"successCount"`
+	FailureCount  int64   `json:"failureCount"`
+	SuccessRate   float64 `json:"successRate"`
+	ChannelCount  int     `json:"channelCount"`
+}
+
+type CommandProxyRequestHistoryData struct {
+	Limit     int    `json:"limit,omitempty"`     // max records to return
+	Offset    int    `json:"offset,omitempty"`    // pagination offset
+	ChannelID string `json:"channelId,omitempty"` // filter by channel
+	Status    string `json:"status,omitempty"`    // all, success, error
+}
+
+type ProxyRequestRecord struct {
+	ID           string `json:"id"`
+	Timestamp    string `json:"timestamp"`
+	ChannelID    string `json:"channelId"`
+	ChannelType  string `json:"channelType"`
+	Model        string `json:"model"`
+	Success      bool   `json:"success"`
+	LatencyMs    int64  `json:"latencyMs"`
+	InputTokens  int64  `json:"inputTokens"`
+	OutputTokens int64  `json:"outputTokens"`
+	ErrorMsg     string `json:"errorMsg,omitempty"`
+	ErrorDetails string `json:"errorDetails,omitempty"`
+}
+
+type CommandProxyRequestHistoryRtnData struct {
+	Records    []*ProxyRequestRecord `json:"records"`
+	TotalCount int64                 `json:"totalCount"`
+}

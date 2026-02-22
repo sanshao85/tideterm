@@ -4,6 +4,7 @@
 import { BlockNodeModel } from "@/app/block/blocktypes";
 import { getAppLanguageFromSettings, t } from "@/app/i18n/i18n-core";
 import { appHandleKeyDown } from "@/app/store/keymodel";
+import { modalsModel } from "@/app/store/modalmodel";
 import type { TabModel } from "@/app/store/tab-model";
 import { waveEventSubscribe } from "@/app/store/wps";
 import { RpcApi } from "@/app/store/wshclientapi";
@@ -38,12 +39,23 @@ import { getBlockingCommand } from "./shellblocking";
 import { computeTheme, DefaultTermTheme } from "./termutil";
 import { TermWrap } from "./termwrap";
 
+function isLocalConnectionName(connection: string | null | undefined): boolean {
+    if (connection == null || connection === "") {
+        return true;
+    }
+    if (connection === "local") {
+        return true;
+    }
+    return connection.startsWith("local:");
+}
+
 const TermMultiSessionKey_IsSession = "term:issession";
 const TermMultiSessionKey_ParentBlockId = "term:parentblockid";
 const TermMultiSessionKey_SessionIds = "term:sessionids";
 const TermMultiSessionKey_ActiveSessionId = "term:activesessionid";
 const TermMultiSessionKey_SessionListOpen = "term:sessionlistopen";
 const TermMultiSessionKey_SessionListWidth = "term:sessionlistwidth";
+const TermMultiSessionKey_HideParentSession = "term:hideparentsession";
 
 export class TermViewModel implements ViewModel {
     viewType: string;
@@ -303,6 +315,21 @@ export class TermViewModel implements ViewModel {
                     },
                 };
                 rtn.push(showListDecl);
+            }
+
+            if (!isCmd && !isSession && termMode !== "vdom") {
+                const connName = blockData?.meta?.connection ?? "local";
+                const isRemoteConn = !isLocalConnectionName(connName);
+                if (isRemoteConn) {
+                    rtn.push({
+                        elemtype: "iconbutton",
+                        icon: "server",
+                        title: tt("term.tmuxSessions.openTitle"),
+                        click: () => {
+                            modalsModel.pushModal("TmuxSessionsModal", { blockId: this.blockId });
+                        },
+                    });
+                }
             }
 
             const isAIPanelOpen = get(WorkspaceLayoutModel.getInstance().panelVisibleAtom);
@@ -967,7 +994,11 @@ export class TermViewModel implements ViewModel {
         if (!Array.isArray(raw)) {
             return [this.blockId];
         }
+        const hideParent = !!blockData?.meta?.[TermMultiSessionKey_HideParentSession];
         const extraIds = raw.filter((v) => typeof v === "string" && v && v !== this.blockId) as string[];
+        if (hideParent && extraIds.length > 0) {
+            return extraIds;
+        }
         return [this.blockId, ...extraIds];
     }
 
@@ -1026,6 +1057,17 @@ export class TermViewModel implements ViewModel {
 
     async createNewTerminalSession() {
         const parentBlockData = globalStore.get(this.blockAtom);
+        const existingSessionIds = parentBlockData?.meta?.[TermMultiSessionKey_SessionIds];
+        const extraSessionIds = Array.isArray(existingSessionIds)
+            ? (existingSessionIds.filter((v) => typeof v === "string" && v) as string[])
+            : [];
+        const shellProcStatus = globalStore.get(this.shellProcStatus);
+
+        if (extraSessionIds.length === 0 && (shellProcStatus === "done" || shellProcStatus === "init")) {
+            this.forceRestartController();
+            return;
+        }
+
         const activeSessionId = this.getActiveTermSessionId(parentBlockData);
 
         let connName: string = parentBlockData?.meta?.connection ?? "local";
@@ -1058,7 +1100,6 @@ export class TermViewModel implements ViewModel {
         });
         const [, newSessionId] = WOS.splitORef(oref);
 
-        const existingSessionIds = parentBlockData?.meta?.[TermMultiSessionKey_SessionIds];
         const nextSessionIds = Array.isArray(existingSessionIds)
             ? (existingSessionIds.filter((v) => typeof v === "string" && v) as string[])
             : [];
@@ -1090,16 +1131,33 @@ export class TermViewModel implements ViewModel {
             const activeSessionId = this.getActiveTermSessionId(parentBlockData);
             const existingSessionIds = this.getTermSessionIds(parentBlockData).filter((id) => id !== this.blockId);
             const nextActive = activeSessionId === this.blockId && existingSessionIds.length > 0 ? existingSessionIds[existingSessionIds.length - 1] : activeSessionId;
+            const metaUpdate: Record<string, unknown> = {};
+
+            if (existingSessionIds.length > 0) {
+                metaUpdate[TermMultiSessionKey_HideParentSession] = true;
+                metaUpdate[TermMultiSessionKey_SessionListOpen] = true;
+            } else if (parentBlockData?.meta?.[TermMultiSessionKey_HideParentSession]) {
+                metaUpdate[TermMultiSessionKey_HideParentSession] = null;
+            }
 
             if (nextActive && nextActive !== activeSessionId) {
-                await this.setActiveTermSessionId(nextActive);
+                metaUpdate[TermMultiSessionKey_ActiveSessionId] = nextActive;
             }
+
+            if (Object.keys(metaUpdate).length > 0) {
+                await RpcApi.SetMetaCommand(TabRpcClient, {
+                    oref: WOS.makeORef("block", this.blockId),
+                    meta: metaUpdate,
+                });
+            }
+
             await RpcApi.ControllerStopCommand(TabRpcClient, this.blockId);
             return;
         }
 
         const parentBlockData = globalStore.get(this.blockAtom);
         const activeSessionId = this.getActiveTermSessionId(parentBlockData);
+        const hideParent = !!parentBlockData?.meta?.[TermMultiSessionKey_HideParentSession];
 
         await RpcApi.DeleteSubBlockCommand(TabRpcClient, { blockid: sessionId });
 
@@ -1115,8 +1173,19 @@ export class TermViewModel implements ViewModel {
                     : this.blockId
                 : activeSessionId;
 
-        const nextListOpen =
-            nextSessionIds.length > 0 ? this.getTermSessionListOpen(parentBlockData) : false;
+        const nextListOpen = nextSessionIds.length > 0 ? this.getTermSessionListOpen(parentBlockData) : false;
+        let nextHideParent = hideParent;
+        let shouldRestartParent = false;
+
+        if (nextSessionIds.length === 0 && hideParent) {
+            nextHideParent = false;
+            if (nextActive === this.blockId) {
+                const shellProcStatus = globalStore.get(this.shellProcStatus);
+                if (shellProcStatus === "done" || shellProcStatus === "init") {
+                    shouldRestartParent = true;
+                }
+            }
+        }
 
         await RpcApi.SetMetaCommand(TabRpcClient, {
             oref: WOS.makeORef("block", this.blockId),
@@ -1124,8 +1193,13 @@ export class TermViewModel implements ViewModel {
                 [TermMultiSessionKey_SessionIds]: nextSessionIds,
                 [TermMultiSessionKey_ActiveSessionId]: nextActive,
                 [TermMultiSessionKey_SessionListOpen]: nextListOpen,
+                [TermMultiSessionKey_HideParentSession]: nextHideParent || null,
             },
         });
+
+        if (shouldRestartParent) {
+            this.forceRestartController();
+        }
     }
 }
 

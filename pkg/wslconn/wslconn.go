@@ -291,7 +291,7 @@ func (conn *WslConn) StartConnServer(ctx context.Context, afterUpdate bool) (boo
 		return false, "", "", fmt.Errorf("unable to start conn controller cmd: %w", err)
 	}
 	linesChan := utilfn.StreamToLinesChan(pipeRead)
-	versionLine, err := utilfn.ReadLineWithTimeout(linesChan, 5*time.Second)
+	versionLine, err := conncontroller.ReadWshVersionLineWithTimeout(ctx, linesChan, 5*time.Second)
 	if err != nil {
 		cancelFn()
 		return false, "", "", fmt.Errorf("error reading wsh version: %w", err)
@@ -311,13 +311,13 @@ func (conn *WslConn) StartConnServer(ctx context.Context, afterUpdate bool) (boo
 		cancelFn()
 		return true, clientVersion, osArchStr, nil
 	}
-	jwtLine, err := utilfn.ReadLineWithTimeout(linesChan, 3*time.Second)
+	jwtLine, err := conncontroller.ReadWshJwtStatusLineWithTimeout(ctx, linesChan, 3*time.Second)
 	if err != nil {
 		cancelFn()
 		return false, clientVersion, "", fmt.Errorf("error reading jwt status line: %w", err)
 	}
 	conn.Infof(ctx, "got jwt status line: %s\n", jwtLine)
-	if strings.TrimSpace(jwtLine) == wavebase.NeedJwtConst {
+	if jwtLine == wavebase.NeedJwtConst {
 		// write the jwt
 		conn.Infof(ctx, "writing jwt token to connserver\n")
 		_, err = fmt.Fprintf(inputPipeWrite, "%s\n", jwtToken)

@@ -30,6 +30,23 @@ USE_SYSTEM_FPM=1 task package
 2. Create a GitHub Release in `sanshao85/tideterm`.
 3. Upload the build artifacts from `make/` to the release.
 
+## Pre-release checklist (fork + compliance)
+
+Before publishing a release, verify the following:
+
+- Version/identity is updated consistently in `package.json` (version/product metadata) and release tag name.
+- Fork change summary is current in `MODIFICATIONS.md` (major functional deltas vs upstream).
+- Release-facing fork diff is current in `RELEASE_NOTES_FORK_DIFF.md` (includes copyable CN/EN release bullets).
+- README entry points are present and valid in `README.md` and `README.zh-CN.md` (links to fork diff/release notes docs).
+- License/notice files are preserved and still correct (`LICENSE`, `NOTICE`).
+- Default behavior changes are documented when relevant (for example telemetry/autoupdate defaults, config path namespace, migration notes).
+- If upstream comparison baseline changes, update the upstream commit reference/date in `MODIFICATIONS.md` and `RELEASE_NOTES_FORK_DIFF.md`.
+
+Optional but recommended:
+
+- Include a short "What's Changed" section in the GitHub Release body using the summary in `RELEASE_NOTES_FORK_DIFF.md`.
+- Add upgrade/migration notes when changing app identifiers, data directories, or remote helper paths.
+
 ## Automatic updates
 
 TideTerm ships with automatic updates **disabled by default**. If you choose to enable them, you will need to:

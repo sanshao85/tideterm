@@ -12,6 +12,7 @@ import {
 import { AiFileDiffViewModel } from "@/app/view/aifilediff/aifilediff";
 import { LauncherViewModel } from "@/app/view/launcher/launcher";
 import { PreviewModel } from "@/app/view/preview/preview-model";
+import { ProxyViewModel } from "@/app/view/proxy/proxy";
 import { SysinfoViewModel } from "@/app/view/sysinfo/sysinfo";
 import { TsunamiViewModel } from "@/app/view/tsunami/tsunami";
 import { VDomModel } from "@/app/view/vdom/vdom-model";
@@ -56,6 +57,7 @@ BlockRegistry.set("launcher", LauncherViewModel);
 BlockRegistry.set("tsunami", TsunamiViewModel);
 BlockRegistry.set("aifilediff", AiFileDiffViewModel);
 BlockRegistry.set("waveconfig", WaveConfigViewModel);
+BlockRegistry.set("proxy", ProxyViewModel);
 
 function makeViewModel(blockId: string, blockView: string, nodeModel: BlockNodeModel, tabModel: TabModel): ViewModel {
     const ctor = BlockRegistry.get(blockView);

@@ -8,6 +8,7 @@ import { DeleteFileModal, PublishAppModal, RenameFileModal } from "@/builder/bui
 import { SetSecretDialog } from "@/builder/tabs/builder-secrettab";
 import { AboutModal } from "./about";
 import { RenameWindowModal } from "./renamewindowmodal";
+import { TmuxSessionsModal } from "./tmuxsessions";
 import { UserInputModal } from "./userinputmodal";
 
 const modalRegistry: { [key: string]: React.ComponentType<any> } = {
@@ -21,6 +22,7 @@ const modalRegistry: { [key: string]: React.ComponentType<any> } = {
     [DeleteFileModal.displayName || "DeleteFileModal"]: DeleteFileModal,
     [SetSecretDialog.displayName || "SetSecretDialog"]: SetSecretDialog,
     [RenameWindowModal.displayName || "RenameWindowModal"]: RenameWindowModal,
+    [TmuxSessionsModal.displayName || "TmuxSessionsModal"]: TmuxSessionsModal,
 };
 
 export const getModalComponent = (key: string): React.ComponentType<any> | undefined => {

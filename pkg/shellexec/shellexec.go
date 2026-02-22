@@ -348,6 +348,16 @@ func makeTmuxAutoResumeShellCommand(sessionName string, zh bool) string {
 			"  if [ -n \"$_tideterm_wsh_dir\" ]; then _tideterm_tmux_cmd=\"$_tideterm_wsh_dir/tideterm-shell\"; fi; "+
 			"  if [ -z \"$_tideterm_tmux_cmd\" ]; then _tideterm_tmux_cmd=\"$HOME/%s/bin/tideterm-shell\"; fi; "+
 			"  tmux set-option -g allow-passthrough on >/dev/null 2>&1 || true; "+
+			"  tmux set-option -g window-size latest >/dev/null 2>&1 || true; "+
+			"  tmux set-window-option -g alternate-screen off >/dev/null 2>&1 || true; "+
+			"  _tideterm_term=\"${TERM-}\"; "+
+			"  _tideterm_overrides_init=\"$(tmux show-option -gqv @tideterm_terminal_overrides_set 2>/dev/null)\"; "+
+			"  if [ \"$_tideterm_overrides_init\" != \"1\" ]; then "+
+			"    if [ -n \"$_tideterm_term\" ]; then tmux set-option -ga terminal-overrides \",${_tideterm_term}:smcup@:rmcup@\" >/dev/null 2>&1 || true; fi; "+
+			"    tmux set-option -ga terminal-overrides \",xterm*:smcup@:rmcup@\" >/dev/null 2>&1 || true; "+
+			"    tmux set-option -g @tideterm_terminal_overrides_set 1 >/dev/null 2>&1 || true; "+
+			"  fi; "+
+			"  unset _tideterm_overrides_init; "+
 			"  if [ -x \"$_tideterm_tmux_cmd\" ]; then "+
 			"    if tmux has-session -t %s >/dev/null 2>&1; then "+
 			"      tmux set-option -t %s default-command \"$_tideterm_tmux_cmd\" >/dev/null 2>&1 || true; "+
@@ -522,25 +532,25 @@ func StartWslShellProc(ctx context.Context, termSize waveobj.TermSize, cmdStr st
 
 	if cmdStr == "" {
 		/* transform command in order to inject environment vars */
-			if shellType == shellutil.ShellType_bash {
-				// add --rcfile
-				// cant set -l or -i with --rcfile
-				bashPath := fmt.Sprintf("~/%s/%s/.bashrc", wavebase.RemoteWaveHomeDirName, shellutil.BashIntegrationDir)
-				shellOpts = append(shellOpts, "--rcfile", bashPath)
-			} else if shellType == shellutil.ShellType_fish {
-				if cmdOpts.Login {
-					shellOpts = append(shellOpts, "-l")
-				}
-				// source the wave.fish file
-				waveFishPath := fmt.Sprintf("~/%s/%s/tideterm.fish", wavebase.RemoteWaveHomeDirName, shellutil.FishIntegrationDir)
-				carg := fmt.Sprintf(`"source %s"`, waveFishPath)
-				shellOpts = append(shellOpts, "-C", carg)
-			} else if shellType == shellutil.ShellType_pwsh {
-				pwshPath := fmt.Sprintf("~/%s/%s/tidetermpwsh.ps1", wavebase.RemoteWaveHomeDirName, shellutil.PwshIntegrationDir)
-				// powershell is weird about quoted path executables and requires an ampersand first
-				shellPath = "& " + shellPath
-				shellOpts = append(shellOpts, "-ExecutionPolicy", "Bypass", "-NoExit", "-File", pwshPath)
-			} else {
+		if shellType == shellutil.ShellType_bash {
+			// add --rcfile
+			// cant set -l or -i with --rcfile
+			bashPath := fmt.Sprintf("~/%s/%s/.bashrc", wavebase.RemoteWaveHomeDirName, shellutil.BashIntegrationDir)
+			shellOpts = append(shellOpts, "--rcfile", bashPath)
+		} else if shellType == shellutil.ShellType_fish {
+			if cmdOpts.Login {
+				shellOpts = append(shellOpts, "-l")
+			}
+			// source the wave.fish file
+			waveFishPath := fmt.Sprintf("~/%s/%s/tideterm.fish", wavebase.RemoteWaveHomeDirName, shellutil.FishIntegrationDir)
+			carg := fmt.Sprintf(`"source %s"`, waveFishPath)
+			shellOpts = append(shellOpts, "-C", carg)
+		} else if shellType == shellutil.ShellType_pwsh {
+			pwshPath := fmt.Sprintf("~/%s/%s/tidetermpwsh.ps1", wavebase.RemoteWaveHomeDirName, shellutil.PwshIntegrationDir)
+			// powershell is weird about quoted path executables and requires an ampersand first
+			shellPath = "& " + shellPath
+			shellOpts = append(shellOpts, "-ExecutionPolicy", "Bypass", "-NoExit", "-File", pwshPath)
+		} else {
 			if cmdOpts.Login {
 				shellOpts = append(shellOpts, "-l")
 			}
@@ -556,13 +566,13 @@ func StartWslShellProc(ctx context.Context, termSize waveobj.TermSize, cmdStr st
 		cmdCombined = fmt.Sprintf("%s %s", shellPath, strings.Join(shellOpts, " "))
 	}
 	conn.Infof(ctx, "starting shell, using command: %s\n", cmdCombined)
-		conn.Infof(ctx, "WSL-NEWSESSION (StartWslShellProc)\n")
+	conn.Infof(ctx, "WSL-NEWSESSION (StartWslShellProc)\n")
 
-		if shellType == shellutil.ShellType_zsh {
-			zshDir := fmt.Sprintf("~/%s/%s", wavebase.RemoteWaveHomeDirName, shellutil.ZshIntegrationDir)
-			conn.Infof(ctx, "setting ZDOTDIR to %s\n", zshDir)
-			cmdCombined = fmt.Sprintf(`ZDOTDIR=%s %s`, zshDir, cmdCombined)
-		}
+	if shellType == shellutil.ShellType_zsh {
+		zshDir := fmt.Sprintf("~/%s/%s", wavebase.RemoteWaveHomeDirName, shellutil.ZshIntegrationDir)
+		conn.Infof(ctx, "setting ZDOTDIR to %s\n", zshDir)
+		cmdCombined = fmt.Sprintf(`ZDOTDIR=%s %s`, zshDir, cmdCombined)
+	}
 	packedToken, err := cmdOpts.SwapToken.PackForClient()
 	if err != nil {
 		conn.Infof(ctx, "error packing swap token: %v", err)
@@ -597,9 +607,7 @@ func StartWslShellProc(ctx context.Context, termSize waveobj.TermSize, cmdStr st
 }
 
 func StartRemoteShellProcNoWsh(ctx context.Context, termSize waveobj.TermSize, cmdStr string, cmdOpts CommandOptsType, conn *conncontroller.SSHConn) (*ShellProc, error) {
-	client := conn.GetClient()
-	conn.Infof(ctx, "SSH-NEWSESSION (StartRemoteShellProcNoWsh)")
-	session, err := client.NewSession()
+	session, err := conn.NewSession(ctx, "StartRemoteShellProcNoWsh")
 	if err != nil {
 		return nil, err
 	}
@@ -647,7 +655,6 @@ func StartRemoteShellProcNoWsh(ctx context.Context, termSize waveobj.TermSize, c
 }
 
 func StartRemoteShellProc(ctx context.Context, logCtx context.Context, termSize waveobj.TermSize, cmdStr string, cmdOpts CommandOptsType, conn *conncontroller.SSHConn) (*ShellProc, error) {
-	client := conn.GetClient()
 	connRoute := wshutil.MakeConnectionRouteId(conn.GetName())
 	rpcClient := wshclient.GetBareRpcClient()
 	remoteInfo, err := wshclient.RemoteGetInfoCommand(rpcClient, &wshrpc.RpcOpts{Route: connRoute, Timeout: 2000})
@@ -718,8 +725,7 @@ func StartRemoteShellProc(ctx context.Context, logCtx context.Context, termSize 
 		cmdCombined = fmt.Sprintf("%s %s", shellPath, strings.Join(shellOpts, " "))
 	}
 	conn.Infof(logCtx, "starting shell, using command: %s\n", cmdCombined)
-	conn.Infof(logCtx, "SSH-NEWSESSION (StartRemoteShellProc)\n")
-	session, err := client.NewSession()
+	session, err := conn.NewSession(logCtx, "StartRemoteShellProc")
 	if err != nil {
 		return nil, err
 	}

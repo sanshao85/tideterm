@@ -13,13 +13,13 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/kevinburke/ssh_config"
-	"github.com/skeema/knownhosts"
 	"github.com/sanshao85/tideterm/pkg/blocklogger"
 	"github.com/sanshao85/tideterm/pkg/genconn"
 	"github.com/sanshao85/tideterm/pkg/panichandler"
@@ -35,6 +35,7 @@ import (
 	"github.com/sanshao85/tideterm/pkg/wps"
 	"github.com/sanshao85/tideterm/pkg/wshrpc"
 	"github.com/sanshao85/tideterm/pkg/wshutil"
+	"github.com/skeema/knownhosts"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/mod/semver"
 )
@@ -261,20 +262,92 @@ func (conn *SSHConn) OpenDomainSocketListener(ctx context.Context) error {
 // returns (up-to-date, semver, osArchStr, error)
 // if not up to date, or error, version might be ""
 func IsWshVersionUpToDate(logCtx context.Context, wshVersionLine string) (bool, string, string, error) {
-	wshVersionLine = strings.TrimSpace(wshVersionLine)
+	wshVersionLine = strings.TrimSpace(stripANSIEscapes(wshVersionLine))
 	if strings.HasPrefix(wshVersionLine, "not-installed") {
 		return false, "not-installed", strings.TrimSpace(strings.TrimPrefix(wshVersionLine, "not-installed")), nil
 	}
 	parts := strings.Fields(wshVersionLine)
-	if len(parts) != 2 {
+	if len(parts) < 2 || parts[0] != "wsh" {
 		return false, "", "", fmt.Errorf("unexpected version format: %s", wshVersionLine)
 	}
 	clientVersion := parts[1]
 	expectedVersion := fmt.Sprintf("v%s", wavebase.WaveVersion)
+	if !semver.IsValid(clientVersion) || !semver.IsValid(expectedVersion) {
+		return false, "", "", fmt.Errorf("invalid semver (client=%q expected=%q)", clientVersion, expectedVersion)
+	}
 	if semver.Compare(clientVersion, expectedVersion) < 0 {
 		return false, clientVersion, "", nil
 	}
+	// Special-case for forks: semver treats a plain release (e.g. v0.13.1) as newer than a prerelease
+	// (e.g. v0.13.1-tideterm.1). For TideTerm we *want* the fork build in that situation.
+	if semverBase(clientVersion) == semverBase(expectedVersion) && semver.Prerelease(expectedVersion) != "" && semver.Prerelease(clientVersion) == "" {
+		return false, clientVersion, "", nil
+	}
 	return true, clientVersion, "", nil
+}
+
+var ansiEscapeRe = regexp.MustCompile("\x1b\\[[0-?]*[ -/]*[@-~]")
+
+func stripANSIEscapes(s string) string {
+	return ansiEscapeRe.ReplaceAllString(s, "")
+}
+
+func semverBase(v string) string {
+	v = semver.Canonical(v)
+	if v == "" {
+		return ""
+	}
+	if build := semver.Build(v); build != "" {
+		v = strings.TrimSuffix(v, build)
+	}
+	if pre := semver.Prerelease(v); pre != "" {
+		v = strings.TrimSuffix(v, pre)
+	}
+	return v
+}
+
+func ReadWshVersionLineWithTimeout(ctx context.Context, linesChan chan utilfn.LineOutput, timeout time.Duration) (string, error) {
+	deadline := time.Now().Add(timeout)
+	for {
+		remaining := time.Until(deadline)
+		if remaining <= 0 {
+			return "", context.DeadlineExceeded
+		}
+		line, err := utilfn.ReadLineWithTimeout(linesChan, remaining)
+		if err != nil {
+			return "", err
+		}
+		if strings.TrimSpace(stripANSIEscapes(line)) == "" {
+			continue
+		}
+		_, _, _, parseErr := IsWshVersionUpToDate(ctx, line)
+		if parseErr == nil {
+			return line, nil
+		}
+		blocklogger.Debugf(ctx, "[conndebug] ignoring preamble line before wsh version: %q\n", line)
+	}
+}
+
+func ReadWshJwtStatusLineWithTimeout(ctx context.Context, linesChan chan utilfn.LineOutput, timeout time.Duration) (string, error) {
+	deadline := time.Now().Add(timeout)
+	for {
+		remaining := time.Until(deadline)
+		if remaining <= 0 {
+			return "", context.DeadlineExceeded
+		}
+		line, err := utilfn.ReadLineWithTimeout(linesChan, remaining)
+		if err != nil {
+			return "", err
+		}
+		cleanLine := strings.TrimSpace(stripANSIEscapes(line))
+		if cleanLine == "" {
+			continue
+		}
+		if cleanLine == wavebase.NeedJwtConst || cleanLine == "HAVE-JWT" {
+			return cleanLine, nil
+		}
+		blocklogger.Debugf(ctx, "[conndebug] ignoring preamble line before jwt status: %q\n", line)
+	}
 }
 
 func (conn *SSHConn) getWshPath() string {
@@ -291,6 +364,69 @@ func (conn *SSHConn) GetConfigShellPath() string {
 		return ""
 	}
 	return config.ConnShellPath
+}
+
+func isRetryableSessionOpenError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "unexpected packet in response to channel open") || strings.Contains(msg, "eof") || strings.Contains(msg, "connection reset")
+}
+
+func (conn *SSHConn) NewSession(ctx context.Context, reason string) (*ssh.Session, error) {
+	const maxAttempts = 3
+	var lastErr error
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		client := conn.GetClient()
+		if client == nil {
+			return nil, fmt.Errorf("ssh client is not connected")
+		}
+		if attempt == 1 {
+			conn.Infof(ctx, "SSH-NEWSESSION (%s)\n", reason)
+		} else {
+			conn.Infof(ctx, "SSH-NEWSESSION (%s) retry %d/%d\n", reason, attempt, maxAttempts)
+		}
+		session, err := client.NewSession()
+		if err == nil {
+			return session, nil
+		}
+		lastErr = err
+		if !isRetryableSessionOpenError(err) || attempt == maxAttempts {
+			break
+		}
+		conn.Infof(ctx, "WARN ssh new session failed (%s): %v; retrying\n", reason, err)
+		time.Sleep(time.Duration(attempt) * 200 * time.Millisecond)
+	}
+	return nil, lastErr
+}
+
+func (conn *SSHConn) startDisconnectWaiter() {
+	conn.HasWaiter.Store(true)
+	go func() {
+		defer func() {
+			panichandler.PanicHandler("conncontroller:waitForDisconnect", recover())
+		}()
+		conn.waitForDisconnect()
+	}()
+}
+
+func (conn *SSHConn) reconnectClient(ctx context.Context, connFlags *wconfig.ConnKeywords) error {
+	conn.Infof(ctx, "attempting ssh reconnect after setup failure\n")
+	client, _, err := remote.ConnectToClient(ctx, conn.Opts, nil, 0, connFlags)
+	if err != nil {
+		return err
+	}
+	var oldClient *ssh.Client
+	conn.WithLock(func() {
+		oldClient = conn.Client
+		conn.Client = client
+	})
+	if oldClient != nil && oldClient != client {
+		oldClient.Close()
+	}
+	conn.startDisconnectWaiter()
+	return nil
 }
 
 // returns (needsInstall, clientVersion, osArchStr, error)
@@ -328,8 +464,7 @@ func (conn *SSHConn) StartConnServer(ctx context.Context, afterUpdate bool) (boo
 	if err != nil {
 		return false, "", "", fmt.Errorf("unable to create jwt token for conn controller: %w", err)
 	}
-	conn.Infof(ctx, "SSH-NEWSESSION (StartConnServer)\n")
-	sshSession, err := client.NewSession()
+	sshSession, err := conn.NewSession(ctx, "StartConnServer")
 	if err != nil {
 		return false, "", "", fmt.Errorf("unable to create ssh session for conn controller: %w", err)
 	}
@@ -349,7 +484,7 @@ func (conn *SSHConn) StartConnServer(ctx context.Context, afterUpdate bool) (boo
 		return false, "", "", fmt.Errorf("unable to start conn controller command: %w", err)
 	}
 	linesChan := utilfn.StreamToLinesChan(pipeRead)
-	versionLine, err := utilfn.ReadLineWithTimeout(linesChan, utilfn.TimeoutFromContext(ctx, 30*time.Second))
+	versionLine, err := ReadWshVersionLineWithTimeout(ctx, linesChan, utilfn.TimeoutFromContext(ctx, 30*time.Second))
 	if err != nil {
 		sshSession.Close()
 		return false, "", "", fmt.Errorf("error reading wsh version: %w", err)
@@ -370,13 +505,13 @@ func (conn *SSHConn) StartConnServer(ctx context.Context, afterUpdate bool) (boo
 		sshSession.Close()
 		return true, clientVersion, osArchStr, nil
 	}
-	jwtLine, err := utilfn.ReadLineWithTimeout(linesChan, 3*time.Second)
+	jwtLine, err := ReadWshJwtStatusLineWithTimeout(ctx, linesChan, 3*time.Second)
 	if err != nil {
 		sshSession.Close()
 		return false, clientVersion, "", fmt.Errorf("error reading jwt status line: %w", err)
 	}
 	conn.Infof(ctx, "got jwt status line: %s\n", jwtLine)
-	if strings.TrimSpace(jwtLine) == wavebase.NeedJwtConst {
+	if jwtLine == wavebase.NeedJwtConst {
 		// write the jwt
 		conn.Infof(ctx, "writing jwt token to connserver\n")
 		_, err = fmt.Fprintf(stdinPipe, "%s\n", jwtToken)
@@ -826,12 +961,7 @@ func (conn *SSHConn) connectInternal(ctx context.Context, connFlags *wconfig.Con
 	conn.WithLock(func() {
 		conn.Client = client
 	})
-	go func() {
-		defer func() {
-			panichandler.PanicHandler("conncontroller:waitForDisconnect", recover())
-		}()
-		conn.waitForDisconnect()
-	}()
+	conn.startDisconnectWaiter()
 	fmtAddr := knownhosts.Normalize(fmt.Sprintf("%s@%s", client.User(), client.RemoteAddr().String()))
 	conn.Infof(ctx, "normalized knownhosts address: %s\n", fmtAddr)
 	clientDisplayName := fmt.Sprintf("%s (%s)", conn.GetName(), fmtAddr)
@@ -845,6 +975,13 @@ func (conn *SSHConn) connectInternal(ctx context.Context, connFlags *wconfig.Con
 		}
 	}
 	conn.persistWshInstalled(ctx, wshResult)
+	if conn.GetClient() == nil {
+		conn.Infof(ctx, "ssh connection dropped during setup, retrying connect without wsh\n")
+		reconnectErr := conn.reconnectClient(ctx, connFlags)
+		if reconnectErr != nil {
+			return fmt.Errorf("ssh connection dropped during setup and reconnect failed: %w", reconnectErr)
+		}
+	}
 	return nil
 }
 
@@ -857,6 +994,10 @@ func (conn *SSHConn) waitForDisconnect() {
 	}
 	err := client.Wait()
 	conn.WithLock(func() {
+		if conn.Client != client {
+			log.Printf("ssh client (%q) old client disconnected (replaced by new client), skipping state update", conn.GetName())
+			return
+		}
 		// disconnects happen for a variety of reasons (like network, etc. and are typically transient)
 		// so we just set the status to "disconnected" here (not error)
 		// don't overwrite any existing error (or error status)

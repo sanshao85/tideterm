@@ -40,6 +40,12 @@ declare global {
         configs: {[key: string]: AIModeConfigType};
     };
 
+    // config.APIKey
+    type APIKey = {
+        key: string;
+        enabled: boolean;
+    };
+
     // wshrpc.ActivityDisplayType
     type ActivityDisplayType = {
         width: number;
@@ -394,6 +400,72 @@ declare global {
         message: string;
     };
 
+    // wshrpc.CommandProxyChannelCreateData
+    type CommandProxyChannelCreateData = {
+        channelType: string;
+        channel: ProxyChannel;
+    };
+
+    // wshrpc.CommandProxyChannelDeleteData
+    type CommandProxyChannelDeleteData = {
+        channelType: string;
+        index: number;
+    };
+
+    // wshrpc.CommandProxyChannelListData
+    type CommandProxyChannelListData = {
+        channelType: string;
+    };
+
+    // wshrpc.CommandProxyChannelListRtnData
+    type CommandProxyChannelListRtnData = {
+        channels: ProxyChannel[];
+    };
+
+    // wshrpc.CommandProxyChannelPingData
+    type CommandProxyChannelPingData = {
+        channelType: string;
+        index: number;
+    };
+
+    // wshrpc.CommandProxyChannelPingRtnData
+    type CommandProxyChannelPingRtnData = {
+        success: boolean;
+        latencyMs: number;
+        error?: string;
+    };
+
+    // wshrpc.CommandProxyChannelUpdateData
+    type CommandProxyChannelUpdateData = {
+        channelType: string;
+        index: number;
+        channel: ProxyChannel;
+    };
+
+    // wshrpc.CommandProxyMetricsData
+    type CommandProxyMetricsData = {
+        channelId?: string;
+    };
+
+    // wshrpc.CommandProxyRequestHistoryData
+    type CommandProxyRequestHistoryData = {
+        limit?: number;
+        offset?: number;
+        channelId?: string;
+        status?: string;
+    };
+
+    // wshrpc.CommandProxyRequestHistoryRtnData
+    type CommandProxyRequestHistoryRtnData = {
+        records: ProxyRequestRecord[];
+        totalCount: number;
+    };
+
+    // wshrpc.CommandProxySetPortData
+    type CommandProxySetPortData = {
+        port: number;
+    };
+
     // wshrpc.CommandPublishAppData
     type CommandPublishAppData = {
         appid: string;
@@ -494,6 +566,32 @@ declare global {
         linestart: number;
         lines: string[];
         lastupdated: number;
+    };
+
+    // wshrpc.CommandTmuxKillSessionData
+    type CommandTmuxKillSessionData = {
+        connname: string;
+        sessionname: string;
+        logblockid?: string;
+    };
+
+    // wshrpc.CommandTmuxListSessionsData
+    type CommandTmuxListSessionsData = {
+        connname: string;
+        logblockid?: string;
+    };
+
+    // wshrpc.CommandTmuxListSessionsRtnData
+    type CommandTmuxListSessionsRtnData = {
+        sessions: TmuxSessionInfo[];
+    };
+
+    // wshrpc.CommandTmuxSetSessionAliasData
+    type CommandTmuxSetSessionAliasData = {
+        connname: string;
+        sessionname: string;
+        alias?: string;
+        logblockid?: string;
     };
 
     // wshrpc.CommandVarData
@@ -1043,6 +1141,72 @@ declare global {
         y: number;
     };
 
+    // wshrpc.ProxyChannel
+    type ProxyChannel = {
+        id: string;
+        name: string;
+        serviceType: string;
+        baseUrl: string;
+        baseUrls?: string[];
+        apiKeys: APIKey[];
+        authType?: string;
+        priority: number;
+        status: string;
+        promotionUntil?: string;
+        modelMapping?: {[key: string]: string};
+        lowQuality?: boolean;
+        description?: string;
+    };
+
+    // wshrpc.ProxyChannelMetrics
+    type ProxyChannelMetrics = {
+        channelId: string;
+        requestCount: number;
+        successCount: number;
+        failureCount: number;
+        successRate: number;
+        consecutiveFailures: number;
+        circuitBroken: boolean;
+        inputTokens: number;
+        outputTokens: number;
+        cacheHitRate: number;
+        avgLatencyMs: number;
+    };
+
+    // wshrpc.ProxyGlobalStats
+    type ProxyGlobalStats = {
+        totalRequests: number;
+        successCount: number;
+        failureCount: number;
+        successRate: number;
+        channelCount: number;
+    };
+
+    // wshrpc.ProxyRequestRecord
+    type ProxyRequestRecord = {
+        id: string;
+        timestamp: string;
+        channelId: string;
+        channelType: string;
+        model: string;
+        success: boolean;
+        latencyMs: number;
+        inputTokens: number;
+        outputTokens: number;
+        errorMsg?: string;
+        errorDetails?: string;
+    };
+
+    // wshrpc.ProxyStatusData
+    type ProxyStatusData = {
+        running: boolean;
+        port: number;
+        startedAt?: string;
+        uptime?: string;
+        version: string;
+        channelCount: number;
+    };
+
     // uctypes.RateLimitInfo
     type RateLimitInfo = {
         req: number;
@@ -1418,6 +1582,15 @@ declare global {
     type TimeSeriesData = {
         ts: number;
         values: {[key: string]: number};
+    };
+
+    // wshrpc.TmuxSessionInfo
+    type TmuxSessionInfo = {
+        name: string;
+        alias?: string;
+        windows: number;
+        attached: number;
+        activity: number;
     };
 
     // uctypes.UIChat

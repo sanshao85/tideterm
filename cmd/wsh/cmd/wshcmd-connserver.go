@@ -16,7 +16,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/spf13/cobra"
 	"github.com/sanshao85/tideterm/pkg/panichandler"
 	"github.com/sanshao85/tideterm/pkg/remote/fileshare/wshfs"
 	"github.com/sanshao85/tideterm/pkg/util/packetparser"
@@ -26,6 +25,7 @@ import (
 	"github.com/sanshao85/tideterm/pkg/wshrpc/wshclient"
 	"github.com/sanshao85/tideterm/pkg/wshrpc/wshremote"
 	"github.com/sanshao85/tideterm/pkg/wshutil"
+	"github.com/spf13/cobra"
 )
 
 var serverCmd = &cobra.Command{
@@ -43,6 +43,21 @@ func init() {
 	serverCmd.Flags().BoolVar(&connServerRouter, "router", false, "run in local router mode")
 	serverCmd.Flags().BoolVar(&singleServerRouter, "single", false, "run in local single mode")
 	rootCmd.AddCommand(serverCmd)
+}
+
+func ensureConnServerWavebaseDirs() {
+	// The connserver runs in environments where the Electron-set TIDETERM_* env vars are not present.
+	// Some features (like the API Proxy config) rely on wavebase's cached config/data dirs, so set
+	// sensible defaults when they're missing.
+	if wavebase.DataHome_VarCache == "" {
+		homeDir := wavebase.GetHomeDir()
+		wavebase.DataHome_VarCache = filepath.Join(homeDir, wavebase.RemoteWaveHomeDirName)
+	}
+	if wavebase.ConfigHome_VarCache == "" {
+		wavebase.ConfigHome_VarCache = filepath.Join(wavebase.DataHome_VarCache, wavebase.ConfigDir)
+	}
+	_ = os.MkdirAll(wavebase.DataHome_VarCache, 0700)
+	_ = os.MkdirAll(wavebase.ConfigHome_VarCache, 0700)
 }
 
 func getRemoteDomainSocketName() string {
@@ -198,8 +213,8 @@ func checkForUpdate() error {
 	if needsRestart {
 		// run the restart command here
 		// how to get the correct path?
-			return syscall.Exec("~/.tideterm/bin/wsh", []string{"wsh", "connserver", "--single"}, []string{})
-		}
+		return syscall.Exec("~/.tideterm/bin/wsh", []string{"wsh", "connserver", "--single"}, []string{})
+	}
 	return nil
 }
 
@@ -250,6 +265,7 @@ func askForJwtToken() (string, error) {
 }
 
 func serverRun(cmd *cobra.Command, args []string) error {
+	ensureConnServerWavebaseDirs()
 	installErr := wshutil.InstallRcFiles()
 	if installErr != nil {
 		log.Printf("error installing rc files: %v", installErr)

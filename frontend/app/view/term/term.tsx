@@ -36,6 +36,7 @@ const TermMultiSessionKey_SessionIds = "term:sessionids";
 const TermMultiSessionKey_ActiveSessionId = "term:activesessionid";
 const TermMultiSessionKey_SessionListOpen = "term:sessionlistopen";
 const TermMultiSessionKey_SessionListWidth = "term:sessionlistwidth";
+const TermMultiSessionKey_HideParentSession = "term:hideparentsession";
 
 function parseDraggedFileUri(uri: string): { connection: string | null; path: string } | null {
     if (!uri) {
@@ -71,6 +72,10 @@ function getExtraSessionIds(blockData: Block | null, selfBlockId: string): strin
         return [];
     }
     return raw.filter((v) => typeof v === "string" && v && v !== selfBlockId) as string[];
+}
+
+function isParentSessionHidden(blockData: Block | null): boolean {
+    return !!blockData?.meta?.[TermMultiSessionKey_HideParentSession];
 }
 
 function getActiveSessionId(blockData: Block | null, selfBlockId: string): string {
@@ -569,8 +574,19 @@ const TerminalView = ({ blockId, model }: ViewComponentProps<TermViewModel>) => 
     }
 
     const extraSessionIds = React.useMemo(() => getExtraSessionIds(blockData, blockId), [blockData, blockId]);
-    const activeSessionId = React.useMemo(() => getActiveSessionId(blockData, blockId), [blockData, blockId]);
-    const hasMultiple = extraSessionIds.length > 0;
+    const hideParentSession = React.useMemo(() => isParentSessionHidden(blockData), [blockData]);
+    const rawActiveSessionId = React.useMemo(() => getActiveSessionId(blockData, blockId), [blockData, blockId]);
+    const showParentSession = !hideParentSession || extraSessionIds.length === 0;
+    const activeSessionId = React.useMemo(() => {
+        if (!showParentSession && rawActiveSessionId === blockId && extraSessionIds.length > 0) {
+            return extraSessionIds[extraSessionIds.length - 1];
+        }
+        return rawActiveSessionId;
+    }, [showParentSession, rawActiveSessionId, blockId, extraSessionIds]);
+    const sessionIds = React.useMemo(() => {
+        return showParentSession ? [blockId, ...extraSessionIds] : [...extraSessionIds];
+    }, [showParentSession, blockId, extraSessionIds]);
+    const hasMultiple = sessionIds.length > 1;
     const isNonMainActive = activeSessionId !== blockId;
     const listOpen = getSessionListOpen(blockData, hasMultiple, isNonMainActive);
     const shouldRenderMulti = listOpen || isNonMainActive;
@@ -668,16 +684,17 @@ const TerminalView = ({ blockId, model }: ViewComponentProps<TermViewModel>) => 
         return <SingleTerminalView blockId={blockId} model={model} />;
     }
 
-    const sessionIds = [blockId, ...extraSessionIds];
     const termBg = computeBgStyleFromMeta(blockData?.meta);
 
     return (
         <div className="term-multi-root" ref={rootRef}>
             {termBg && <div className="absolute inset-0 z-0 pointer-events-none" style={termBg} />}
             <div className="term-multi-main">
-                <div className={clsx("term-multi-session", { active: activeSessionId === blockId })}>
-                    <SingleTerminalView blockId={blockId} model={model} />
-                </div>
+                {showParentSession ? (
+                    <div className={clsx("term-multi-session", { active: activeSessionId === blockId })}>
+                        <SingleTerminalView blockId={blockId} model={model} />
+                    </div>
+                ) : null}
                 {extraSessionIds.map((sessionId) => {
                     const isFocusedAtom = jotai.atom((get) => {
                         return get(model.nodeModel.isFocused) && activeSessionId === sessionId;

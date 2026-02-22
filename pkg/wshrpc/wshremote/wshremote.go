@@ -26,6 +26,7 @@ import (
 	"github.com/sanshao85/tideterm/pkg/util/tarcopy"
 	"github.com/sanshao85/tideterm/pkg/util/utilfn"
 	"github.com/sanshao85/tideterm/pkg/wavebase"
+	"github.com/sanshao85/tideterm/pkg/waveproxy"
 	"github.com/sanshao85/tideterm/pkg/wshrpc"
 	"github.com/sanshao85/tideterm/pkg/wshrpc/wshclient"
 	"github.com/sanshao85/tideterm/pkg/wshutil"
@@ -860,4 +861,138 @@ func (*ServerImpl) FetchSuggestionsCommand(ctx context.Context, data wshrpc.Fetc
 func (*ServerImpl) DisposeSuggestionsCommand(ctx context.Context, widgetId string) error {
 	suggestion.DisposeSuggestions(ctx, widgetId)
 	return nil
+}
+
+// Proxy commands
+
+func (*ServerImpl) ProxyStartCommand(ctx context.Context) error {
+	return waveproxy.StartProxyServer(ctx)
+}
+
+func (*ServerImpl) ProxyStopCommand(ctx context.Context) error {
+	return waveproxy.StopProxyServer(ctx)
+}
+
+func (*ServerImpl) ProxyStatusCommand(ctx context.Context) (*wshrpc.ProxyStatusData, error) {
+	status := waveproxy.GetProxyStatus()
+	return &wshrpc.ProxyStatusData{
+		Running:      status.Running,
+		Port:         status.Port,
+		StartedAt:    status.StartedAt,
+		Uptime:       status.Uptime,
+		Version:      status.Version,
+		ChannelCount: status.ChannelCount,
+	}, nil
+}
+
+func (*ServerImpl) ProxySetPortCommand(ctx context.Context, data wshrpc.CommandProxySetPortData) error {
+	return waveproxy.SetProxyPort(ctx, data.Port)
+}
+
+func (*ServerImpl) ProxyChannelListCommand(ctx context.Context, data wshrpc.CommandProxyChannelListData) (*wshrpc.CommandProxyChannelListRtnData, error) {
+	channels := waveproxy.GetChannelList(data.ChannelType)
+	result := make([]*wshrpc.ProxyChannel, len(channels))
+	for i, ch := range channels {
+		result[i] = &wshrpc.ProxyChannel{
+			ID:             ch.ID,
+			Name:           ch.Name,
+			ServiceType:    ch.ServiceType,
+			BaseUrl:        ch.BaseUrl,
+			BaseUrls:       ch.BaseUrls,
+			ApiKeys:        ch.ApiKeys,
+			AuthType:       ch.AuthType,
+			Priority:       ch.Priority,
+			Status:         ch.Status,
+			PromotionUntil: ch.PromotionUntil,
+			ModelMapping:   ch.ModelMapping,
+			LowQuality:     ch.LowQuality,
+			Description:    ch.Description,
+		}
+	}
+	return &wshrpc.CommandProxyChannelListRtnData{Channels: result}, nil
+}
+
+func (*ServerImpl) ProxyChannelCreateCommand(ctx context.Context, data wshrpc.CommandProxyChannelCreateData) error {
+	return waveproxy.CreateChannel(data.ChannelType, data.Channel)
+}
+
+func (*ServerImpl) ProxyChannelUpdateCommand(ctx context.Context, data wshrpc.CommandProxyChannelUpdateData) error {
+	return waveproxy.UpdateChannel(data.ChannelType, data.Index, data.Channel)
+}
+
+func (*ServerImpl) ProxyChannelDeleteCommand(ctx context.Context, data wshrpc.CommandProxyChannelDeleteData) error {
+	return waveproxy.DeleteChannel(data.ChannelType, data.Index)
+}
+
+func (*ServerImpl) ProxyChannelPingCommand(ctx context.Context, data wshrpc.CommandProxyChannelPingData) (*wshrpc.CommandProxyChannelPingRtnData, error) {
+	result := waveproxy.PingChannel(data.ChannelType, data.Index)
+	return &wshrpc.CommandProxyChannelPingRtnData{
+		Success:   result.Success,
+		LatencyMs: result.LatencyMs,
+		Error:     result.Error,
+	}, nil
+}
+
+func (*ServerImpl) ProxyMetricsCommand(ctx context.Context, data wshrpc.CommandProxyMetricsData) ([]*wshrpc.ProxyChannelMetrics, error) {
+	metrics := waveproxy.GetMetrics(data.ChannelID)
+	result := make([]*wshrpc.ProxyChannelMetrics, len(metrics))
+	for i, m := range metrics {
+		result[i] = &wshrpc.ProxyChannelMetrics{
+			ChannelID:           m.ChannelID,
+			RequestCount:        m.RequestCount,
+			SuccessCount:        m.SuccessCount,
+			FailureCount:        m.FailureCount,
+			SuccessRate:         m.SuccessRate,
+			ConsecutiveFailures: m.ConsecutiveFailures,
+			CircuitBroken:       m.CircuitBroken,
+			InputTokens:         m.InputTokens,
+			OutputTokens:        m.OutputTokens,
+			CacheHitRate:        m.CacheHitRate,
+			AvgLatencyMs:        m.AvgLatencyMs,
+		}
+	}
+	return result, nil
+}
+
+func (*ServerImpl) ProxyGlobalStatsCommand(ctx context.Context) (*wshrpc.ProxyGlobalStats, error) {
+	stats := waveproxy.GetGlobalStats()
+	return &wshrpc.ProxyGlobalStats{
+		TotalRequests: stats.TotalRequests,
+		SuccessCount:  stats.SuccessCount,
+		FailureCount:  stats.FailureCount,
+		SuccessRate:   stats.SuccessRate,
+		ChannelCount:  stats.ChannelCount,
+	}, nil
+}
+
+func (*ServerImpl) ProxySchedulerResetCommand(ctx context.Context, channelId string) error {
+	return waveproxy.ResetScheduler(channelId)
+}
+
+func (*ServerImpl) ProxyRequestHistoryCommand(ctx context.Context, data wshrpc.CommandProxyRequestHistoryData) (*wshrpc.CommandProxyRequestHistoryRtnData, error) {
+	records, total := waveproxy.GetRequestHistory(data.ChannelID, data.Limit, data.Offset, data.Status)
+	result := make([]*wshrpc.ProxyRequestRecord, len(records))
+	for i, r := range records {
+		result[i] = &wshrpc.ProxyRequestRecord{
+			ID:           r.ID,
+			Timestamp:    r.Timestamp,
+			ChannelID:    r.ChannelID,
+			ChannelType:  r.ChannelType,
+			Model:        r.Model,
+			Success:      r.Success,
+			LatencyMs:    r.LatencyMs,
+			InputTokens:  r.InputTokens,
+			OutputTokens: r.OutputTokens,
+			ErrorMsg:     r.ErrorMsg,
+			ErrorDetails: r.ErrorDetails,
+		}
+	}
+	return &wshrpc.CommandProxyRequestHistoryRtnData{
+		Records:    result,
+		TotalCount: total,
+	}, nil
+}
+
+func (*ServerImpl) ProxyHistoryClearCommand(ctx context.Context) error {
+	return waveproxy.ClearRequestHistory()
 }

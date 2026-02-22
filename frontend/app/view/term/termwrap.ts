@@ -588,6 +588,39 @@ export class TermWrap {
         }
     }
 
+    private getWheelDeltaLines(ev: WheelEvent): number {
+        let delta = ev.deltaY;
+        switch (ev.deltaMode) {
+            case WheelEvent.DOM_DELTA_LINE:
+                break;
+            case WheelEvent.DOM_DELTA_PAGE:
+                delta *= this.terminal.rows;
+                break;
+            default: {
+                const viewport = this.terminal.element?.getElementsByClassName("xterm-viewport")[0] as
+                    | HTMLDivElement
+                    | undefined;
+                const lineHeight = viewport && this.terminal.rows > 0 ? viewport.clientHeight / this.terminal.rows : 0;
+                const divisor = lineHeight > 0 ? lineHeight : 16;
+                delta = delta / divisor;
+                break;
+            }
+        }
+        const fastModifier = this.terminal.options.fastScrollModifier ?? "alt";
+        const useFast =
+            (fastModifier === "alt" && ev.altKey) ||
+            (fastModifier === "ctrl" && ev.ctrlKey) ||
+            (fastModifier === "shift" && ev.shiftKey);
+        const sensitivity = useFast
+            ? this.terminal.options.fastScrollSensitivity ?? 5
+            : this.terminal.options.scrollSensitivity ?? 1;
+        const scaled = delta * sensitivity;
+        if (scaled === 0) {
+            return 0;
+        }
+        return scaled > 0 ? Math.ceil(scaled) : Math.floor(scaled);
+    }
+
     constructor(
         tabId: string,
         blockId: string,
@@ -655,6 +688,28 @@ export class TermWrap {
             return handleOsc16162Command(data, this.blockId, this.loaded, this);
         });
         this.terminal.attachCustomKeyEventHandler(waveOptions.keydownHandler);
+        this.terminal.attachCustomWheelEventHandler((ev: WheelEvent) => {
+            if (this.isLocalConnection()) {
+                return true;
+            }
+            const mouseTrackingMode = this.terminal.modes?.mouseTrackingMode ?? "none";
+            if (mouseTrackingMode === "none") {
+                return true;
+            }
+            if (this.terminal.buffer.active.type === "alternate") {
+                return true;
+            }
+            if (ev.altKey) {
+                return true;
+            }
+            ev.preventDefault();
+            ev.stopPropagation();
+            const lines = this.getWheelDeltaLines(ev);
+            if (lines !== 0) {
+                this.terminal.scrollLines(lines);
+            }
+            return false;
+        });
         this.connectElem = connectElem;
         this.mainFileSubject = null;
         this.heldData = [];

@@ -25,6 +25,7 @@ import { AppBackground } from "./app-bg";
 import { CenteredDiv } from "./element/quickelems";
 import { NotificationBubbles } from "./notification/notificationbubbles";
 import { WindowTitleManager } from "./window/windowtitle";
+import { ProxyDock } from "./view/proxy/proxy-dock";
 
 import "./app.scss";
 
@@ -350,6 +351,7 @@ const AppInner = () => {
             <DndProvider backend={HTML5Backend}>
                 <Workspace />
             </DndProvider>
+            <ProxyDock />
             <FlashError />
             {isDev() ? <NotificationBubbles></NotificationBubbles> : null}
         </div>

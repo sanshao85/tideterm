@@ -56,6 +56,47 @@ func normalizeArch(arch string) string {
 	return arch
 }
 
+var ansiEscapeRe = regexp.MustCompile("\x1b\\[[0-?]*[ -/]*[@-~]")
+
+func stripANSIEscapes(s string) string {
+	return ansiEscapeRe.ReplaceAllString(s, "")
+}
+
+func parseClientPlatformFromUnameOutput(output string) (string, string, error) {
+	output = strings.ReplaceAll(output, "\r\n", "\n")
+	output = strings.ReplaceAll(output, "\r", "\n")
+	output = stripANSIEscapes(output)
+
+	// First try the full output (common case).
+	parts := strings.Fields(strings.ToLower(strings.TrimSpace(output)))
+	if len(parts) == 2 {
+		osName, archName := normalizeOs(parts[0]), normalizeArch(parts[1])
+		if err := wavebase.ValidateWshSupportedArch(osName, archName); err == nil {
+			return osName, archName, nil
+		}
+	}
+
+	// Some environments print banners/MOTD/rcfile output before the command, which can pollute stdout.
+	// Scan line-by-line from the end and pick the first valid (os, arch) pair.
+	lines := strings.Split(output, "\n")
+	for i := len(lines) - 1; i >= 0; i-- {
+		line := strings.TrimSpace(lines[i])
+		if line == "" {
+			continue
+		}
+		fields := strings.Fields(strings.ToLower(line))
+		if len(fields) != 2 {
+			continue
+		}
+		osName, archName := normalizeOs(fields[0]), normalizeArch(fields[1])
+		if err := wavebase.ValidateWshSupportedArch(osName, archName); err == nil {
+			return osName, archName, nil
+		}
+	}
+
+	return "", "", fmt.Errorf("unexpected output from uname: %s", strings.TrimSpace(output))
+}
+
 // returns (os, arch, error)
 // guaranteed to return a supported platform
 func GetClientPlatform(ctx context.Context, shell genconn.ShellClient) (string, string, error) {
@@ -66,28 +107,19 @@ func GetClientPlatform(ctx context.Context, shell genconn.ShellClient) (string, 
 	if err != nil {
 		return "", "", fmt.Errorf("error running uname -sm: %w, stderr: %s", err, stderr)
 	}
-	// Parse and normalize output
-	parts := strings.Fields(strings.ToLower(strings.TrimSpace(stdout)))
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("unexpected output from uname: %s", stdout)
-	}
-	os, arch := normalizeOs(parts[0]), normalizeArch(parts[1])
-	if err := wavebase.ValidateWshSupportedArch(os, arch); err != nil {
+	osName, archName, err := parseClientPlatformFromUnameOutput(stdout)
+	if err != nil {
 		return "", "", err
 	}
-	return os, arch, nil
+	return osName, archName, nil
 }
 
 func GetClientPlatformFromOsArchStr(ctx context.Context, osArchStr string) (string, string, error) {
-	parts := strings.Fields(strings.TrimSpace(osArchStr))
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("unexpected output from uname: %s", osArchStr)
-	}
-	os, arch := normalizeOs(parts[0]), normalizeArch(parts[1])
-	if err := wavebase.ValidateWshSupportedArch(os, arch); err != nil {
+	osName, archName, err := parseClientPlatformFromUnameOutput(osArchStr)
+	if err != nil {
 		return "", "", err
 	}
-	return os, arch, nil
+	return osName, archName, nil
 }
 
 var installTemplateRawDefault = strings.TrimSpace(`

@@ -447,6 +447,76 @@ class RpcApiType {
         return client.wshRpcCall("path", data, opts);
     }
 
+    // command "proxychannelcreate" [call]
+    ProxyChannelCreateCommand(client: WshClient, data: CommandProxyChannelCreateData, opts?: RpcOpts): Promise<void> {
+        return client.wshRpcCall("proxychannelcreate", data, opts);
+    }
+
+    // command "proxychanneldelete" [call]
+    ProxyChannelDeleteCommand(client: WshClient, data: CommandProxyChannelDeleteData, opts?: RpcOpts): Promise<void> {
+        return client.wshRpcCall("proxychanneldelete", data, opts);
+    }
+
+    // command "proxychannellist" [call]
+    ProxyChannelListCommand(client: WshClient, data: CommandProxyChannelListData, opts?: RpcOpts): Promise<CommandProxyChannelListRtnData> {
+        return client.wshRpcCall("proxychannellist", data, opts);
+    }
+
+    // command "proxychannelping" [call]
+    ProxyChannelPingCommand(client: WshClient, data: CommandProxyChannelPingData, opts?: RpcOpts): Promise<CommandProxyChannelPingRtnData> {
+        return client.wshRpcCall("proxychannelping", data, opts);
+    }
+
+    // command "proxychannelupdate" [call]
+    ProxyChannelUpdateCommand(client: WshClient, data: CommandProxyChannelUpdateData, opts?: RpcOpts): Promise<void> {
+        return client.wshRpcCall("proxychannelupdate", data, opts);
+    }
+
+    // command "proxyglobalstats" [call]
+    ProxyGlobalStatsCommand(client: WshClient, opts?: RpcOpts): Promise<ProxyGlobalStats> {
+        return client.wshRpcCall("proxyglobalstats", null, opts);
+    }
+
+    // command "proxyhistoryclear" [call]
+    ProxyHistoryClearCommand(client: WshClient, opts?: RpcOpts): Promise<void> {
+        return client.wshRpcCall("proxyhistoryclear", null, opts);
+    }
+
+    // command "proxymetrics" [call]
+    ProxyMetricsCommand(client: WshClient, data: CommandProxyMetricsData, opts?: RpcOpts): Promise<ProxyChannelMetrics[]> {
+        return client.wshRpcCall("proxymetrics", data, opts);
+    }
+
+    // command "proxyrequesthistory" [call]
+    ProxyRequestHistoryCommand(client: WshClient, data: CommandProxyRequestHistoryData, opts?: RpcOpts): Promise<CommandProxyRequestHistoryRtnData> {
+        return client.wshRpcCall("proxyrequesthistory", data, opts);
+    }
+
+    // command "proxyschedulerreset" [call]
+    ProxySchedulerResetCommand(client: WshClient, data: string, opts?: RpcOpts): Promise<void> {
+        return client.wshRpcCall("proxyschedulerreset", data, opts);
+    }
+
+    // command "proxysetport" [call]
+    ProxySetPortCommand(client: WshClient, data: CommandProxySetPortData, opts?: RpcOpts): Promise<void> {
+        return client.wshRpcCall("proxysetport", data, opts);
+    }
+
+    // command "proxystart" [call]
+    ProxyStartCommand(client: WshClient, opts?: RpcOpts): Promise<void> {
+        return client.wshRpcCall("proxystart", null, opts);
+    }
+
+    // command "proxystatus" [call]
+    ProxyStatusCommand(client: WshClient, opts?: RpcOpts): Promise<ProxyStatusData> {
+        return client.wshRpcCall("proxystatus", null, opts);
+    }
+
+    // command "proxystop" [call]
+    ProxyStopCommand(client: WshClient, opts?: RpcOpts): Promise<void> {
+        return client.wshRpcCall("proxystop", null, opts);
+    }
+
     // command "publishapp" [call]
     PublishAppCommand(client: WshClient, data: CommandPublishAppData, opts?: RpcOpts): Promise<CommandPublishAppRtnData> {
         return client.wshRpcCall("publishapp", data, opts);
@@ -630,6 +700,21 @@ class RpcApiType {
     // command "test" [call]
     TestCommand(client: WshClient, data: string, opts?: RpcOpts): Promise<void> {
         return client.wshRpcCall("test", data, opts);
+    }
+
+    // command "tmuxkillsession" [call]
+    TmuxKillSessionCommand(client: WshClient, data: CommandTmuxKillSessionData, opts?: RpcOpts): Promise<void> {
+        return client.wshRpcCall("tmuxkillsession", data, opts);
+    }
+
+    // command "tmuxlistsessions" [call]
+    TmuxListSessionsCommand(client: WshClient, data: CommandTmuxListSessionsData, opts?: RpcOpts): Promise<CommandTmuxListSessionsRtnData> {
+        return client.wshRpcCall("tmuxlistsessions", data, opts);
+    }
+
+    // command "tmuxsetsessionalias" [call]
+    TmuxSetSessionAliasCommand(client: WshClient, data: CommandTmuxSetSessionAliasData, opts?: RpcOpts): Promise<void> {
+        return client.wshRpcCall("tmuxsetsessionalias", data, opts);
     }
 
     // command "vdomasyncinitiation" [call]
