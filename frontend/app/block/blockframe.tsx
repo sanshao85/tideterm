@@ -10,6 +10,7 @@ import { ChangeConnectionBlockModal } from "@/app/modals/conntypeahead";
 import { ContextMenuModel } from "@/app/store/contextmenu";
 import {
     atoms,
+    getAllBlockComponentModels,
     getBlockComponentModel,
     getConnStatusAtom,
     getSettingsKeyAtom,
@@ -39,7 +40,119 @@ import { CopyButton } from "../element/copybutton";
 import { BlockFrameProps } from "./blocktypes";
 
 const NumActiveConnColors = 8;
+const AutoReconnectBackoffMs = [1500, 3000, 5000, 10000, 20000];
+const autoReconnectTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const autoReconnectAttempts = new Map<string, number>();
+const reconnectInFlight = new Map<string, Promise<void>>();
 type TFn = ReturnType<typeof useT>;
+
+function clearAutoReconnectTimer(connName: string) {
+    const timer = autoReconnectTimers.get(connName);
+    if (timer != null) {
+        clearTimeout(timer);
+        autoReconnectTimers.delete(connName);
+    }
+}
+
+function resetAutoReconnectState(connName: string) {
+    clearAutoReconnectTimer(connName);
+    autoReconnectAttempts.delete(connName);
+}
+
+function getTermSizeForBlock(blockId: string): TermSize | null {
+    const bcm = getBlockComponentModel(blockId);
+    const vmAny = bcm?.viewModel as any;
+    const rows = vmAny?.termRef?.current?.terminal?.rows;
+    const cols = vmAny?.termRef?.current?.terminal?.cols;
+    if (typeof rows !== "number" || typeof cols !== "number") {
+        return null;
+    }
+    if (!isFinite(rows) || !isFinite(cols) || rows <= 0 || cols <= 0) {
+        return null;
+    }
+    return { rows, cols };
+}
+
+function getTermBlockIdsForConnection(connName: string): string[] {
+    const blockIds: string[] = [];
+    for (const bcm of getAllBlockComponentModels()) {
+        const blockId = (bcm?.viewModel as any)?.blockId;
+        if (typeof blockId !== "string" || util.isBlank(blockId)) {
+            continue;
+        }
+        const blockData = WOS.getObjectValue<Block>(WOS.makeORef("block", blockId));
+        if (blockData?.meta?.view !== "term") {
+            continue;
+        }
+        if ((blockData?.meta?.connection ?? "local") !== connName) {
+            continue;
+        }
+        blockIds.push(blockId);
+    }
+    return Array.from(new Set(blockIds));
+}
+
+async function restartTermBlocksForConnection(connName: string) {
+    const blockIds = getTermBlockIdsForConnection(connName);
+    if (blockIds.length === 0) {
+        return;
+    }
+    const tabId = globalStore.get(atoms.staticTabId);
+    await Promise.allSettled(
+        blockIds.map((blockId) => {
+            const termSize = getTermSizeForBlock(blockId);
+            const data: CommandControllerResyncData = {
+                tabid: tabId,
+                blockid: blockId,
+                forcerestart: true,
+            };
+            if (termSize != null) {
+                data.rtopts = { termsize: termSize };
+            }
+            return RpcApi.ControllerResyncCommand(TabRpcClient, data);
+        })
+    );
+}
+
+function reconnectConnectionAndRestartTermBlocks(connName: string, logBlockId: string): Promise<void> {
+    const inFlight = reconnectInFlight.get(connName);
+    if (inFlight != null) {
+        return inFlight;
+    }
+    const promise = (async () => {
+        await RpcApi.ConnConnectCommand(
+            TabRpcClient,
+            { host: connName, logblockid: logBlockId },
+            { timeout: 300000 }
+        );
+        await restartTermBlocksForConnection(connName);
+    })().finally(() => {
+        reconnectInFlight.delete(connName);
+    });
+    reconnectInFlight.set(connName, promise);
+    return promise;
+}
+
+function scheduleAutoReconnect(connName: string, logBlockId: string) {
+    if (reconnectInFlight.has(connName) || autoReconnectTimers.has(connName)) {
+        return;
+    }
+    const attempt = autoReconnectAttempts.get(connName) ?? 0;
+    const delayMs = AutoReconnectBackoffMs[Math.min(attempt, AutoReconnectBackoffMs.length - 1)];
+    const timer = setTimeout(() => {
+        autoReconnectTimers.delete(connName);
+        void reconnectConnectionAndRestartTermBlocks(connName, logBlockId)
+            .then(() => {
+                resetAutoReconnectState(connName);
+            })
+            .catch((e) => {
+                autoReconnectAttempts.set(connName, attempt + 1);
+                console.log("auto reconnect failed", connName, e);
+                scheduleAutoReconnect(connName, logBlockId);
+            });
+    }, delayMs);
+    autoReconnectTimers.set(connName, timer);
+}
 
 function handleHeaderContextMenu(
     e: React.MouseEvent<HTMLDivElement>,
@@ -372,30 +485,12 @@ const ConnStatusOverlay = React.memo(
 
         const handleTryReconnect = React.useCallback(async () => {
             try {
-                await RpcApi.ConnConnectCommand(
-                    TabRpcClient,
-                    { host: connName, logblockid: nodeModel.blockId },
-                    { timeout: 300000 }
-                );
+                await reconnectConnectionAndRestartTermBlocks(connName, nodeModel.blockId);
+                resetAutoReconnectState(connName);
             } catch (e) {
                 console.log("error reconnecting", connName, e);
-                return;
             }
-
-            // If this is a terminal block, force a controller restart after reconnect so the PTY
-            // is recreated (and tmux-based resume can reattach immediately).
-            if (blockData?.meta?.view === "term") {
-                try {
-                    await RpcApi.ControllerResyncCommand(TabRpcClient, {
-                        tabid: globalStore.get(atoms.staticTabId),
-                        blockid: nodeModel.blockId,
-                        forcerestart: true,
-                    });
-                } catch (e) {
-                    console.log("error controller resync after reconnect", nodeModel.blockId, e);
-                }
-            }
-        }, [connName, nodeModel.blockId, blockData?.meta?.view]);
+        }, [connName, nodeModel.blockId]);
 
         const handleDisableWsh = React.useCallback(async () => {
             // using unknown is a hack. we need proper types for the
@@ -587,6 +682,8 @@ const BlockFrame_Default_Component = (props: BlockFrameProps) => {
     const viewIconUnion = util.useAtomValueSafe(viewModel?.viewIcon) ?? blockViewToIcon(blockData?.meta?.view);
     const customBg = util.useAtomValueSafe(viewModel?.blockBg);
     const manageConnection = util.useAtomValueSafe(viewModel?.manageConnection);
+    const connName = blockData?.meta?.connection;
+    const connStatus = jotai.useAtomValue(getConnStatusAtom(connName));
     const changeConnModalAtom = useBlockAtom(nodeModel.blockId, "changeConn", () => {
         return jotai.atom(false);
     }) as jotai.PrimitiveAtom<boolean>;
@@ -622,7 +719,6 @@ const BlockFrame_Default_Component = (props: BlockFrameProps) => {
         if (!manageConnection || blockData == null || preview) {
             return;
         }
-        const connName = blockData?.meta?.connection;
         if (!util.isLocalConnName(connName)) {
             console.log("ensure conn", nodeModel.blockId, connName);
             RpcApi.ConnEnsureCommand(
@@ -633,7 +729,36 @@ const BlockFrame_Default_Component = (props: BlockFrameProps) => {
                 console.log("error ensuring connection", nodeModel.blockId, connName, e);
             });
         }
-    }, [manageConnection, blockData]);
+    }, [manageConnection, connName, blockData, preview, nodeModel.blockId]);
+
+    React.useEffect(() => {
+        if (!manageConnection || preview || util.isBlank(connName) || util.isLocalConnName(connName) || connName.startsWith("aws:")) {
+            return;
+        }
+        if (connStatus?.status === "connected") {
+            resetAutoReconnectState(connName);
+            return;
+        }
+        if (connStatus?.status === "connecting") {
+            clearAutoReconnectTimer(connName);
+            return;
+        }
+        const shouldAutoReconnect =
+            connStatus?.status === "disconnected" && connStatus?.hasconnected && !util.isBlank(connStatus?.error);
+        if (!shouldAutoReconnect) {
+            clearAutoReconnectTimer(connName);
+            return;
+        }
+        scheduleAutoReconnect(connName, nodeModel.blockId);
+    }, [
+        manageConnection,
+        preview,
+        connName,
+        connStatus?.status,
+        connStatus?.hasconnected,
+        connStatus?.error,
+        nodeModel.blockId,
+    ]);
 
     const viewIconElem = getViewIconElem(viewIconUnion, blockData);
     let innerStyle: React.CSSProperties = {};
