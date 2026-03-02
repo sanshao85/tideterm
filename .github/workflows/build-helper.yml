@@ -201,13 +201,13 @@ jobs:
 
             # Upload artifacts to the workflow output for the draft release job
             - name: Upload artifacts
-              uses: actions/upload-artifact@v5
+              uses: actions/upload-artifact@v7
               with:
                   name: ${{ matrix.runner }}
                   path: make
             - name: Upload Snapcraft logs on failure
               if: failure()
-              uses: actions/upload-artifact@v5
+              uses: actions/upload-artifact@v7
               with:
                   name: ${{ matrix.runner }}-log
                   path: /home/runner/.local/state/snapcraft/log
