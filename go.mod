@@ -24,7 +24,7 @@ require (
 	github.com/junegunn/fzf v0.65.2
 	github.com/kevinburke/ssh_config v1.2.0
 	github.com/launchdarkly/eventsource v1.11.0
-	github.com/mattn/go-sqlite3 v1.14.32
+	github.com/mattn/go-sqlite3 v1.14.33
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pelletier/go-toml/v2 v2.2.3
 	github.com/sanshao85/tideterm/tsunami v0.12.3
